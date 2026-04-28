@@ -7,7 +7,12 @@ dataTypes:
   number: 數字
 contextMenu:
   translate: 翻譯
+  translateSelection: 翻譯「%s」
   showOriginal: 顯示原文
+sidePanel:
+  firefoxUserActionHint: 在 Firefox 中，請從瀏覽器側邊欄開啟陪讀蛙。
+  firefoxUserActionHelpText: 查看 Firefox 側邊欄說明
+  firefoxUserActionHelpUrl: https://support.mozilla.org/zh-TW/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: 主題
   autoLang: 自動偵測
@@ -129,11 +134,18 @@ options:
         noModelsFound: 未找到模型
       featureProviders: 功能提供商
       advancedOptions: 進階選項
+      connectionOptionLabels:
+        region: 區域
       temperature: 溫度
       temperatureHint: 控制回應的隨機性。較低的值（0）更具確定性，較高的值更具創造性。範圍因提供者而異。留空則使用提供者預設值。
       providerOptions: 提供者選項
       providerOptionsHint: 用於非標準 API 功能（如思考/推理模式）的提供者特定選項。詳情請參閱 Vercel AI SDK 文件或您的提供者官方文件。
       providerOptionsDocsLink: 查看提供者文件
+      providerOptionsRecommendationTrigger: 查看推薦的提供者選項
+      providerOptionsRecommendationTitle: 偵測到推薦的提供者選項
+      providerOptionsRecommendationDescription: 請先檢查，再手動套用推薦設定。
+      providerOptionsRecommendationApply: 套用
+      providerOptionsRecommendationApplied: 已套用
       invalidJson: JSON 格式無效
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: 提供最新、全面的模型和按量付費 API
         openaiCompatible: OpenAI API 相容的第三方
         deeplx: 非官方 DeepL API
+        deepl: 官方 DeepL API
         bedrock: 面向企業級基礎模型的 AWS 託管服務
         groq: 專注於超高速 LLM 推理速度的專用硬體
         deepinfra: 面向熱門開源模型的經濟高效雲端推理
@@ -186,7 +199,6 @@ options:
       features:
         translate: 網頁翻譯
         selectionToolbar_translate: 劃詞翻譯
-        selectionToolbar_vocabularyInsight: 劃詞詞彙解析
         tts: 文字轉語音
         inputTranslation: 輸入翻譯
         videoSubtitles: 影片字幕
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: 點擊行為
         description: 選擇點擊懸浮按鈕時執行的操作
-        panel: 開啟面板
+        panel: 開啟側邊欄
         translate: 切換頁面翻譯
     selectionToolbar:
       globalToggle:
         title: 啟用選擇工具列
-        description: 在網頁上選擇文字時顯示工具列，快速翻譯和詞彙解析
+        description: 在網頁上選取文字時顯示工具列，快速翻譯、朗讀和使用 AI 指令
+      opacity:
+        title: 透明度
+        description: 調整選擇工具列及其展開內容視窗的透明度
       featureToggles:
         title: 功能開關
         description: 選擇在選擇工具列中顯示哪些內建功能
         translate: 翻譯
         speak: 朗讀
-        vocabularyInsight: 詞彙解析
       closeMenu:
         disableForSite: 停用此網站
         disableGlobally: 全域停用
@@ -315,9 +329,6 @@ options:
         translate:
           title: 劃詞翻譯
           description: 配置選擇工具列翻譯功能使用的提供商與模型
-        vocabularyInsight:
-          title: 詞彙解析
-          description: 配置選擇工具列詞彙/短語解析功能使用的提供商與模型
       customActions:
         title: 自訂 AI 指令
         description: 為劃詞新增你自己的結構化 AI 操作
@@ -360,11 +371,48 @@ options:
             description: 此輸出欄位將被移除。
             confirm: 刪除
             cancel: 取消
+          notebase:
+            title: 筆記庫連線
+            description: 將這個指令的結構化結果儲存到遠端筆記庫。
+            loginRequiredTitle: 登入後才能設定筆記庫
+            loginRequiredDescription: 先到 readfrog.app 登入，再選擇筆記庫與編輯映射。
+            loginAction: 前往登入
+            tableLabel: 筆記庫
+            tablePlaceholder: 選擇一個筆記庫
+            tableClearOption: 不連接筆記庫
+            refreshAction: 重新整理
+            emptyTitle: 還沒有筆記庫
+            emptyDescription: 先到 readfrog.app 建立一個筆記庫，再回來映射欄位。
+            openNotebaseAction: 開啟筆記庫
+            betaLockedTitle: 目前帳號尚未加入 Notebase Beta
+            betaLockedDescription: 你可以保留目前的 action 設定，但選擇筆記庫與同步結果目前僅對部分 Beta 帳號開放。
+            tableUnavailableTitle: 選取的筆記庫已不可用
+            tableUnavailableDescription: 請重新整理，或改選其他筆記庫後再儲存。
+            tableUnavailableOption: 不可用
+            schemaErrorTitle: 載入筆記庫 schema 失敗
+            schemaErrorDescription: 請稍後再試一次重新整理。
+            schemaLoading: 正在載入筆記庫 schema...
+            mappingsLabel: 欄位映射
+            mappingsEmpty: 尚未建立映射，準備好後即可新增。
+            addMappingAction: 新增映射
+            removeMappingAction: 移除映射
+            localFieldLabel: 指令欄位
+            localFieldPlaceholder: 選擇一個指令欄位
+            remoteFieldLabel: 筆記庫欄位
+            remoteFieldPlaceholder: 選擇一個筆記庫欄位
+            columnUnavailableOption: 已刪除
+            invalidMappingsTitle: 有些映射需要處理
+            invalidMappingsDescription: 無效映射會被保留，但在修復前會停用「儲存到筆記庫」。
+            mappingMissingLocal: 映射的指令欄位已不存在。
+            mappingMissingRemote: 映射的筆記庫欄位已不存在。
+            mappingMissingSchema: 重新整理筆記庫 schema 後才能驗證這個映射。
+            mappingIncompatible: 欄位類型已不相容。
           tokens:
             selection: 選取的文字內容
             paragraphs: 與選取範圍相交的段落內容，會以空行串接，傳給自訂 AI 指令時會截斷到前 2000 個字元
             targetLanguage: 使用者的目標語言
             webTitle: 網頁標題
+            webContent: 從目前頁面擷取的網頁正文內容（截斷到前 2000 個字元）
           delete: 刪除
           deleteDialog:
             title: 刪除自訂 AI 指令？
@@ -383,7 +431,7 @@ options:
       title: 右鍵選單
       translate:
         title: 啟用右鍵翻譯
-        description: 在瀏覽器右鍵選單中新增翻譯選項，快速翻譯頁面
+        description: 在瀏覽器右鍵選單中新增翻譯選項，快速翻譯頁面或所選文字
   translation:
     title: 翻譯
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: 需要翻譯的文字內容
           targetLanguage: 目標語言
           webTitle: 網頁標題
+          webContent: 網頁正文內容（截斷到前 2000 個字元）
           webSummary: 網頁摘要（需啟用 AI 智慧上下文）
         save: 保存
         close: 取消
@@ -540,9 +589,9 @@ options:
         description: 基礎偵測快速且免費。LLM 偵測更準確，但會增加延遲和 API 費用。
     aiContentAware:
       title: AI 智慧上下文翻譯
-      description: 透過向 AI 提供文章上下文來提高翻譯品質
+      description: 透過向 AI 提供網頁上下文來提高翻譯品質
       enable: 啟用 AI 智慧上下文翻譯
-      enableDescription: AI 使用文章摘要來提高翻譯準確性。需要 LLM 翻譯提供商。剛開始翻譯頁面時會有延遲，並增加 API 費用。
+      enableDescription: AI 使用網頁摘要來提高翻譯準確性。需要 LLM 翻譯提供商。剛開始翻譯頁面時會有延遲，並增加 API 費用。
   tts:
     title: 文字轉語音
     description: 使用 Edge TTS 語音參數來自訂「朗讀」按鈕。
@@ -575,6 +624,13 @@ options:
       batchRequestCount: 批量請求數量
   config:
     title: 設定
+    about:
+      title: 關於
+      description: Read Frog 誕生於 2025 年 4 月
+      mission: Read Frog 致力於在 AI 時代擴大高品質教育機會的平等可及性，透過更低成本地提供盡可能接近真人教師的學習體驗，涵蓋語言學習、醫學以及其他知識密集型領域。
+      analytics:
+        title: 幫助改進使用者體驗
+        tooltip: 開啟後，Read Frog 會傳送匿名的產品使用訊號，用於驗證功能是否穩定、優化效能與互動細節，並幫助我們決定接下來優先投入的方向。
     sync:
       title: 手動設定同步
       description: 手動匯入和匯出您的設定
@@ -743,7 +799,13 @@ options:
         description: 每個批量翻譯的最大段落數，用於控制單次翻譯的內容量
     customPrompts:
       title: 自訂字幕提示詞
-      description: 自訂字幕翻譯的提示詞模板（與網頁翻譯提示詞獨立）
+      description: 自訂字幕翻譯的提示詞模板（與網頁翻譯提示詞分離）
+      editPrompt:
+        promptCellInput:
+          input: 要翻譯的字幕文字
+          targetLanguage: 目標語言
+          videoTitle: 影片標題
+          videoSummary: 影片摘要（需啟用 AI 智慧上下文）
   whatsNew:
     title: 最近更新
   survey:
@@ -795,14 +857,20 @@ action:
   copied: 已複製
   regenerate: 重新生成
   viewContextDetails: 上下文
+  saveToNotebase: 儲存到筆記庫
+  saveToNotebaseSaving: 儲存中...
+  saveToNotebaseSuccess: 已儲存到筆記庫
+  saveToNotebaseFailed: 儲存到筆記庫失敗
+  saveToNotebaseLoginRequired: 請先到 readfrog.app 登入後再儲存到筆記庫
+  saveToNotebaseBetaRequired: 目前帳號尚未加入 Notebase Beta
+  saveToNotebaseTableUnavailable: 選取的筆記庫已不可用
+  saveToNotebaseConnectionInvalid: 目前的筆記庫連線已過期，請到 Custom AI Actions 重新整理並修復映射
+  saveToNotebaseNoMappings: 至少新增一個有效映射後才能儲存
   contextDetailsTitleLabel: 標題
   contextDetailsParagraphsLabel: 段落內容
   translation: 翻譯
   speak: 朗讀
   playing: 播放中
-  vocabularyInsight: 詞彙解析
-  vocabularyInsightDeprecation: 此功能將在 2 週後被自訂 AI 動作的詞典功能取代。詞典動作提供更靈活和強大的體驗。
-  vocabularyInsightDeprecationLink: 設定詞典動作
 thinking:
   label: 思考中
   complete: 思考完成
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: 請輸入快捷鍵
 subtitles:
+  actions:
+    downloadSource: 下載原始字幕
   state:
     loading: Read Frog 字幕載入中
     error: 發生錯誤

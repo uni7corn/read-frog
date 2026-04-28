@@ -9,6 +9,7 @@ import { Rnd } from "react-rnd"
 import { Button } from "@/components/ui/base-ui/button"
 import {
   SELECTION_CONTENT_OVERLAY_LAYERS,
+  SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE,
 } from "@/entrypoints/selection.content/overlay-layers"
 import { NOTRANSLATE_CLASS } from "@/utils/constants/dom-labels"
 import { cn } from "@/utils/styles/utils"
@@ -78,22 +79,27 @@ export function useSelectionPopoverOverlayProps() {
 }
 
 function SelectionPopoverRoot({
+  anchor: anchorProp,
   children,
   defaultOpen = false,
   open: openProp,
+  onAnchorChange,
   onOpenChange,
 }: {
+  anchor?: SelectionPopoverPosition | null
   children: React.ReactNode
   defaultOpen?: boolean
   open?: boolean
+  onAnchorChange?: (anchor: SelectionPopoverPosition | null) => void
   onOpenChange?: (open: boolean) => void
 }) {
   const instanceId = React.useId()
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen)
-  const [anchor, setAnchor] = React.useState<SelectionPopoverPosition | null>(null)
+  const [uncontrolledAnchor, setUncontrolledAnchor] = React.useState<SelectionPopoverPosition | null>(null)
   const [pinned, setPinned] = React.useState(false)
   const [triggerElement, setTriggerElement] = React.useState<HTMLElement | null>(null)
   const open = openProp ?? uncontrolledOpen
+  const anchor = anchorProp ?? uncontrolledAnchor
 
   const setOpen = React.useCallback((value: boolean | ((value: boolean) => boolean)) => {
     const nextOpen = typeof value === "function" ? value(open) : value
@@ -108,6 +114,14 @@ function SelectionPopoverRoot({
 
     onOpenChange?.(nextOpen)
   }, [onOpenChange, open, openProp])
+
+  const setAnchor = React.useCallback((value: SelectionPopoverPosition | null) => {
+    if (anchorProp === undefined) {
+      setUncontrolledAnchor(value)
+    }
+
+    onAnchorChange?.(value)
+  }, [anchorProp, onAnchorChange])
 
   React.useEffect(() => {
     if (!open) {
@@ -140,7 +154,7 @@ function SelectionPopoverRoot({
     setPinned,
     triggerElement,
     setTriggerElement,
-  }), [anchor, open, pinned, setOpen, triggerElement])
+  }), [anchor, open, pinned, setAnchor, setOpen, triggerElement])
 
   return (
     <SelectionPopoverRootContext value={contextValue}>
@@ -272,9 +286,11 @@ function SelectionPopoverShell({
         `pointer-events-auto flex flex-col overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-floating ${NOTRANSLATE_CLASS}`,
         className,
       )}
+      {...{ [SELECTION_CONTENT_OVERLAY_ROOT_ATTRIBUTE]: "" }}
       style={{
         display: "flex",
         ...style,
+        opacity: "var(--rf-selection-opacity, 1)",
         maxWidth: "100vw",
         maxHeight: "100vh",
       }}
@@ -301,10 +317,12 @@ function SelectionPopoverContent({
   className,
   children,
   container,
+  finalFocus,
   render,
   ...props
 }: useRender.ComponentProps<"div"> & React.ComponentProps<"div"> & {
   container?: SelectionPopoverPortalContainer
+  finalFocus?: DialogPrimitive.Popup.Props["finalFocus"]
 }) {
   const { open, setOpen, anchor, triggerElement } = useSelectionPopoverRootContext()
   const bodyElementRef = React.useRef<HTMLDivElement | null>(null)
@@ -373,6 +391,8 @@ function SelectionPopoverContent({
     return null
   }
 
+  const resolvedFinalFocus = finalFocus ?? (triggerElement ? { current: triggerElement } : false)
+
   return (
     <DialogPrimitive.Portal container={container}>
       <DialogPrimitive.Popup
@@ -380,7 +400,7 @@ function SelectionPopoverContent({
           "fixed inset-0 pointer-events-none focus:outline-none",
           SELECTION_CONTENT_OVERLAY_LAYERS.popover,
         )}
-        finalFocus={triggerElement ? { current: triggerElement } : false}
+        finalFocus={resolvedFinalFocus}
       >
         <SelectionPopoverShell
           rndRef={rndRef}

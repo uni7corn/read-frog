@@ -38,7 +38,8 @@ const ConnectionTestResultIconMap = {
 }
 
 export function ConnectionTestButton({ providerConfig }: { providerConfig: APIProviderConfig }) {
-  const { apiKey, baseURL, provider } = providerConfig
+  const { apiKey, provider, connectionOptions } = providerConfig
+  const baseURL = "baseURL" in providerConfig ? providerConfig.baseURL : undefined
 
   const mutation = useMutation({
     // for safety, we should not include apiKey in the mutationKey
@@ -54,8 +55,8 @@ export function ConnectionTestButton({ providerConfig }: { providerConfig: APIPr
 
   useEffect(() => {
     mutation.reset()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider, apiKey, baseURL])
+  // eslint-disable-next-line react/exhaustive-deps
+  }, [provider, apiKey, baseURL, connectionOptions])
 
   const testResult = mutation.isSuccess ? "success" : mutation.isError ? "error" : null
   const ConnectionTestResultIcon = testResult ? ConnectionTestResultIconMap[testResult] : null

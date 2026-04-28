@@ -7,7 +7,12 @@ dataTypes:
   number: Số
 contextMenu:
   translate: Dịch
+  translateSelection: Dịch "%s"
   showOriginal: Hiển thị bản gốc
+sidePanel:
+  firefoxUserActionHint: Trong Firefox, hãy mở Read Frog từ thanh bên của trình duyệt.
+  firefoxUserActionHelpText: Xem cách mở thanh bên Firefox
+  firefoxUserActionHelpUrl: https://support.mozilla.org/vi/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: Chủ đề
   autoLang: Tự động
@@ -129,11 +134,18 @@ options:
         noModelsFound: Không tìm thấy mô hình
       featureProviders: Nhà cung cấp tính năng
       advancedOptions: Tùy chọn nâng cao
+      connectionOptionLabels:
+        region: Khu vực
       temperature: Nhiệt độ
       temperatureHint: Kiểm soát tính ngẫu nhiên trong phản hồi. Giá trị thấp (0) mang tính xác định hơn, giá trị cao mang tính sáng tạo hơn. Phạm vi thay đổi theo nhà cung cấp. Để trống để sử dụng giá trị mặc định của nhà cung cấp.
       providerOptions: Tùy chọn nhà cung cấp
       providerOptionsHint: Các tùy chọn dành riêng cho nhà cung cấp cho các tính năng API không chuẩn như chế độ suy nghĩ/lập luận. Xem tài liệu Vercel AI SDK hoặc tài liệu chính thức của nhà cung cấp để biết chi tiết cấu hình.
       providerOptionsDocsLink: Xem Tài liệu Nhà cung cấp
+      providerOptionsRecommendationTrigger: Xem tùy chọn nhà cung cấp được đề xuất
+      providerOptionsRecommendationTitle: Đã phát hiện tùy chọn nhà cung cấp được đề xuất
+      providerOptionsRecommendationDescription: Hãy xem lại và tự áp dụng cấu hình được đề xuất.
+      providerOptionsRecommendationApply: Áp dụng
+      providerOptionsRecommendationApplied: Đã áp dụng
       invalidJson: Định dạng JSON không hợp lệ
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: Cung cấp các mô hình mới nhất và toàn diện nhất với API trả theo lần sử dụng
         openaiCompatible: Bên thứ ba và tương thích API OpenAI
         deeplx: API DeepL không chính thức
+        deepl: API DeepL chính thức
         bedrock: Dịch vụ được quản lý bởi AWS cho các mô hình nền tảng cấp doanh nghiệp
         groq: Phần cứng chuyên dụng cho tốc độ suy luận LLM siêu nhanh
         deepinfra: Suy luận đám mây hiệu quả chi phí cho các mô hình mã nguồn mở phổ biến
@@ -186,7 +199,6 @@ options:
       features:
         translate: Dịch trang
         selectionToolbar_translate: Dịch thanh công cụ chọn
-        selectionToolbar_vocabularyInsight: Phân tích từ vựng thanh công cụ chọn
         tts: Chuyển văn bản thành giọng nói
         inputTranslation: Dịch đầu vào
         videoSubtitles: Phụ đề video
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: Hành động khi nhấn
         description: Chọn hành động khi nhấn vào nút nổi
-        panel: Mở bảng điều khiển
+        panel: Mở bảng điều khiển bên
         translate: Bật/tắt dịch trang
     selectionToolbar:
       globalToggle:
         title: Bật thanh công cụ chọn văn bản
-        description: Hiển thị thanh công cụ khi chọn văn bản trên trang web để dịch và phân tích từ vựng nhanh
+        description: Hiển thị thanh công cụ khi chọn văn bản trên trang web để dịch nhanh, đọc to và dùng các hành động AI
+      opacity:
+        title: Độ mờ
+        description: Điều chỉnh độ mờ của thanh công cụ chọn văn bản và cửa sổ mở rộng mở từ đó
       featureToggles:
         title: Bật/tắt tính năng
         description: Chọn các tính năng tích hợp để hiển thị trên thanh công cụ chọn văn bản
         translate: Dịch
         speak: Đọc
-        vocabularyInsight: Phân tích từ vựng
       closeMenu:
         disableForSite: Tắt cho trang web này
         disableGlobally: Tắt toàn cục
@@ -315,9 +329,6 @@ options:
         translate:
           title: Dịch văn bản chọn
           description: Cấu hình nhà cung cấp và model cho tính năng dịch của selection toolbar
-        vocabularyInsight:
-          title: Phân tích từ vựng
-          description: Cấu hình nhà cung cấp và model cho tính năng phân tích từ/cụm từ của selection toolbar
       customActions:
         title: Hành động AI tùy chỉnh
         description: Thêm các hành động AI có cấu trúc của riêng bạn cho văn bản được chọn
@@ -360,11 +371,48 @@ options:
             description: Trường đầu ra này sẽ bị xóa.
             confirm: Xóa
             cancel: Hủy
+          notebase:
+            title: Kết nối Notebase
+            description: Lưu kết quả có cấu trúc của hành động này vào Notebase từ xa.
+            loginRequiredTitle: Đăng nhập để cấu hình Notebase
+            loginRequiredDescription: Hãy đăng nhập trên readfrog.app trước khi chọn notebase hoặc chỉnh sửa ánh xạ.
+            loginAction: Đăng nhập
+            tableLabel: Notebase
+            tablePlaceholder: Chọn một notebase
+            tableClearOption: Không kết nối notebase
+            refreshAction: Làm mới
+            emptyTitle: Chưa có Notebase nào
+            emptyDescription: Hãy tạo một notebase trên readfrog.app rồi quay lại đây để ánh xạ các trường.
+            openNotebaseAction: Mở Notebase
+            betaLockedTitle: Tài khoản này chưa nằm trong beta Notebase
+            betaLockedDescription: Bạn vẫn có thể giữ cấu hình action hiện tại, nhưng việc chọn Notebase và đồng bộ kết quả hiện chỉ mở cho một số tài khoản beta.
+            tableUnavailableTitle: Notebase đã chọn không còn khả dụng
+            tableUnavailableDescription: Hãy làm mới hoặc chọn một notebase khác trước khi lưu lại.
+            tableUnavailableOption: không khả dụng
+            schemaErrorTitle: Không tải được schema notebase
+            schemaErrorDescription: Hãy thử làm mới lại sau ít phút nữa.
+            schemaLoading: Đang tải schema notebase...
+            mappingsLabel: Ánh xạ trường
+            mappingsEmpty: Chưa có ánh xạ nào. Hãy thêm một ánh xạ khi bạn sẵn sàng lưu các trường.
+            addMappingAction: Thêm ánh xạ
+            removeMappingAction: Xóa ánh xạ
+            localFieldLabel: Trường của hành động
+            localFieldPlaceholder: Chọn một trường của hành động
+            remoteFieldLabel: Trường Notebase
+            remoteFieldPlaceholder: Chọn một trường notebase
+            columnUnavailableOption: đã xóa
+            invalidMappingsTitle: Một số ánh xạ cần được xử lý
+            invalidMappingsDescription: Các ánh xạ không hợp lệ vẫn được giữ lại, nhưng Save to Notebase sẽ bị vô hiệu hóa cho đến khi bạn sửa chúng.
+            mappingMissingLocal: Trường của hành động đã ánh xạ không còn tồn tại.
+            mappingMissingRemote: Trường notebase đã ánh xạ không còn tồn tại.
+            mappingMissingSchema: Hãy làm mới schema notebase để xác thực ánh xạ này.
+            mappingIncompatible: Kiểu trường không còn khớp nữa.
           tokens:
             selection: Nội dung văn bản đã chọn
             paragraphs: Nội dung các đoạn giao với vùng chọn, được nối bằng dòng trống, sẽ bị cắt còn 2000 ký tự đầu khi gửi vào hành động AI tùy chỉnh
             targetLanguage: Ngôn ngữ đích của người dùng
             webTitle: Tiêu đề trang web
+            webContent: Nội dung trang web được trích xuất từ trang hiện tại (bị cắt còn 2000 ký tự đầu)
           delete: Xóa
           deleteDialog:
             title: Xóa hành động tùy chỉnh?
@@ -383,7 +431,7 @@ options:
       title: Menu ngữ cảnh
       translate:
         title: Bật dịch menu ngữ cảnh
-        description: Thêm tùy chọn dịch vào menu chuột phải của trình duyệt để dịch trang nhanh
+        description: Thêm các tùy chọn dịch vào menu chuột phải của trình duyệt để dịch nhanh trang hoặc văn bản đã chọn
   translation:
     title: Dịch thuật
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: Nội dung văn bản để dịch
           targetLanguage: Ngôn ngữ đích
           webTitle: Tiêu đề trang web
+          webContent: Nội dung trang web (bị cắt còn 2000 ký tự đầu)
           webSummary: Tóm tắt trang web (yêu cầu Ngữ cảnh thông minh AI)
         save: Lưu thay đổi
         close: Hủy
@@ -540,9 +589,9 @@ options:
         description: Phát hiện cơ bản nhanh và miễn phí. Phát hiện LLM chính xác hơn nhưng thêm độ trễ và chi phí API.
     aiContentAware:
       title: Dịch ngữ cảnh thông minh AI
-      description: Nâng cao chất lượng dịch bằng cách cung cấp ngữ cảnh bài viết cho AI
+      description: Nâng cao chất lượng dịch bằng cách cung cấp ngữ cảnh trang web cho AI
       enable: Bật dịch ngữ cảnh thông minh AI
-      enableDescription: AI sử dụng tóm tắt bài viết để cải thiện độ chính xác dịch. Yêu cầu nhà cung cấp LLM. Thêm độ trễ khi bắt đầu dịch trang và tăng chi phí API.
+      enableDescription: AI sử dụng tóm tắt trang web để cải thiện độ chính xác dịch. Yêu cầu nhà cung cấp LLM. Thêm độ trễ khi bắt đầu dịch trang và tăng chi phí API.
   tts:
     title: Chuyển văn bản thành giọng nói
     description: Tùy chỉnh nút Đọc với cài đặt giọng nói Edge TTS.
@@ -575,6 +624,13 @@ options:
       batchRequestCount: Số yêu cầu theo lô
   config:
     title: Cấu hình
+    about:
+      title: Giới thiệu
+      description: Read Frog ra đời vào tháng 4 năm 2025
+      mission: Read Frog hướng tới việc mở rộng cơ hội tiếp cận bình đẳng với giáo dục chất lượng cao trong thời đại AI bằng cách mang lại trải nghiệm học tập gần với cảm giác được giáo viên thật hướng dẫn, nhưng với chi phí hợp lý hơn trong học ngôn ngữ, y học và các lĩnh vực giàu tri thức khác.
+      analytics:
+        title: Giúp cải thiện trải nghiệm người dùng
+        tooltip: Khi bật, Read Frog sẽ gửi các tín hiệu sử dụng ẩn danh để xác minh tính ổn định của tính năng, tối ưu hiệu năng và độ tinh chỉnh UX, đồng thời giúp chúng tôi ưu tiên những gì cần xây tiếp theo.
     sync:
       title: Đồng bộ cấu hình thủ công
       description: Nhập và xuất cài đặt cấu hình thủ công
@@ -742,8 +798,14 @@ options:
         title: Số đoạn văn tối đa
         description: Số đoạn văn tối đa cho mỗi bản dịch lô để kiểm soát khối lượng nội dung của mỗi bản dịch
     customPrompts:
-      title: Tùy chỉnh Prompt phụ đề
-      description: Tùy chỉnh mẫu prompt cho dịch phụ đề (độc lập với prompt dịch trang web)
+      title: Lời nhắc phụ đề tùy chỉnh
+      description: Tùy chỉnh mẫu lời nhắc cho dịch phụ đề (tách biệt với lời nhắc dịch trang web)
+      editPrompt:
+        promptCellInput:
+          input: Văn bản phụ đề cần dịch
+          targetLanguage: Ngôn ngữ đích
+          videoTitle: Tiêu đề video
+          videoSummary: Tóm tắt video (yêu cầu Ngữ cảnh thông minh AI)
   whatsNew:
     title: Có gì mới
   survey:
@@ -795,14 +857,20 @@ action:
   copied: Đã sao chép
   regenerate: Tạo lại
   viewContextDetails: Ngữ cảnh
+  saveToNotebase: Lưu vào Notebase
+  saveToNotebaseSaving: Đang lưu...
+  saveToNotebaseSuccess: Đã lưu vào Notebase
+  saveToNotebaseFailed: Không thể lưu vào Notebase
+  saveToNotebaseLoginRequired: Hãy đăng nhập trên readfrog.app để lưu vào Notebase
+  saveToNotebaseBetaRequired: Tài khoản này chưa được mở quyền beta Notebase
+  saveToNotebaseTableUnavailable: Notebase đã chọn không còn khả dụng
+  saveToNotebaseConnectionInvalid: Kết nối Notebase này đã lỗi thời. Hãy làm mới trong Custom AI Actions và sửa các ánh xạ.
+  saveToNotebaseNoMappings: Hãy thêm ít nhất một ánh xạ hợp lệ trước khi lưu
   contextDetailsTitleLabel: Tiêu đề
   contextDetailsParagraphsLabel: Các đoạn văn
   translation: Dịch
   speak: Đọc
   playing: Đang phát
-  vocabularyInsight: Phân tích từ vựng
-  vocabularyInsightDeprecation: Tính năng này sẽ được thay thế bằng tính năng Từ điển của Hành động AI tùy chỉnh sau 2 tuần. Hành động Từ điển mang đến trải nghiệm linh hoạt và mạnh mẽ hơn.
-  vocabularyInsightDeprecationLink: Thiết lập Hành động Từ điển
 thinking:
   label: Đang suy luận
   complete: Suy luận hoàn tất
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: Vui lòng nhập phím tắt
 subtitles:
+  actions:
+    downloadSource: Tải phụ đề gốc
   state:
     loading: Read Frog đang tải phụ đề
     error: Đã xảy ra lỗi

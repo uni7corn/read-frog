@@ -7,7 +7,12 @@ dataTypes:
   number: Число
 contextMenu:
   translate: Перевести
+  translateSelection: Перевести "%s"
   showOriginal: Показать оригинал
+sidePanel:
+  firefoxUserActionHint: В Firefox откройте Read Frog из боковой панели браузера.
+  firefoxUserActionHelpText: Как открыть боковую панель Firefox
+  firefoxUserActionHelpUrl: https://support.mozilla.org/ru/kb/ispolzovanije-bokovoi-paneli-dostup-instrumenty-i-vertikalnyje-vkladki
 popup:
   theme: Тема
   autoLang: Авто
@@ -129,11 +134,18 @@ options:
         noModelsFound: Модели не найдены
       featureProviders: Поставщики функций
       advancedOptions: Расширенные настройки
+      connectionOptionLabels:
+        region: Регион
       temperature: Температура
       temperatureHint: Контролирует случайность ответов. Низкие значения (0) более детерминированы, высокие — более креативны. Диапазон зависит от провайдера. Оставьте пустым для использования значения по умолчанию.
       providerOptions: Параметры провайдера
       providerOptionsHint: Специфические параметры провайдера для нестандартных функций API, таких как режим размышления/рассуждения. Подробнее см. документацию Vercel AI SDK или официальную документацию вашего провайдера.
       providerOptionsDocsLink: Документация провайдера
+      providerOptionsRecommendationTrigger: Показать рекомендуемые параметры провайдера
+      providerOptionsRecommendationTitle: Обнаружены рекомендуемые параметры провайдера
+      providerOptionsRecommendationDescription: Проверьте рекомендованную конфигурацию и примените её вручную.
+      providerOptionsRecommendationApply: Применить
+      providerOptionsRecommendationApplied: Применено
       invalidJson: Неверный формат JSON
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: Предоставляет новейшие и наиболее полные модели с оплатой по мере использования API
         openaiCompatible: Сторонние и OpenAI API-совместимые
         deeplx: Неофициальный DeepL API
+        deepl: Официальный DeepL API
         bedrock: Управляемый AWS сервис для корпоративных базовых моделей
         groq: Специализированное оборудование для сверхбыстрого вывода LLM
         deepinfra: Экономичный облачный вывод для популярных моделей с открытым исходным кодом
@@ -186,7 +199,6 @@ options:
       features:
         translate: Перевод страницы
         selectionToolbar_translate: Перевод выделения
-        selectionToolbar_vocabularyInsight: Анализ слов выделения
         tts: Озвучивание текста
         inputTranslation: Перевод ввода
         videoSubtitles: Субтитры видео
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: Действие по клику
         description: Выберите действие при нажатии на плавающую кнопку
-        panel: Открыть панель
+        panel: Открыть боковую панель
         translate: Переключить перевод страницы
     selectionToolbar:
       globalToggle:
         title: Включить панель выделения
-        description: Отображать панель при выделении текста на веб-страницах для быстрого перевода и анализа слов
+        description: Показывать панель при выделении текста на веб-страницах для быстрого перевода, озвучивания и AI-действий
+      opacity:
+        title: Прозрачность
+        description: Настройте прозрачность панели выделения и раскрытого окна, которое открывается из неё
       featureToggles:
         title: Переключатели функций
         description: Выберите, какие встроенные функции показывать в панели выделения
         translate: Перевод
         speak: Озвучивание
-        vocabularyInsight: Анализ слов
       closeMenu:
         disableForSite: Отключить для этого сайта
         disableGlobally: Отключить глобально
@@ -315,9 +329,6 @@ options:
         translate:
           title: Перевод выделения
           description: Настройка провайдера и модели для перевода в панели выделения
-        vocabularyInsight:
-          title: Анализ слов
-          description: Настройка провайдера и модели для анализа слов/фраз в панели выделения
       customActions:
         title: Пользовательские AI-действия
         description: Добавляйте собственные структурированные AI-действия для выделенного текста
@@ -360,11 +371,48 @@ options:
             description: Это поле вывода будет удалено.
             confirm: Удалить
             cancel: Отмена
+          notebase:
+            title: Подключение Notebase
+            description: Сохранить структурированные результаты этого действия в удалённую Notebase.
+            loginRequiredTitle: Войдите, чтобы настроить Notebase
+            loginRequiredDescription: Войдите на readfrog.app, прежде чем выбирать notebase или редактировать сопоставления.
+            loginAction: Войти
+            tableLabel: Notebase
+            tablePlaceholder: Выберите notebase
+            tableClearOption: Не подключать notebase
+            refreshAction: Обновить
+            emptyTitle: Notebase пока нет
+            emptyDescription: Создайте notebase на readfrog.app, затем вернитесь сюда и сопоставьте поля.
+            openNotebaseAction: Открыть Notebase
+            betaLockedTitle: Этот аккаунт ещё не участвует в beta Notebase
+            betaLockedDescription: Вы можете сохранить текущую настройку action, но выбор Notebase и синхронизация результатов пока доступны только выбранным beta-аккаунтам.
+            tableUnavailableTitle: Выбранная notebase больше недоступна
+            tableUnavailableDescription: Обновите список или выберите другую notebase перед следующим сохранением.
+            tableUnavailableOption: недоступно
+            schemaErrorTitle: Не удалось загрузить схему notebase
+            schemaErrorDescription: Попробуйте обновить схему ещё раз чуть позже.
+            schemaLoading: Загрузка схемы notebase...
+            mappingsLabel: Сопоставления полей
+            mappingsEmpty: Сопоставлений пока нет. Добавьте хотя бы одно, когда будете готовы сохранять поля.
+            addMappingAction: Добавить сопоставление
+            removeMappingAction: Удалить сопоставление
+            localFieldLabel: Поле действия
+            localFieldPlaceholder: Выберите поле действия
+            remoteFieldLabel: Поле Notebase
+            remoteFieldPlaceholder: Выберите поле notebase
+            columnUnavailableOption: удалено
+            invalidMappingsTitle: Некоторые сопоставления требуют внимания
+            invalidMappingsDescription: Некорректные сопоставления сохраняются, но кнопка Save to Notebase остаётся отключённой, пока вы их не исправите.
+            mappingMissingLocal: Сопоставленное поле действия больше не существует.
+            mappingMissingRemote: Сопоставленное поле notebase больше не существует.
+            mappingMissingSchema: Обновите схему notebase, чтобы проверить это сопоставление.
+            mappingIncompatible: Типы полей больше не совпадают.
           tokens:
             selection: Содержимое выделенного текста
             paragraphs: Текст абзацев, пересекающихся с выделением, объединённый пустыми строками; при отправке в пользовательские AI-действия обрезается до первых 2000 символов
             targetLanguage: Целевой язык пользователя
             webTitle: Заголовок веб-страницы
+            webContent: Содержимое веб-страницы, извлечённое с текущей страницы и сокращённое до первых 2000 символов
           delete: Удалить
           deleteDialog:
             title: Удалить пользовательское действие?
@@ -383,7 +431,7 @@ options:
       title: Контекстное меню
       translate:
         title: Включить перевод в контекстном меню
-        description: Добавить опцию перевода в контекстное меню браузера для быстрого перевода страницы
+        description: Добавить опцию перевода в контекстное меню браузера для быстрого перевода страницы и выделенного текста
   translation:
     title: Перевод
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: Текстовое содержимое для перевода
           targetLanguage: Целевой язык
           webTitle: Заголовок веб-страницы
+          webContent: Содержимое веб-страницы (обрезается до первых 2000 символов)
           webSummary: Резюме веб-страницы (требуется умный контекст ИИ)
         save: Сохранить изменения
         close: Отмена
@@ -540,9 +589,9 @@ options:
         description: Базовое определение быстрое и бесплатное. LLM определение точнее, но добавляет задержку и затраты на API.
     aiContentAware:
       title: Умный контекстный перевод ИИ
-      description: Улучшайте качество перевода, предоставляя контекст статьи ИИ
+      description: Улучшайте качество перевода, предоставляя ИИ контекст веб-страницы
       enable: Включить умный контекстный перевод ИИ
-      enableDescription: ИИ использует резюме статьи для повышения точности перевода. Требуется LLM-провайдер. Добавляет задержку при начале перевода страницы и увеличивает затраты на API.
+      enableDescription: ИИ использует резюме веб-страницы для повышения точности перевода. Требуется LLM-провайдер. Добавляет задержку при начале перевода страницы и увеличивает затраты на API.
   tts:
     title: Синтез речи
     description: Настройте кнопку озвучивания с параметрами голоса Edge TTS.
@@ -575,6 +624,13 @@ options:
       batchRequestCount: Количество пакетных запросов
   config:
     title: Конфигурация
+    about:
+      title: О приложении
+      description: Read Frog появился в апреле 2025 года
+      mission: Read Frog стремится расширить равный доступ к качественному образованию в эпоху ИИ, делая обучение, максимально похожее на занятия с настоящим преподавателем, доступным по цене в языках, медицине и других знанияемких областях.
+      analytics:
+        title: Помочь улучшить пользовательский опыт
+        tooltip: Когда параметр включен, Read Frog отправляет анонимные сигналы об использовании продукта, чтобы мы могли проверять надежность функций, улучшать производительность и UX-детали, а также понимать, что развивать дальше в первую очередь.
     sync:
       title: Ручная синхронизация конфигурации
       description: Ручной импорт и экспорт настроек конфигурации
@@ -743,7 +799,13 @@ options:
         description: Максимальное количество абзацев для каждого пакетного перевода для контроля объёма содержимого каждого перевода
     customPrompts:
       title: Пользовательские промпты субтитров
-      description: Настройте шаблоны промптов для перевода субтитров (отдельно от промптов для веб-страниц)
+      description: Настройте шаблоны промптов для перевода субтитров (отдельно от промптов перевода веб-страниц)
+      editPrompt:
+        promptCellInput:
+          input: Текст субтитров для перевода
+          targetLanguage: Целевой язык
+          videoTitle: Название видео
+          videoSummary: Краткое содержание видео (требуется умный контекст ИИ)
   whatsNew:
     title: Что нового
   survey:
@@ -795,14 +857,20 @@ action:
   copied: Скопировано
   regenerate: Сгенерировать заново
   viewContextDetails: Контекст
+  saveToNotebase: Сохранить в Notebase
+  saveToNotebaseSaving: Сохранение...
+  saveToNotebaseSuccess: Сохранено в Notebase
+  saveToNotebaseFailed: Не удалось сохранить в Notebase
+  saveToNotebaseLoginRequired: Войдите на readfrog.app, чтобы сохранить в Notebase
+  saveToNotebaseBetaRequired: Для этого аккаунта beta-доступ к Notebase пока не включён
+  saveToNotebaseTableUnavailable: Выбранная Notebase больше недоступна
+  saveToNotebaseConnectionInvalid: Это подключение Notebase устарело. Обновите его в Custom AI Actions и исправьте сопоставления.
+  saveToNotebaseNoMappings: Добавьте хотя бы одно корректное сопоставление перед сохранением
   contextDetailsTitleLabel: Заголовок
   contextDetailsParagraphsLabel: Абзацы
   translation: Перевод
   speak: Озвучить
   playing: Воспроизведение
-  vocabularyInsight: Разбор слов
-  vocabularyInsightDeprecation: Эта функция будет заменена функцией словаря в пользовательских AI-действиях через 2 недели. Словарное действие обеспечивает более гибкий и мощный опыт.
-  vocabularyInsightDeprecationLink: Настроить словарное действие
 thinking:
   label: Размышление
   complete: Размышление завершено
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: Пожалуйста, введите горячую клавишу
 subtitles:
+  actions:
+    downloadSource: Скачать исходные субтитры
   state:
     loading: Read Frog загрузка субтитров
     error: Произошла ошибка

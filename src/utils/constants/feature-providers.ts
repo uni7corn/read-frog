@@ -1,6 +1,6 @@
 import type { Config } from "@/types/config/config"
 import type { ProviderConfig } from "@/types/config/provider"
-import { isLLMProvider, isTranslateProvider } from "@/types/config/provider"
+import { isTranslateProvider } from "@/types/config/provider"
 import { mergeWithArrayOverwrite } from "../atoms/config"
 import { getProviderConfigById } from "../config/helpers"
 
@@ -8,7 +8,6 @@ export const FEATURE_KEYS = [
   "translate",
   "videoSubtitles",
   "selectionToolbar.translate",
-  "selectionToolbar.vocabularyInsight",
   "inputTranslation",
 ] as const
 
@@ -36,11 +35,6 @@ export const FEATURE_PROVIDER_DEFS = {
     getProviderId: (c: Config) => c.selectionToolbar.features.translate.providerId,
     configPath: ["selectionToolbar", "features", "translate", "providerId"],
   },
-  "selectionToolbar.vocabularyInsight": {
-    isProvider: isLLMProvider,
-    getProviderId: (c: Config) => c.selectionToolbar.features.vocabularyInsight.providerId,
-    configPath: ["selectionToolbar", "features", "vocabularyInsight", "providerId"],
-  },
   "inputTranslation": {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.inputTranslation.providerId,
@@ -49,12 +43,17 @@ export const FEATURE_PROVIDER_DEFS = {
 } as const satisfies Record<FeatureKey, FeatureProviderDef>
 
 /** Maps FeatureKey (with dots) to i18n-safe key (with underscores) for `options.general.featureProviders.features.*` */
-export const FEATURE_KEY_I18N_MAP: Record<FeatureKey, string> = {
+export const FEATURE_KEY_I18N_MAP = {
   "translate": "translate",
   "videoSubtitles": "videoSubtitles",
   "selectionToolbar.translate": "selectionToolbar_translate",
-  "selectionToolbar.vocabularyInsight": "selectionToolbar_vocabularyInsight",
   "inputTranslation": "inputTranslation",
+} as const satisfies Record<FeatureKey, string>
+
+export type FeatureLabelI18nKey = `options.general.featureProviders.features.${(typeof FEATURE_KEY_I18N_MAP)[FeatureKey]}`
+
+export function getFeatureLabelI18nKey(featureKey: FeatureKey): FeatureLabelI18nKey {
+  return `options.general.featureProviders.features.${FEATURE_KEY_I18N_MAP[featureKey]}`
 }
 
 export function resolveProviderConfig(config: Config, featureKey: FeatureKey) {

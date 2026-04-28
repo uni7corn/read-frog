@@ -7,7 +7,12 @@ dataTypes:
   number: 数値
 contextMenu:
   translate: 翻訳
+  translateSelection: 「%s」を翻訳
   showOriginal: 原文を表示
+sidePanel:
+  firefoxUserActionHint: Firefox では、ブラウザーのサイドバーから Read Frog を開いてください。
+  firefoxUserActionHelpText: Firefox サイドバーの開き方を見る
+  firefoxUserActionHelpUrl: https://support.mozilla.org/ja/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: テーマ
   autoLang: 自動検出
@@ -129,11 +134,18 @@ options:
         noModelsFound: モデルが見つかりません
       featureProviders: 機能プロバイダー
       advancedOptions: 詳細オプション
+      connectionOptionLabels:
+        region: リージョン
       temperature: 温度
       temperatureHint: 応答のランダム性を制御します。低い値（0）はより決定的で、高い値はより創造的です。範囲はプロバイダーによって異なります。空欄の場合はプロバイダーのデフォルト値を使用します。
       providerOptions: プロバイダーオプション
       providerOptionsHint: 思考/推論モードなどの非標準API機能のためのプロバイダー固有オプション。詳細はVercel AI SDKドキュメントまたはプロバイダーの公式ドキュメントをご覧ください。
       providerOptionsDocsLink: プロバイダードキュメントを見る
+      providerOptionsRecommendationTrigger: 推奨プロバイダーオプションを表示
+      providerOptionsRecommendationTitle: 推奨プロバイダーオプションが見つかりました
+      providerOptionsRecommendationDescription: 推奨設定を確認し、手動で適用してください。
+      providerOptionsRecommendationApply: 適用
+      providerOptionsRecommendationApplied: 適用済み
       invalidJson: 無効なJSON形式
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: 最新かつ包括的なモデルと従量課金制APIを提供
         openaiCompatible: OpenAI API互換のサードパーティー
         deeplx: 非公式 DeepL API
+        deepl: 公式 DeepL API
         bedrock: エンタープライズグレードの基盤モデル向けAWSマネージドサービス
         groq: 超高速LLM推論速度に特化したハードウェア
         deepinfra: 人気のオープンソースモデル向けコスト効率的なクラウド推論
@@ -186,7 +199,6 @@ options:
       features:
         translate: ページ翻訳
         selectionToolbar_translate: 選択ツールバー翻訳
-        selectionToolbar_vocabularyInsight: 選択ツールバー語彙解析
         tts: テキスト読み上げ
         inputTranslation: 入力翻訳
         videoSubtitles: 動画字幕
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: クリック動作
         description: フローティングボタンをクリックしたときの動作を選択
-        panel: パネルを開く
+        panel: サイドパネルを開く
         translate: ページ翻訳を切り替え
     selectionToolbar:
       globalToggle:
         title: 選択ツールバーを有効化
-        description: ウェブページでテキストを選択したときにツールバーを表示し、素早く翻訳と語彙分析
+        description: ウェブページでテキストを選択したときにツールバーを表示し、すばやく翻訳・読み上げ・AIアクションを実行します
+      opacity:
+        title: 透明度
+        description: 選択ツールバーとそこから開く展開ウィンドウの透明度を調整します
       featureToggles:
         title: 機能トグル
         description: 選択ツールバーに表示する組み込み機能を選択
         translate: 翻訳
         speak: 読み上げ
-        vocabularyInsight: 語彙分析
       closeMenu:
         disableForSite: このサイトで無効化
         disableGlobally: グローバルで無効化
@@ -315,9 +329,6 @@ options:
         translate:
           title: 選択翻訳
           description: 選択ツールバー翻訳機能のプロバイダーとモデルを設定
-        vocabularyInsight:
-          title: 語彙分析
-          description: 選択ツールバーで単語/フレーズを分析するためのプロバイダーとモデルを設定
       customActions:
         title: カスタム AI アクション
         description: 選択テキスト向けに独自の構造化 AI アクションを追加
@@ -360,11 +371,48 @@ options:
             description: この出力フィールドは削除されます。
             confirm: 削除
             cancel: キャンセル
+          notebase:
+            title: Notebase 接続
+            description: このアクションの構造化された結果をリモート Notebase に保存します。
+            loginRequiredTitle: Notebase を設定するにはログインが必要です
+            loginRequiredDescription: notebase を選択したりマッピングを編集したりする前に、readfrog.app にログインしてください。
+            loginAction: ログイン
+            tableLabel: Notebase
+            tablePlaceholder: notebase を選択
+            tableClearOption: notebase を接続しない
+            refreshAction: 更新
+            emptyTitle: Notebase がまだありません
+            emptyDescription: readfrog.app で notebase を作成してから、ここに戻ってフィールドをマッピングしてください。
+            openNotebaseAction: Notebase を開く
+            betaLockedTitle: このアカウントは Notebase ベータ対象外です
+            betaLockedDescription: このアクション設定は保持できますが、Notebase の選択と結果の同期は現在一部のベータアカウントのみに提供されています。
+            tableUnavailableTitle: 選択した notebase は利用できなくなりました
+            tableUnavailableDescription: もう一度保存する前に、更新するか別の notebase を選択してください。
+            tableUnavailableOption: 利用不可
+            schemaErrorTitle: notebase スキーマの読み込みに失敗しました
+            schemaErrorDescription: 少し待ってからもう一度更新してください。
+            schemaLoading: notebase スキーマを読み込み中...
+            mappingsLabel: フィールドマッピング
+            mappingsEmpty: まだマッピングはありません。フィールドを保存する準備ができたら追加してください。
+            addMappingAction: マッピングを追加
+            removeMappingAction: マッピングを削除
+            localFieldLabel: アクションフィールド
+            localFieldPlaceholder: アクションフィールドを選択
+            remoteFieldLabel: Notebase フィールド
+            remoteFieldPlaceholder: notebase フィールドを選択
+            columnUnavailableOption: 削除済み
+            invalidMappingsTitle: 一部のマッピングに対応が必要です
+            invalidMappingsDescription: 無効なマッピングは保持されますが、修正するまで Save to Notebase は無効のままです。
+            mappingMissingLocal: マッピングされたアクションフィールドは存在しなくなりました。
+            mappingMissingRemote: マッピングされた notebase フィールドは存在しなくなりました。
+            mappingMissingSchema: このマッピングを検証するには、notebase スキーマを更新してください。
+            mappingIncompatible: フィールドの型が一致しなくなりました。
           tokens:
             selection: 選択したテキスト内容
             paragraphs: 選択範囲と交差する段落内容。空行で連結され、カスタム AI アクションに送信する際は先頭 2000 文字に切り詰められます
             targetLanguage: ユーザーのターゲット言語
             webTitle: ウェブページのタイトル
+            webContent: 現在のページから抽出されたウェブページ本文（先頭 2000 文字に切り詰め）
           delete: 削除
           deleteDialog:
             title: カスタムアクションを削除しますか？
@@ -383,7 +431,7 @@ options:
       title: コンテキストメニュー
       translate:
         title: 右クリック翻訳を有効化
-        description: ブラウザの右クリックメニューに翻訳オプションを追加し、ページを素早く翻訳
+        description: ブラウザの右クリックメニューに翻訳オプションを追加し、ページや選択テキストを素早く翻訳
   translation:
     title: 翻訳
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: 翻訳するテキスト内容
           targetLanguage: 目標言語
           webTitle: ウェブページタイトル
+          webContent: ウェブページ本文（先頭 2000 文字に切り詰め）
           webSummary: ウェブページ要約（AI スマートコンテキストが必要）
         save: 保存
         close: キャンセル
@@ -540,9 +589,9 @@ options:
         description: 基本検出は高速で無料です。LLM 検出はより正確ですが、遅延と API コストが増加します。
     aiContentAware:
       title: AI スマートコンテキスト翻訳
-      description: 記事のコンテキストを AI に提供して翻訳品質を向上させます
+      description: ウェブページのコンテキストを AI に提供して翻訳品質を向上させます
       enable: AI スマートコンテキスト翻訳を有効にする
-      enableDescription: AI は記事の要約を使用して翻訳精度を向上させます。LLM プロバイダーが必要です。翻訳開始時に遅延が発生し、API コストが増加します。
+      enableDescription: AI はウェブページの要約を使用して翻訳精度を向上させます。LLM プロバイダーが必要です。翻訳開始時に遅延が発生し、API コストが増加します。
   tts:
     title: テキスト読み上げ
     description: Edge TTS の音声設定で読み上げボタンをカスタマイズします。
@@ -575,6 +624,13 @@ options:
       batchRequestCount: バッチリクエスト数
   config:
     title: 設定
+    about:
+      title: Read Frog について
+      description: Read Frog は 2025 年 4 月に生まれました
+      mission: Read Frog は、AI 時代における質の高い教育機会への平等なアクセスを広げるため、語学学習、医学、その他の知識集約型分野で、実際の教師に近い学習体験を手頃な価格で提供することを目指しています。
+      analytics:
+        title: ユーザー体験の改善に協力する
+        tooltip: 有効にすると、Read Frog は匿名の利用シグナルを送信し、機能の安定性確認、性能や UX の改善、今後優先すべき機能の判断に役立てます。
     sync:
       title: 手動設定同期
       description: 手動で設定をインポート・エクスポート
@@ -743,7 +799,13 @@ options:
         description: 各バッチ翻訳の最大段落数、各翻訳のコンテンツ量を制御します
     customPrompts:
       title: カスタム字幕プロンプト
-      description: 字幕翻訳用のプロンプトテンプレートをカスタマイズ（ウェブページ翻訳プロンプトとは独立）
+      description: 字幕翻訳用のプロンプトテンプレートをカスタマイズします（ウェブページ翻訳プロンプトとは別です）
+      editPrompt:
+        promptCellInput:
+          input: 翻訳する字幕テキスト
+          targetLanguage: 対象言語
+          videoTitle: 動画タイトル
+          videoSummary: 動画要約（AI スマートコンテキストが必要）
   whatsNew:
     title: 新機能
   survey:
@@ -795,14 +857,20 @@ action:
   copied: コピー済み
   regenerate: 再生成
   viewContextDetails: コンテキスト
+  saveToNotebase: Notebase に保存
+  saveToNotebaseSaving: 保存中...
+  saveToNotebaseSuccess: Notebase に保存しました
+  saveToNotebaseFailed: Notebase への保存に失敗しました
+  saveToNotebaseLoginRequired: Notebase に保存するには readfrog.app にログインしてください
+  saveToNotebaseBetaRequired: このアカウントはまだ Notebase ベータに参加していません
+  saveToNotebaseTableUnavailable: 選択した Notebase は利用できなくなりました
+  saveToNotebaseConnectionInvalid: この Notebase 接続は古くなっています。Custom AI Actions で更新し、マッピングを修正してください。
+  saveToNotebaseNoMappings: 保存する前に、少なくとも1つの有効なマッピングを追加してください
   contextDetailsTitleLabel: タイトル
   contextDetailsParagraphsLabel: 段落内容
   translation: 翻訳
   speak: 読み上げ
   playing: 再生中
-  vocabularyInsight: 語彙解析
-  vocabularyInsightDeprecation: この機能は2週間後にカスタムAIアクションの辞書機能に置き換えられます。辞書アクションはより柔軟で強力な体験を提供します。
-  vocabularyInsightDeprecationLink: 辞書アクションを設定
 thinking:
   label: 思考中
   complete: 思考完了
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: ショートカットを入力してください
 subtitles:
+  actions:
+    downloadSource: 元字幕をダウンロード
   state:
     loading: Read Frog 字幕読み込み中
     error: エラーが発生しました

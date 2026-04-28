@@ -1,5 +1,233 @@
 # @read-frog/extension
 
+## 1.33.1
+
+### Patch Changes
+
+- [#1394](https://github.com/mengxi-ream/read-frog/pull/1394) [`619c83d`](https://github.com/mengxi-ream/read-frog/commit/619c83defd417ad2c68c8e0c6258afe5e5d79b04) Thanks [@taiiiyang](https://github.com/taiiiyang)! - feat(subtitles): add embed translate button and settings panel injection
+
+- [#1402](https://github.com/mengxi-ream/read-frog/pull/1402) [`0bd869f`](https://github.com/mengxi-ream/read-frog/commit/0bd869fd935738adcddae76f84c1232313168099) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(extension): guard popup account avatar session state
+
+- [#1397](https://github.com/mengxi-ream/read-frog/pull/1397) [`466c1ce`](https://github.com/mengxi-ream/read-frog/commit/466c1cefdb78726fd870d979ec90c41beafbaa38) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - feat(extension): open native side panel from floating button
+
+- [#1400](https://github.com/mengxi-ream/read-frog/pull/1400) [`c3debfb`](https://github.com/mengxi-ream/read-frog/commit/c3debfbc0c2fe3ebf6c53937c63ca3d745ee4c0e) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - style(options): widen Google Drive sync conflict dialog
+
+## 1.33.0
+
+### Minor Changes
+
+- [#1388](https://github.com/mengxi-ream/read-frog/pull/1388) [`6922155`](https://github.com/mengxi-ream/read-frog/commit/69221554ff0a4db662ce9dff3304ea8923f46c8e) Thanks [@taiiiyang](https://github.com/taiiiyang)! - feat(subtitles): add subtitle style settings panel with Trancy-inspired UI
+
+- [#1392](https://github.com/mengxi-ream/read-frog/pull/1392) [`596bcf7`](https://github.com/mengxi-ream/read-frog/commit/596bcf7248ddeea7bea843143bcdab52b41a5048) Thanks [@taiiiyang](https://github.com/taiiiyang)! - feat(extension): support YouTube embed subtitles on third-party sites
+
+### Patch Changes
+
+- [#1385](https://github.com/mengxi-ream/read-frog/pull/1385) [`746a3c5`](https://github.com/mengxi-ream/read-frog/commit/746a3c5c3b71d83a4404db7c26a37c44acc031ae) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(extension): ensure Defuddle webpage context returns Markdown
+
+- [#1391](https://github.com/mengxi-ream/read-frog/pull/1391) [`afa7dee`](https://github.com/mengxi-ream/read-frog/commit/afa7dee1b0b8fcd26559d8a8590e51649166c3a9) Thanks [@li-yiou](https://github.com/li-yiou)! - feat: add floating button controls
+
+- [#1389](https://github.com/mengxi-ream/read-frog/pull/1389) [`c25b299`](https://github.com/mengxi-ream/read-frog/commit/c25b299ca474f3c2baccf9e4a629d6e042dcfbcc) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - style(extension): align primary theme tokens and translation brand colors
+
+## 1.32.4
+
+### Patch Changes
+
+- [#1382](https://github.com/mengxi-ream/read-frog/pull/1382) [`068bdec`](https://github.com/mengxi-ream/read-frog/commit/068bdecc8a3336f2e208a2caeb33412ae4fa45b1) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - perf: replace startup Readability parsing with lightweight page detection
+
+- [#1379](https://github.com/mengxi-ream/read-frog/pull/1379) [`396dd0d`](https://github.com/mengxi-ream/read-frog/commit/396dd0d36b53e67d4815b83bd25418c99f67dac0) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(auth): include credentials for API auth client
+
+- [#1381](https://github.com/mengxi-ream/read-frog/pull/1381) [`810623b`](https://github.com/mengxi-ream/read-frog/commit/810623ba029911b7ab7d1e4db22a5ea3d6867cc5) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(popup): search languages in popup selectors
+
+- [#1377](https://github.com/mengxi-ream/read-frog/pull/1377) [`5b56df8`](https://github.com/mengxi-ream/read-frog/commit/5b56df819abb0e921e8426af97d26e6981b69d29) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - perf(options): persist slider settings after drag commit
+
+- [#1356](https://github.com/mengxi-ream/read-frog/pull/1356) [`4667e3e`](https://github.com/mengxi-ream/read-frog/commit/4667e3eb406fa414cdb6d807682aea28368e548b) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(selection-toolbar): keep modal selections visible when opacity is below 100%
+
+- [#1378](https://github.com/mengxi-ream/read-frog/pull/1378) [`adfc89a`](https://github.com/mengxi-ream/read-frog/commit/adfc89add6f8b0b7d2f6adda5f232d2024e36e94) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(selection-toolbar): keep custom AI action provider switches stable
+
+## 1.32.3
+
+### Patch Changes
+
+- [#1323](https://github.com/mengxi-ream/read-frog/pull/1323) [`da2e94b`](https://github.com/mengxi-ream/read-frog/commit/da2e94bb151e1dca2ca2ac31d777df28210452af) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(selection-toolbar): add more cursor clearance after text selection
+
+- [#1318](https://github.com/mengxi-ream/read-frog/pull/1318) [`74f4219`](https://github.com/mengxi-ream/read-frog/commit/74f42196158be314dc65dc6e9c00b78ab021be23) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(selection-toolbar): derive custom action webpage context by popover session
+
+- [#1336](https://github.com/mengxi-ream/read-frog/pull/1336) [`74f16a9`](https://github.com/mengxi-ream/read-frog/commit/74f16a98d8d8e390ecf8aadc1a5a1db7990310e9) Thanks [@taiiiyang](https://github.com/taiiiyang)! - fix(subtitles): support stylized YouTube karaoke parsing and source export
+
+- [#1324](https://github.com/mengxi-ream/read-frog/pull/1324) [`08b40e8`](https://github.com/mengxi-ream/read-frog/commit/08b40e82cd2c8d7b46e2cac8e1d87672c813fe0b) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix: keep floating button close menu aligned after reopening
+
+- [#1335](https://github.com/mengxi-ream/read-frog/pull/1335) [`fe2eedd`](https://github.com/mengxi-ream/read-frog/commit/fe2eeddc3d49a5554d26454271a8ca27ea16245b) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(models): skip unsupported thinking options for instruct variants
+
+- [#1373](https://github.com/mengxi-ream/read-frog/pull/1373) [`d2c75ac`](https://github.com/mengxi-ream/read-frog/commit/d2c75ace5a4c5c8b6241a4211ac65f443c375c92) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix: open options page in Dia browser
+
+- [#1345](https://github.com/mengxi-ream/read-frog/pull/1345) [`a49ab27`](https://github.com/mengxi-ream/read-frog/commit/a49ab2790bbb39112d67c08a1c8c5f8b22e4a1c8) Thanks [@taiiiyang](https://github.com/taiiiyang)! - fix(subtitles): stabilize YouTube subtitle navigation and popup mounting
+
+- [#1360](https://github.com/mengxi-ream/read-frog/pull/1360) [`01ccdd1`](https://github.com/mengxi-ream/read-frog/commit/01ccdd17a226361eb436ab4fc498c6ac3aeb44c8) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - refactor(env): simplify extension env wiring
+
+- [#1325](https://github.com/mengxi-ream/read-frog/pull/1325) [`0f6bf63`](https://github.com/mengxi-ream/read-frog/commit/0f6bf631ad61088f9c2c8fc27517754ef3dfe565) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - chore(deps): upgrade WXT to 0.20.22 and preserve extension-safe bundle output
+
+- [#1321](https://github.com/mengxi-ream/read-frog/pull/1321) [`fb1937c`](https://github.com/mengxi-ream/read-frog/commit/fb1937c437bcba8ae1eacb181f367e61cc26c3db) Thanks [@yioulii](https://github.com/yioulii)! - fix: floating button style
+
+- [#1372](https://github.com/mengxi-ream/read-frog/pull/1372) [`090463d`](https://github.com/mengxi-ream/read-frog/commit/090463d5887640df1fe4de83b1d40fd3a2175f94) Thanks [@ishiko732](https://github.com/ishiko732)! - docs: update `/tutorial` references to `/docs` to match the website
+
+- [#1368](https://github.com/mengxi-ream/read-frog/pull/1368) [`26b06af`](https://github.com/mengxi-ream/read-frog/commit/26b06af8702ae32420d912666cd66d3348e26e4a) Thanks [@taiiiyang](https://github.com/taiiiyang)! - refactor(subtitles): replace route-based navigation with flat panel navigator
+
+## 1.32.2
+
+### Patch Changes
+
+- [#1317](https://github.com/mengxi-ream/read-frog/pull/1317) [`3500802`](https://github.com/mengxi-ream/read-frog/commit/35008023c6adcabc60903787282c0906873dc107) Thanks [@taiiiyang](https://github.com/taiiiyang)! - i18n(subtitles): rename zh-CN source subtitle download label
+
+- [#1283](https://github.com/mengxi-ream/read-frog/pull/1283) [`219a8d2`](https://github.com/mengxi-ream/read-frog/commit/219a8d29c6a093b822a56cec43e1c3336778e4c9) Thanks [@taiiiyang](https://github.com/taiiiyang)! - feat(subtitles): add a settings toggle menu for video subtitles
+
+- [#1295](https://github.com/mengxi-ream/read-frog/pull/1295) [`75fafc5`](https://github.com/mengxi-ream/read-frog/commit/75fafc5a3e198667094bdbffa6b77858ce49d499) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - refactor: unify webpage translation context and prompt flow
+
+- [#1287](https://github.com/mengxi-ream/read-frog/pull/1287) [`4a56faa`](https://github.com/mengxi-ream/read-frog/commit/4a56faa44c47f8157528fb9bd734a0e51712004c) Thanks [@ishiko732](https://github.com/ishiko732)! - style: improve selection preview scrolling in the selection toolbar
+
+- [#1297](https://github.com/mengxi-ream/read-frog/pull/1297) [`acdd296`](https://github.com/mengxi-ream/read-frog/commit/acdd296e19681b4d2987f2edc2dbdbedd6cd57c8) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(extension): soften page translation loading spinner with a thinner muted-gray arc
+
+- [#1312](https://github.com/mengxi-ream/read-frog/pull/1312) [`f344e0d`](https://github.com/mengxi-ream/read-frog/commit/f344e0d7dd297d62b33d363ce710ee5ff8fccf1f) Thanks [@taiiiyang](https://github.com/taiiiyang)! - refactor(subtitles): reuse prefetched source subtitles across download and translation
+
+- [#1300](https://github.com/mengxi-ream/read-frog/pull/1300) [`da8d937`](https://github.com/mengxi-ream/read-frog/commit/da8d9376e77939b2ac7be6e85653e467bbcb8019) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(extension): namespace theme tokens to avoid shadow-root css collisions
+
+- [#1299](https://github.com/mengxi-ream/read-frog/pull/1299) [`1464d77`](https://github.com/mengxi-ream/read-frog/commit/1464d774fddc34c950cf7f44852388af65e3e503) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - docs(extension): document the real-browser Edge extension testing workflow for UI verification
+
+- [#1303](https://github.com/mengxi-ream/read-frog/pull/1303) [`3e9f374`](https://github.com/mengxi-ream/read-frog/commit/3e9f374770841d0c03aa66d817958aa5f8035485) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(page-translation): only prime webpage context for AI-aware title translation
+
+- [#1314](https://github.com/mengxi-ream/read-frog/pull/1314) [`788edfb`](https://github.com/mengxi-ream/read-frog/commit/788edfb5ce8ce09f6865726e65f1f67ee68f5433) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(extension): allow the page pre-translate preload distance to be set up to 10000px
+
+- [#1302](https://github.com/mengxi-ream/read-frog/pull/1302) [`f1d9256`](https://github.com/mengxi-ream/read-frog/commit/f1d92569ba224571fae5b221f0432804f1af9f1e) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(tts): change default English voice to Davis and colocate preview button
+
+- [#1313](https://github.com/mengxi-ream/read-frog/pull/1313) [`1951736`](https://github.com/mengxi-ream/read-frog/commit/19517361ceb546989d707bec5fe2675ba1840fb9) Thanks [@taiiiyang](https://github.com/taiiiyang)! - Optimize YouTube subtitle fetching by trying a fast timedtext fetch from the initial player data snapshot before falling back to the slower POT/wait flow.
+
+- [#1307](https://github.com/mengxi-ream/read-frog/pull/1307) [`38be1ed`](https://github.com/mengxi-ream/read-frog/commit/38be1edea97040ecda6753bb557711a76c08aa35) Thanks [@taiiiyang](https://github.com/taiiiyang)! - feat(subtitles): add source subtitle download as SRT
+
+## 1.32.1
+
+### Patch Changes
+
+- [#1279](https://github.com/mengxi-ream/read-frog/pull/1279) [`b88746d`](https://github.com/mengxi-ream/read-frog/commit/b88746d79b41c7bff0a3dca0739dbf836ca16a08) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(translation): keep reduced-motion spinners visibly active without animation
+
+- [#1262](https://github.com/mengxi-ream/read-frog/pull/1262) [`0e98d55`](https://github.com/mengxi-ream/read-frog/commit/0e98d55f6e3db8a4db7c42814a97dbaa65fc3bac) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(models): broaden Qwen and Kimi model matching
+
+- [#1261](https://github.com/mengxi-ream/read-frog/pull/1261) [`7ea0609`](https://github.com/mengxi-ream/read-frog/commit/7ea06092a9c59e401904fb4353f10f4a3fc70de6) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(provider-options): normalize openai-compatible option aliases
+
+- [#1258](https://github.com/mengxi-ream/read-frog/pull/1258) [`714e44e`](https://github.com/mengxi-ream/read-frog/commit/714e44ed0d81b7a5dafe17b6cadf431aea195bd1) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(providers): set domestic base URLs for minimax and alibaba
+
+- [#1263](https://github.com/mengxi-ream/read-frog/pull/1263) [`e0e78c2`](https://github.com/mengxi-ream/read-frog/commit/e0e78c29ad4ff5cbeeacb8c9eb833b6559be25d5) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(selection-toolbar): avoid hiding focused triggers behind overlays
+
+## 1.32.0
+
+### Minor Changes
+
+- [#1215](https://github.com/mengxi-ream/read-frog/pull/1215) [`dc6fe8e`](https://github.com/mengxi-ream/read-frog/commit/dc6fe8efcd170e4d07e209736bc30236e0b4b23f) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - feat(extension): add save to notebase workflow
+
+### Patch Changes
+
+- [#1242](https://github.com/mengxi-ream/read-frog/pull/1242) [`c253982`](https://github.com/mengxi-ream/read-frog/commit/c2539821fba5acc399e4cc056a67765e5d28b84d) Thanks [@kilidoc](https://github.com/kilidoc)! - fix: storage false value reset and backup delete dialog not showing
+
+- [#1195](https://github.com/mengxi-ream/read-frog/pull/1195) [`ce61cc9`](https://github.com/mengxi-ream/read-frog/commit/ce61cc9daa43dd60792951c784cc2d8ba1bf3e84) Thanks [@taiiiyang](https://github.com/taiiiyang)! - perf(subtitles): decouple AI smart context summary from translation
+
+- [#1253](https://github.com/mengxi-ream/read-frog/pull/1253) [`aacbe36`](https://github.com/mengxi-ream/read-frog/commit/aacbe367a1241982ffa9e88ddc09bab00703ab2f) Thanks [@pooneyy](https://github.com/pooneyy)! - feat(models): update minimax model list and default model
+
+- [#1257](https://github.com/mengxi-ream/read-frog/pull/1257) [`8d3baa8`](https://github.com/mengxi-ream/read-frog/commit/8d3baa88dee92081b8467eda89b93e43cd10c4f9) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(extension): preserve shared popup close-state behavior in builds
+
+- [#1230](https://github.com/mengxi-ream/read-frog/pull/1230) [`b2173e8`](https://github.com/mengxi-ream/read-frog/commit/b2173e8efa6c3d2307fcd06168879c9e81662096) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(extension): guard notebase beta access
+
+## 1.31.4
+
+### Patch Changes
+
+- [#1224](https://github.com/mengxi-ream/read-frog/pull/1224) [`64931e3`](https://github.com/mengxi-ream/read-frog/commit/64931e3307564760cc1ff67291380146be2fcbf7) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(selection-toolbar): ignore overlay text selections
+
+- [#1225](https://github.com/mengxi-ream/read-frog/pull/1225) [`8774215`](https://github.com/mengxi-ream/read-frog/commit/8774215468c00ad3b9a325a20e2c0aad88d79100) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(openai): sync GPT-5.4 model defaults and reasoning floors
+
+- [#1217](https://github.com/mengxi-ream/read-frog/pull/1217) [`d97ce8c`](https://github.com/mengxi-ream/read-frog/commit/d97ce8c9b89090954d400634da7b73343975e3b3) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(selection-toolbar): wrap long text in selection popovers
+
+## 1.31.3
+
+### Patch Changes
+
+- [#1207](https://github.com/mengxi-ream/read-frog/pull/1207) [`8df06c3`](https://github.com/mengxi-ream/read-frog/commit/8df06c3a8c73f8a9deaaac3948738781f600fa61) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(i18n): use the UI locale for latest blog content
+
+- [#1188](https://github.com/mengxi-ream/read-frog/pull/1188) [`234998a`](https://github.com/mengxi-ream/read-frog/commit/234998aca50e4f373482ae09960baec3274f15fe) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix: keep float-wrapped bilingual translations in flow beside floated content
+
+- [#1190](https://github.com/mengxi-ream/read-frog/pull/1190) [`f13e50e`](https://github.com/mengxi-ream/read-frog/commit/f13e50e882ebe7db3c0a48b540acdb877da9719d) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(url): support caddy localhost URLs in dev mode
+
+- [#1185](https://github.com/mengxi-ream/read-frog/pull/1185) [`01b38b5`](https://github.com/mengxi-ream/read-frog/commit/01b38b5822ccc9eb1218833315e98d8c27eafa0a) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(selection-toolbar): ignore retargeted interactive clicks
+
+- [#1214](https://github.com/mengxi-ream/read-frog/pull/1214) [`7376421`](https://github.com/mengxi-ream/read-frog/commit/73764212e6aeef148b4cc79c56aa97df71e00960) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - build(typescript): upgrade to TypeScript 6 compatibility
+
+- [#1207](https://github.com/mengxi-ream/read-frog/pull/1207) [`8df06c3`](https://github.com/mengxi-ream/read-frog/commit/8df06c3a8c73f8a9deaaac3948738781f600fa61) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(config-sync): widen the Google Drive conflict resolution dialog for large config diffs
+
+## 1.31.2
+
+### Patch Changes
+
+- [#1175](https://github.com/mengxi-ream/read-frog/pull/1175) [`cca465a`](https://github.com/mengxi-ream/read-frog/commit/cca465ad040a940beacb09dd8158671de4e4efba) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix(translation): skip GitHub PR review diff tables during page translation
+
+- [#1180](https://github.com/mengxi-ream/read-frog/pull/1180) [`c430e6e`](https://github.com/mengxi-ream/read-frog/commit/c430e6e178f39fec44d4964e6c35bf5cd561a7ca) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(translation): force block translation for Reddit post text body
+
+- [#1183](https://github.com/mengxi-ream/read-frog/pull/1183) [`7119d1b`](https://github.com/mengxi-ream/read-frog/commit/7119d1b746a245042457eb4ae5b4bfd87af61146) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(selection-tooltip): close selection popover tooltips after hover leave
+
+- [#1181](https://github.com/mengxi-ream/read-frog/pull/1181) [`940bea1`](https://github.com/mengxi-ream/read-frog/commit/940bea12844af64917fbcbcfbe3c31a6348bbc71) Thanks [@taiiiyang](https://github.com/taiiiyang)! - fix(subtitles): align subtitle style controls in options panel
+
+## 1.31.1
+
+### Patch Changes
+
+- [#1171](https://github.com/mengxi-ream/read-frog/pull/1171) [`05f49c1`](https://github.com/mengxi-ream/read-frog/commit/05f49c1448a2a2107204f1b0880701880f766957) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(context-menu): add selection translation and custom AI action right-click entries.
+
+- [#1161](https://github.com/mengxi-ream/read-frog/pull/1161) [`fc167d6`](https://github.com/mengxi-ream/read-frog/commit/fc167d6e9bc93f2801d28bd80871dbc71fc7fc8b) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - refactor(chart): migrate the batch request statistics chart to Recharts and remove the old VChart theme provider.
+
+- [#1166](https://github.com/mengxi-ream/read-frog/pull/1166) [`eb150b7`](https://github.com/mengxi-ream/read-frog/commit/eb150b751f6c4f42bf73ca60547eb074ea89128f) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - Remove the deprecated Selection Toolbar AI button / Vocabulary Insight feature and keep Dictionary custom actions as the supported replacement.
+
+- [#1170](https://github.com/mengxi-ream/read-frog/pull/1170) [`20004ed`](https://github.com/mengxi-ream/read-frog/commit/20004edcd4ccf660010aee9930a039c6e31c6569) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(provider-options): apply runtime defaults and placeholders
+
+- [#1164](https://github.com/mengxi-ream/read-frog/pull/1164) [`eb33ec6`](https://github.com/mengxi-ream/read-frog/commit/eb33ec6c555e7eddcd9f902537255a26c7fb1163) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(shortcut): migrate page translation hotkeys to TanStack and store them as portable shortcut strings.
+
+- [#1172](https://github.com/mengxi-ream/read-frog/pull/1172) [`288cc2c`](https://github.com/mengxi-ream/read-frog/commit/288cc2c43a8b5d0059ffbd40d723d445dc2ca880) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - feat(sidebar): move What's New into a footer popover with blog previews.
+
+## 1.31.0
+
+### Minor Changes
+
+- [#1099](https://github.com/mengxi-ream/read-frog/pull/1099) [`73a0347`](https://github.com/mengxi-ream/read-frog/commit/73a03470cab4342f9348075da63a309c0e97daa8) Thanks [@iykon](https://github.com/iykon)! - feat: add official DeepL API provider with automatic free/pro endpoint selection
+
+### Patch Changes
+
+- [#1152](https://github.com/mengxi-ream/read-frog/pull/1152) [`d3dc6bd`](https://github.com/mengxi-ream/read-frog/commit/d3dc6bdc8bc46eec2bf89a9ffce0d77027e47c00) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - fix(provider-options): stop auto applying recommended provider options
+
+- [#1158](https://github.com/mengxi-ream/read-frog/pull/1158) [`18c10b6`](https://github.com/mengxi-ream/read-frog/commit/18c10b6b3e9a74823106ed30693f6f108737e00f) Thanks [@frogGuaGuaGuaGua](https://github.com/frogGuaGuaGuaGua)! - fix: fall back to getRandomValues when crypto.randomUUID is unavailable
+
+- [#1144](https://github.com/mengxi-ream/read-frog/pull/1144) [`9c32b7b`](https://github.com/mengxi-ream/read-frog/commit/9c32b7b69a77061683ebef2f3604ce41446d8003) Thanks [@ishiko732](https://github.com/ishiko732)! - feat: add connection options field to provider config, support bedrock region
+
+- [#1142](https://github.com/mengxi-ream/read-frog/pull/1142) [`5aeb842`](https://github.com/mengxi-ream/read-frog/commit/5aeb84232c0cbaee8ac475385b750d7c3a4b3ac3) Thanks [@mengxi-ream](https://github.com/mengxi-ream)! - style: preset FrogToast default position to bottom-left to avoid covering top-page controls
+
+## 1.30.4
+
+### Patch Changes
+
+- [#1139](https://github.com/mengxi-ream/read-frog/pull/1139) [`341adba`](https://github.com/mengxi-ream/read-frog/commit/341adba45228666e64337affa06cbe23463932c3) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(extension): add required Firefox consent field
+
+## 1.30.3
+
+### Patch Changes
+
+- [#1136](https://github.com/mengxi-ream/read-frog/pull/1136) [`0decdba`](https://github.com/mengxi-ream/read-frog/commit/0decdba82f8622fe20807be92a6535ccae781b07) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - fix(extension): add Firefox data collection consent metadata
+
+## 1.30.2
+
+### Patch Changes
+
+- [`f563623`](https://github.com/mengxi-ream/read-frog/commit/f563623b67b62d025c2cc66a36477d612c172723) Thanks [@ananaBMaster](https://github.com/ananaBMaster)! - chore: release ci fix
+
+## 1.30.1
+
+### Patch Changes
+
+- [#1126](https://github.com/mengxi-ream/read-frog/pull/1126) [`c533428`](https://github.com/mengxi-ream/read-frog/commit/c5334289807d43cffe93658b6c2d22ab19ad2579) Thanks [@Sufyr](https://github.com/Sufyr)! - feat: add an opacity setting for the selection toolbar and its popover UI.
+
 ## 1.30.0
 
 ### Minor Changes

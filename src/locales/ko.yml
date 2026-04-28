@@ -7,7 +7,12 @@ dataTypes:
   number: 숫자
 contextMenu:
   translate: 번역
+  translateSelection: '"%s" 번역'
   showOriginal: 원문 보기
+sidePanel:
+  firefoxUserActionHint: Firefox에서는 브라우저 사이드바에서 Read Frog를 열어 주세요.
+  firefoxUserActionHelpText: Firefox 사이드바 여는 방법 보기
+  firefoxUserActionHelpUrl: https://support.mozilla.org/ko/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: 테마
   autoLang: 자동
@@ -129,11 +134,18 @@ options:
         noModelsFound: 모델을 찾을 수 없습니다
       featureProviders: 기능 제공업체
       advancedOptions: 고급 옵션
+      connectionOptionLabels:
+        region: 리전
       temperature: 온도
       temperatureHint: 응답의 무작위성을 제어합니다. 낮은 값(0)은 더 결정적이고, 높은 값은 더 창의적입니다. 범위는 제공자에 따라 다릅니다. 비워두면 제공자 기본값을 사용합니다.
       providerOptions: 제공자 옵션
       providerOptionsHint: 사고/추론 모드와 같은 비표준 API 기능을 위한 공급자별 옵션입니다. 자세한 내용은 Vercel AI SDK 문서 또는 공급자의 공식 문서를 참조하세요.
       providerOptionsDocsLink: 공급자 문서 보기
+      providerOptionsRecommendationTrigger: 추천 제공자 옵션 보기
+      providerOptionsRecommendationTitle: 추천 제공자 옵션이 감지되었습니다
+      providerOptionsRecommendationDescription: 추천 구성을 검토한 뒤 수동으로 적용하세요.
+      providerOptionsRecommendationApply: 적용
+      providerOptionsRecommendationApplied: 적용됨
       invalidJson: 잘못된 JSON 형식
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: 최신의 포괄적인 모델과 종량제 API를 제공
         openaiCompatible: OpenAI API 호환 서드파티
         deeplx: 비공식 DeepL API
+        deepl: 공식 DeepL API
         bedrock: 엔터프라이즈급 파운데이션 모델을 위한 AWS 관리 서비스
         groq: 초고속 LLM 추론 속도에 특화된 하드웨어
         deepinfra: 인기 있는 오픈소스 모델을 위한 비용 효율적인 클라우드 추론
@@ -186,7 +199,6 @@ options:
       features:
         translate: 페이지 번역
         selectionToolbar_translate: 선택 툴바 번역
-        selectionToolbar_vocabularyInsight: 선택 툴바 어휘 분석
         tts: 텍스트 음성 변환
         inputTranslation: 입력 번역
         videoSubtitles: 비디오 자막
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: 클릭 동작
         description: 플로팅 버튼을 클릭할 때 실행할 동작 선택
-        panel: 패널 열기
+        panel: 사이드 패널 열기
         translate: 페이지 번역 전환
     selectionToolbar:
       globalToggle:
         title: 선택 툴바 활성화
-        description: 웹 페이지에서 텍스트를 선택할 때 툴바를 표시하여 빠른 번역 및 어휘 분석
+        description: 웹 페이지에서 텍스트를 선택할 때 도구 모음을 표시하여 빠르게 번역, 읽기, AI 액션을 사용할 수 있습니다
+      opacity:
+        title: 투명도
+        description: 선택 툴바와 여기서 열리는 확장 창의 투명도를 조절합니다
       featureToggles:
         title: 기능 토글
         description: 선택 툴바에 표시할 기본 제공 기능 선택
         translate: 번역
         speak: 읽기
-        vocabularyInsight: 어휘 분석
       closeMenu:
         disableForSite: 이 사이트에서 비활성화
         disableGlobally: 전역 비활성화
@@ -315,9 +329,6 @@ options:
         translate:
           title: 선택 번역
           description: 선택 툴바 번역 기능의 제공업체와 모델을 구성합니다
-        vocabularyInsight:
-          title: 어휘 분석
-          description: 선택 툴바에서 단어/구문 분석 기능의 제공업체와 모델을 구성합니다
       customActions:
         title: 커스텀 AI 액션
         description: 선택한 텍스트에 대한 구조화된 AI 작업을 직접 추가하세요
@@ -360,11 +371,48 @@ options:
             description: 이 출력 필드가 제거됩니다.
             confirm: 삭제
             cancel: 취소
+          notebase:
+            title: Notebase 연결
+            description: 이 액션의 구조화된 결과를 원격 Notebase에 저장합니다.
+            loginRequiredTitle: Notebase를 설정하려면 로그인하세요
+            loginRequiredDescription: notebase를 선택하거나 매핑을 편집하기 전에 readfrog.app에 로그인하세요.
+            loginAction: 로그인
+            tableLabel: Notebase
+            tablePlaceholder: notebase 선택
+            tableClearOption: notebase 연결 안 함
+            refreshAction: 새로고침
+            emptyTitle: 아직 Notebase가 없습니다
+            emptyDescription: readfrog.app에서 notebase를 만든 뒤 여기로 돌아와 필드를 매핑하세요.
+            openNotebaseAction: Notebase 열기
+            betaLockedTitle: 이 계정은 Notebase 베타에 포함되어 있지 않습니다
+            betaLockedDescription: 현재 action 설정은 유지할 수 있지만, Notebase 선택과 결과 동기화는 일부 베타 계정에만 제공됩니다.
+            tableUnavailableTitle: 선택한 notebase를 더 이상 사용할 수 없습니다
+            tableUnavailableDescription: 다시 저장하기 전에 새로고침하거나 다른 notebase를 선택하세요.
+            tableUnavailableOption: 사용 불가
+            schemaErrorTitle: notebase 스키마를 불러오지 못했습니다
+            schemaErrorDescription: 잠시 후 다시 새로고침해 보세요.
+            schemaLoading: notebase 스키마를 불러오는 중...
+            mappingsLabel: 필드 매핑
+            mappingsEmpty: 아직 매핑이 없습니다. 필드를 저장할 준비가 되면 추가하세요.
+            addMappingAction: 매핑 추가
+            removeMappingAction: 매핑 제거
+            localFieldLabel: 액션 필드
+            localFieldPlaceholder: 액션 필드 선택
+            remoteFieldLabel: Notebase 필드
+            remoteFieldPlaceholder: notebase 필드 선택
+            columnUnavailableOption: 삭제됨
+            invalidMappingsTitle: 일부 매핑을 확인해야 합니다
+            invalidMappingsDescription: 잘못된 매핑은 유지되지만, 수정하기 전까지 Save to Notebase는 비활성화됩니다.
+            mappingMissingLocal: 매핑된 액션 필드가 더 이상 존재하지 않습니다.
+            mappingMissingRemote: 매핑된 notebase 필드가 더 이상 존재하지 않습니다.
+            mappingMissingSchema: 이 매핑을 검증하려면 notebase 스키마를 새로고침하세요.
+            mappingIncompatible: 필드 타입이 더 이상 맞지 않습니다.
           tokens:
             selection: 선택한 텍스트 내용
             paragraphs: 선택 영역과 겹치는 문단 내용을 빈 줄로 이어 붙인 값이며, 사용자 정의 AI 액션에 전달될 때는 앞의 2000자로 잘립니다
             targetLanguage: 사용자의 대상 언어
             webTitle: 웹페이지 제목
+            webContent: 현재 페이지에서 추출한 웹페이지 본문(앞의 2000자로 잘린 버전)
           delete: 삭제
           deleteDialog:
             title: 사용자 정의 액션을 삭제하시겠습니까?
@@ -383,7 +431,7 @@ options:
       title: 컨텍스트 메뉴
       translate:
         title: 우클릭 번역 활성화
-        description: 브라우저 우클릭 메뉴에 번역 옵션을 추가하여 빠른 페이지 번역
+        description: 브라우저 우클릭 메뉴에 번역 옵션을 추가하여 페이지나 선택한 텍스트를 빠르게 번역
   translation:
     title: 번역
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: 번역할 텍스트 내용
           targetLanguage: 목표 언어
           webTitle: 웹페이지 제목
+          webContent: 웹페이지 본문(앞의 2000자로 잘림)
           webSummary: 웹페이지 요약 (AI 스마트 컨텍스트 필요)
         save: 저장
         close: 취소
@@ -540,9 +589,9 @@ options:
         description: 기본 감지는 빠르고 무료입니다. LLM 감지는 더 정확하지만 지연 시간과 API 비용이 증가합니다.
     aiContentAware:
       title: AI 스마트 컨텍스트 번역
-      description: AI에 문서 컨텍스트를 제공하여 번역 품질을 향상시킵니다
+      description: AI에 웹페이지 컨텍스트를 제공하여 번역 품질을 향상시킵니다
       enable: AI 스마트 컨텍스트 번역 활성화
-      enableDescription: AI가 문서 요약을 사용하여 번역 정확도를 향상시킵니다. LLM 제공업체가 필요합니다. 번역 시작 시 지연이 발생하고 API 비용이 증가합니다.
+      enableDescription: AI가 웹페이지 요약을 사용하여 번역 정확도를 향상시킵니다. LLM 제공업체가 필요합니다. 번역 시작 시 지연이 발생하고 API 비용이 증가합니다.
   tts:
     title: 텍스트 음성 변환
     description: Edge TTS 음성 설정으로 말하기 버튼을 사용자 지정하세요.
@@ -575,6 +624,13 @@ options:
       batchRequestCount: 일괄 요청 수
   config:
     title: 설정
+    about:
+      title: 소개
+      description: Read Frog는 2025년 4월에 태어났습니다
+      mission: Read Frog는 언어 학습, 의학 등 지식 집약적 분야에서 AI 시대의 고품질 교육 기회에 더 평등하게 접근할 수 있도록, 실제 교사에 가까운 학습 경험을 더 낮은 비용으로 제공하는 것을 목표로 합니다.
+      analytics:
+        title: 사용자 경험 개선에 기여
+        tooltip: 켜면 Read Frog가 익명 사용 신호를 전송하여 기능 안정성을 검증하고, 성능과 UX 디테일을 개선하며, 앞으로 무엇을 우선적으로 만들지 결정하는 데 활용합니다.
     sync:
       title: 수동 설정 동기화
       description: 수동으로 설정 가져오기 및 내보내기
@@ -743,7 +799,13 @@ options:
         description: 각 배치 번역의 최대 단락 수로 각 번역의 콘텐츠 양을 제어합니다
     customPrompts:
       title: 사용자 정의 자막 프롬프트
-      description: 자막 번역용 프롬프트 템플릿 사용자 정의 (웹페이지 번역 프롬프트와 독립)
+      description: 자막 번역용 프롬프트 템플릿을 사용자 정의합니다 (웹페이지 번역 프롬프트와 별도)
+      editPrompt:
+        promptCellInput:
+          input: 번역할 자막 텍스트
+          targetLanguage: 대상 언어
+          videoTitle: 동영상 제목
+          videoSummary: 동영상 요약 (AI 스마트 컨텍스트 필요)
   whatsNew:
     title: 새로운 기능
   survey:
@@ -795,14 +857,20 @@ action:
   copied: 복사됨
   regenerate: 다시 생성
   viewContextDetails: 컨텍스트
+  saveToNotebase: Notebase에 저장
+  saveToNotebaseSaving: 저장 중...
+  saveToNotebaseSuccess: Notebase에 저장했습니다
+  saveToNotebaseFailed: Notebase에 저장하지 못했습니다
+  saveToNotebaseLoginRequired: Notebase에 저장하려면 readfrog.app에 로그인하세요
+  saveToNotebaseBetaRequired: 이 계정은 아직 Notebase 베타 대상이 아닙니다
+  saveToNotebaseTableUnavailable: 선택한 Notebase를 더 이상 사용할 수 없습니다
+  saveToNotebaseConnectionInvalid: 현재 Notebase 연결이 오래되었습니다. Custom AI Actions에서 새로고침하고 매핑을 수정하세요.
+  saveToNotebaseNoMappings: 저장하기 전에 유효한 매핑을 하나 이상 추가하세요
   contextDetailsTitleLabel: 제목
   contextDetailsParagraphsLabel: 문단 내용
   translation: 번역
   speak: 읽기
   playing: 재생 중
-  vocabularyInsight: 어휘 분석
-  vocabularyInsightDeprecation: 이 기능은 2주 후에 사용자 정의 AI 액션의 사전 기능으로 대체됩니다. 사전 액션은 더 유연하고 강력한 경험을 제공합니다.
-  vocabularyInsightDeprecationLink: 사전 액션 설정
 thinking:
   label: 사고 중
   complete: 사고 완료
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: 단축키를 입력해 주세요
 subtitles:
+  actions:
+    downloadSource: 원본 자막 다운로드
   state:
     loading: Read Frog 자막 로딩 중
     error: 오류 발생

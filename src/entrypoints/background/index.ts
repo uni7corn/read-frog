@@ -1,10 +1,12 @@
 import "@/utils/zod-config"
 import { browser, defineBackground } from "#imports"
-import { WEBSITE_URL } from "@/utils/constants/url"
+import { env } from "@/env"
 import { logger } from "@/utils/logger"
 import { onMessage } from "@/utils/message"
+import { openOptionsPage } from "@/utils/navigation"
 import { SessionCacheGroupRegistry } from "@/utils/session-cache/session-cache-group-registry"
 import { runAiSegmentSubtitles } from "./ai-segmentation"
+import { setupAnalyticsMessageHandlers } from "./analytics"
 import { dispatchBackgroundStreamPort } from "./background-stream"
 import { ensureInitializedConfig } from "./config"
 import { setUpConfigBackup } from "./config-backup"
@@ -16,6 +18,7 @@ import { setupLLMGenerateTextMessageHandlers } from "./llm-generate-text"
 import { initMockData } from "./mock-data"
 import { newUserGuide } from "./new-user-guide"
 import { proxyFetch } from "./proxy-fetch"
+import { setupSidePanelMessageHandler } from "./side-panel"
 import { setUpSubtitlesTranslationQueue, setUpWebPageTranslationQueue } from "./translation-queues"
 import { translationMessage } from "./translation-signal"
 import { setupTTSPlaybackMessageHandlers } from "./tts-playback"
@@ -32,7 +35,7 @@ export default defineBackground({
       // Open tutorial page when extension is installed
       if (details.reason === "install") {
         await browser.tabs.create({
-          url: `${WEBSITE_URL}/guide/step-1`,
+          url: `${env.WXT_WEBSITE_URL}/guide/step-1`,
         })
       }
 
@@ -49,9 +52,15 @@ export default defineBackground({
       await browser.tabs.create({ url, active: active ?? true })
     })
 
-    onMessage("openOptionsPage", () => {
+    onMessage("openOptionsPage", async () => {
       logger.info("openOptionsPage")
-      void browser.runtime.openOptionsPage()
+      await openOptionsPage()
+    })
+
+    setupSidePanelMessageHandler({
+      extensionBrowser: browser,
+      logger,
+      registerMessageHandler: onMessage,
     })
 
     onMessage("aiSegmentSubtitles", async (message) => {
@@ -78,6 +87,7 @@ export default defineBackground({
     })
 
     newUserGuide()
+    setupAnalyticsMessageHandlers()
     translationMessage()
 
     // Register context menu listeners synchronously

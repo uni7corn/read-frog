@@ -8,6 +8,7 @@ import {
   BLOCK_ATTRIBUTE,
   BLOCK_CONTENT_CLASS,
   CONTENT_WRAPPER_CLASS,
+  FLOAT_WRAP_ATTRIBUTE,
   INLINE_ATTRIBUTE,
   INLINE_CONTENT_CLASS,
   PARAGRAPH_ATTRIBUTE,
@@ -41,6 +42,39 @@ const TRANSLATION_ONLY_CONFIG: Config = {
     ...DEFAULT_CONFIG.translate,
     mode: "translationOnly" as const,
   },
+}
+
+function setHost(host: string) {
+  Object.defineProperty(window, "location", {
+    value: new URL(`https://${host}/some/path`),
+    writable: true,
+    configurable: true,
+  })
+}
+
+function createRect({ top, left, width, height }: { top: number, left: number, width: number, height: number }): DOMRect {
+  return {
+    top,
+    left,
+    width,
+    height,
+    right: left + width,
+    bottom: top + height,
+    x: left,
+    y: top,
+    toJSON() {
+      return {
+        top,
+        left,
+        width,
+        height,
+        right: left + width,
+        bottom: top + height,
+        x: left,
+        y: top,
+      }
+    },
+  } as DOMRect
 }
 
 describe("translate", () => {
@@ -756,6 +790,80 @@ describe("translate", () => {
           expectNodeLabels(node.children[1], [BLOCK_ATTRIBUTE, PARAGRAPH_ATTRIBUTE])
         })
       })
+      describe("block translations beside floated siblings", () => {
+        it("bilingual mode: marks block translation for float wrap when inline-block would drop below the float", async () => {
+          render(
+            <div data-testid="test-node">
+              <figure data-testid="float-node" style={{ float: "right" }}><span aria-hidden="true" /></figure>
+              <p data-testid="paragraph">{MOCK_ORIGINAL_TEXT}</p>
+            </div>,
+          )
+          const node = screen.getByTestId("test-node")
+          const paragraph = screen.getByTestId("paragraph")
+          const floatNode = screen.getByTestId("float-node")
+
+          const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+            if (this === floatNode) {
+              return createRect({ top: 80, left: 600, width: 200, height: 320 })
+            }
+            if (this === paragraph) {
+              return createRect({ top: 100, left: 0, width: 600, height: 60 })
+            }
+            if (this.classList.contains(BLOCK_CONTENT_CLASS)) {
+              return createRect({ top: 420, left: 0, width: 500, height: 40 })
+            }
+            return createRect({ top: 0, left: 0, width: 200, height: 20 })
+          })
+
+          try {
+            await removeOrShowPageTranslation("bilingual", true)
+          }
+          finally {
+            rectSpy.mockRestore()
+          }
+
+          expectNodeLabels(node, [BLOCK_ATTRIBUTE])
+          expectNodeLabels(paragraph, [BLOCK_ATTRIBUTE, PARAGRAPH_ATTRIBUTE])
+          const wrapper = expectTranslationWrapper(paragraph, "bilingual")
+          const translatedContent = expectTranslatedContent(wrapper, BLOCK_CONTENT_CLASS)
+          expect(translatedContent).toHaveAttribute(FLOAT_WRAP_ATTRIBUTE, "true")
+        })
+
+        it("bilingual mode: leaves block translation unchanged when the translated node stays beside the float", async () => {
+          render(
+            <div data-testid="test-node">
+              <figure data-testid="float-node" style={{ float: "right" }}><span aria-hidden="true" /></figure>
+              <p data-testid="paragraph">{MOCK_ORIGINAL_TEXT}</p>
+            </div>,
+          )
+          const paragraph = screen.getByTestId("paragraph")
+          const floatNode = screen.getByTestId("float-node")
+
+          const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+            if (this === floatNode) {
+              return createRect({ top: 80, left: 600, width: 200, height: 320 })
+            }
+            if (this === paragraph) {
+              return createRect({ top: 420, left: 0, width: 600, height: 60 })
+            }
+            if (this.classList.contains(BLOCK_CONTENT_CLASS)) {
+              return createRect({ top: 500, left: 0, width: 500, height: 40 })
+            }
+            return createRect({ top: 0, left: 0, width: 200, height: 20 })
+          })
+
+          try {
+            await removeOrShowPageTranslation("bilingual", true)
+          }
+          finally {
+            rectSpy.mockRestore()
+          }
+
+          const wrapper = expectTranslationWrapper(paragraph, "bilingual")
+          const translatedContent = expectTranslatedContent(wrapper, BLOCK_CONTENT_CLASS)
+          expect(translatedContent).not.toHaveAttribute(FLOAT_WRAP_ATTRIBUTE)
+        })
+      })
     })
     describe("br dom between inline nodes", () => {
       it("bilingual mode: should insert separate wrappers for paragraphs and be block wrappers", async () => {
@@ -1317,6 +1425,41 @@ describe("translate", () => {
 
         expect(node.querySelector(`.${CONTENT_WRAPPER_CLASS}`)).toBeFalsy()
         expect(node.textContent).toBe(codeContent)
+      })
+    })
+
+    describe("github diff table - should not translate review code snippets", () => {
+      it("bilingual mode: should skip github diff-table content entirely", async () => {
+        const originalLocation = window.location
+        setHost("github.com")
+        vi.mocked(translateTextForPage).mockClear()
+
+        try {
+          render(
+            <div data-testid="test-node">
+              <table className="diff-table">
+                <tbody>
+                  <tr>
+                    <td>const foo = 1</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>,
+          )
+          const node = screen.getByTestId("test-node")
+          await removeOrShowPageTranslation("bilingual", true)
+
+          expect(node.querySelector(`.${CONTENT_WRAPPER_CLASS}`)).toBeFalsy()
+          expect(node.textContent).toBe("const foo = 1")
+          expect(translateTextForPage).not.toHaveBeenCalled()
+        }
+        finally {
+          Object.defineProperty(window, "location", {
+            value: originalLocation,
+            writable: true,
+            configurable: true,
+          })
+        }
       })
     })
 

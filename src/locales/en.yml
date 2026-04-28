@@ -7,7 +7,12 @@ dataTypes:
   number: Number
 contextMenu:
   translate: Translate
+  translateSelection: Translate "%s"
   showOriginal: Show Original
+sidePanel:
+  firefoxUserActionHint: In Firefox, open Read Frog from the browser sidebar.
+  firefoxUserActionHelpText: Learn how to open the Firefox sidebar
+  firefoxUserActionHelpUrl: https://support.mozilla.org/en-US/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: Theme
   autoLang: Auto
@@ -130,11 +135,18 @@ options:
         noModelsFound: No models found
       featureProviders: Feature Providers
       advancedOptions: Advanced Options
+      connectionOptionLabels:
+        region: Region
       temperature: Temperature
       temperatureHint: Controls randomness in responses. Lower values (0) are more deterministic, higher values are more creative. Range varies by provider. Leave empty to use provider default.
       providerOptions: Provider Options
       providerOptionsHint: Provider-specific options for non-standard API features like thinking/reasoning mode. See the Vercel AI SDK docs or your provider's official documentation for configuration details.
       providerOptionsDocsLink: View Provider Docs
+      providerOptionsRecommendationTrigger: View recommended provider options
+      providerOptionsRecommendationTitle: Recommended provider options detected
+      providerOptionsRecommendationDescription: Review and manually apply the recommended configuration.
+      providerOptionsRecommendationApply: Apply
+      providerOptionsRecommendationApplied: Applied
       invalidJson: Invalid JSON format
     providers:
       description:
@@ -150,6 +162,7 @@ options:
         ai302: Provides the latest and most comprehensive models with pay-as-you-go API
         openaiCompatible: Third-party and OpenAI API compatible
         deeplx: Unofficial DeepL API
+        deepl: Official DeepL API
         bedrock: AWS managed service for enterprise-grade foundation models
         groq: Specialized hardware for ultra-fast LLM inference speeds
         deepinfra: Cost-effective cloud inference for popular open-source models
@@ -187,7 +200,6 @@ options:
       features:
         translate: Page Translation
         selectionToolbar_translate: Selection Toolbar Translation
-        selectionToolbar_vocabularyInsight: Selection Toolbar Vocabulary Insight
         tts: Text to Speech
         inputTranslation: Input Translation
         videoSubtitles: Video Subtitles
@@ -277,18 +289,20 @@ options:
       clickAction:
         title: Click Action
         description: Choose the action when clicking the floating button
-        panel: Open Panel
+        panel: Open Side Panel
         translate: Toggle Page Translation
     selectionToolbar:
       globalToggle:
         title: Enable Selection Toolbar
-        description: Display the toolbar when selecting text on web pages for quick translation and vocabulary insights
+        description: Display the toolbar when selecting text on web pages for quick translation, speech, and AI actions
+      opacity:
+        title: Opacity
+        description: Adjust the opacity of the selection toolbar and the expanded window opened from it
       featureToggles:
         title: Feature Toggles
         description: Choose which built-in features to show in the selection toolbar
         translate: Translate
         speak: Speak
-        vocabularyInsight: Vocabulary Insight
       closeMenu:
         disableForSite: Disable for this site
         disableGlobally: Disable globally
@@ -316,9 +330,6 @@ options:
         translate:
           title: Selection Translation
           description: Configure provider and model for the selection toolbar translation feature
-        vocabularyInsight:
-          title: Vocabulary Insight
-          description: Configure provider and model for vocabulary/phrase analysis in the selection toolbar
       customActions:
         title: Custom AI Actions
         description: Add your own structured AI actions for selected text
@@ -361,11 +372,48 @@ options:
             description: This output field will be removed.
             confirm: Delete
             cancel: Cancel
+          notebase:
+            title: Notebase Connection
+            description: Save this action's structured results to a remote notebase.
+            loginRequiredTitle: Log in to configure Notebase
+            loginRequiredDescription: Sign in on readfrog.app before choosing a notebase or editing mappings.
+            loginAction: Log in
+            tableLabel: Notebase
+            tablePlaceholder: Select a notebase
+            tableClearOption: Disconnect notebase
+            refreshAction: Refresh
+            emptyTitle: No notebases yet
+            emptyDescription: Create a notebase on readfrog.app, then come back here to map fields.
+            openNotebaseAction: Open Notebase
+            betaLockedTitle: This account is not in the Notebase beta
+            betaLockedDescription: You can keep this action configured, but choosing notebases and syncing results is limited to selected beta accounts for now.
+            tableUnavailableTitle: Selected notebase is no longer available
+            tableUnavailableDescription: Refresh or choose another notebase before saving again.
+            tableUnavailableOption: unavailable
+            schemaErrorTitle: Failed to load notebase schema
+            schemaErrorDescription: Try refreshing the schema again in a moment.
+            schemaLoading: Loading notebase schema...
+            mappingsLabel: Field Mappings
+            mappingsEmpty: No mappings yet. Add one when you are ready to save fields.
+            addMappingAction: Add Mapping
+            removeMappingAction: Remove mapping
+            localFieldLabel: Action field
+            localFieldPlaceholder: Select an action field
+            remoteFieldLabel: Notebase field
+            remoteFieldPlaceholder: Select a notebase field
+            columnUnavailableOption: removed
+            invalidMappingsTitle: Some mappings need attention
+            invalidMappingsDescription: Invalid mappings are preserved, but Save to Notebase stays disabled until you fix them.
+            mappingMissingLocal: The mapped action field no longer exists.
+            mappingMissingRemote: The mapped notebase field no longer exists.
+            mappingMissingSchema: Refresh the notebase schema to validate this mapping.
+            mappingIncompatible: The field types no longer match.
           tokens:
             selection: Selected text content
             paragraphs: Intersecting paragraph text joined with blank lines, truncated to the first 2000 characters when sent to custom AI actions
             targetLanguage: "User's target language"
             webTitle: Webpage title
+            webContent: Webpage content extracted from the current page, truncated to the first 2000 characters
           delete: Delete
           deleteDialog:
             title: Delete Custom Action?
@@ -498,7 +546,7 @@ options:
       title: Context Menu
       translate:
         title: Enable Context Menu Translate
-        description: Add a translate option to the browser right-click menu for quick page translation
+        description: Add translate options to the browser right-click menu for quick page and selection translation
   translation:
     title: Translation
     requestQueueConfig:
@@ -546,6 +594,7 @@ options:
           input: Text content to translate
           targetLanguage: Target language
           webTitle: Webpage title
+          webContent: Webpage content (truncated to the first 2000 characters)
           webSummary: Webpage summary (requires AI Smart Context)
         save: Save Changes
         close: Cancel
@@ -655,9 +704,9 @@ options:
         description: Basic detection is fast and free. LLM detection is more accurate but adds latency and API costs.
     aiContentAware:
       title: AI Smart Context Translation
-      description: Enhance translation quality by providing article context to the AI
+      description: Enhance translation quality by providing webpage context to the AI
       enable: Enable AI Smart Context Translation
-      enableDescription: AI uses article summary to improve translation accuracy. Requires LLM provider. Adds latency when starting to translate a page and increases API costs.
+      enableDescription: AI uses webpage summary to improve translation accuracy. Requires LLM provider. Adds latency when starting to translate a page and increases API costs.
   tts:
     title: Text to Speech
     description: Use Edge TTS voice settings for the Speak button.
@@ -690,6 +739,13 @@ options:
       batchRequestCount: Batch Request Count
   config:
     title: Config
+    about:
+      title: About
+      description: Read Frog was born in April 2025
+      mission: Read Frog aims to expand equal access to high-quality education in the AI era by making learning experiences that feel closer to a real teacher affordable across language learning, medicine, and other knowledge-heavy fields.
+      analytics:
+        title: Help improve user experience
+        tooltip: When enabled, Read Frog sends anonymous product usage signals so we can verify feature reliability, improve performance and UX polish, and prioritize future work.
     sync:
       title: Manual Config Sync
       description: Manually import and export your configuration settings
@@ -859,6 +915,12 @@ options:
     customPrompts:
       title: Custom Subtitle Prompts
       description: Customize prompt templates for subtitle translation (separate from webpage translation prompts)
+      editPrompt:
+        promptCellInput:
+          input: Subtitle text to translate
+          targetLanguage: Target language
+          videoTitle: Video title
+          videoSummary: Video summary (requires AI Smart Context)
   whatsNew:
     title: What's New
   survey:
@@ -910,14 +972,20 @@ action:
   copied: Copied
   regenerate: Regenerate
   viewContextDetails: Context
+  saveToNotebase: Save to Notebase
+  saveToNotebaseSaving: Saving...
+  saveToNotebaseSuccess: Saved to Notebase
+  saveToNotebaseFailed: Failed to save to Notebase
+  saveToNotebaseLoginRequired: Log in on readfrog.app to save to Notebase
+  saveToNotebaseBetaRequired: This account is not enrolled in the Notebase beta yet
+  saveToNotebaseTableUnavailable: The selected Notebase is no longer available
+  saveToNotebaseConnectionInvalid: This Notebase connection is out of date. Refresh it in Custom AI Actions and fix the mappings.
+  saveToNotebaseNoMappings: Add at least one valid mapping before saving
   contextDetailsTitleLabel: Title
   contextDetailsParagraphsLabel: Paragraphs
   translation: Translation
   speak: Speak
   playing: Playing
-  vocabularyInsight: Vocabulary Insight
-  vocabularyInsightDeprecation: This feature will be replaced by Custom AI Action's Dictionary feature in 2 weeks. Dictionary Action offers a more flexible and powerful experience.
-  vocabularyInsightDeprecationLink: Set up Dictionary Action
 thinking:
   label: Thinking
   complete: Thinking complete
@@ -926,6 +994,8 @@ thinking:
 shortcutKeySelector:
   placeholder: Please enter the shortcut
 subtitles:
+  actions:
+    downloadSource: Download source subtitles
   state:
     loading: Read Frog loading captions
     error: Error occurred

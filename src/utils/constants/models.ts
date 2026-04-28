@@ -1,11 +1,26 @@
+import type { AlibabaProviderOptions } from "@ai-sdk/alibaba"
 import type { AnthropicProviderOptions } from "@ai-sdk/anthropic"
+import type { CohereLanguageModelOptions } from "@ai-sdk/cohere"
+import type { DeepSeekLanguageModelOptions } from "@ai-sdk/deepseek"
+import type { FireworksProviderOptions } from "@ai-sdk/fireworks"
 import type { GoogleGenerativeAIProviderOptions } from "@ai-sdk/google"
+import type { GroqProviderOptions } from "@ai-sdk/groq"
+import type { MoonshotAIProviderOptions } from "@ai-sdk/moonshotai"
 import type { OpenAIResponsesProviderOptions } from "@ai-sdk/openai"
+import type { XaiProviderOptions } from "@ai-sdk/xai"
 import type { JSONValue } from "ai"
 
+type OpenAIReasoningEffort = Exclude<OpenAIResponsesProviderOptions["reasoningEffort"], undefined>
+
+interface OpenAIGPT5ReasoningEffortPolicy {
+  pattern: RegExp
+  supportedValues: readonly OpenAIReasoningEffort[]
+  recommendedValue?: OpenAIReasoningEffort
+}
+
 export const LLM_PROVIDER_MODELS = {
-  "openai": ["gpt-5.2-chat-latest", "gpt-5.2", "gpt-5.2-pro", "gpt-5.1-chat-latest", "gpt-5.1-codex-mini", "gpt-5.1", "gpt-5.1-codex", "gpt-5-chat-latest", "gpt-5-nano", "gpt-5-mini", "gpt-5", "gpt-5-codex", "gpt-5-pro", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini", "gpt-4o"],
-  "deepseek": ["deepseek-chat", "deepseek-reasoner"],
+  "openai": ["gpt-5.4-pro", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.3-chat-latest", "gpt-5.2-pro", "gpt-5.2", "gpt-5.2-chat-latest", "gpt-5.1-codex-mini", "gpt-5.1-codex", "gpt-5.1", "gpt-5.1-chat-latest", "gpt-5-pro", "gpt-5-codex", "gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-5-chat-latest", "gpt-4.1-nano", "gpt-4.1-mini", "gpt-4.1", "gpt-4o-mini", "gpt-4o"],
+  "deepseek": ["deepseek-v4-flash", "deepseek-v4-pro", "deepseek-chat", "deepseek-reasoner"],
   "google": ["gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-3-pro-preview", "gemini-2.5-flash-lite", "gemini-2.5-flash-lite-preview-06-17", "gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-flash-8b-latest", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-1.5-pro-latest"],
   "anthropic": ["claude-opus-4-6", "claude-sonnet-4-6", "claude-haiku-4-5", "claude-sonnet-4-5", "claude-opus-4-5", "claude-opus-4-1", "claude-sonnet-4-0", "claude-opus-4-0", "claude-3-7-sonnet-latest", "claude-3-5-haiku-latest"],
   "siliconflow": ["Qwen/Qwen3-Next-80B-A3B-Instruct"],
@@ -27,7 +42,7 @@ export const LLM_PROVIDER_MODELS = {
   "openrouter": ["x-ai/grok-4-fast:free", "openai/gpt-4.1-mini"],
   "ollama": ["gemma3:4b", "llama3.2:3b"],
   "volcengine": ["doubao-seed-1-6-flash-250828", "doubao-seed-1-6-lite-251015", "doubao-seed-1-6-251015"],
-  "minimax": ["MiniMax-M2", "MiniMax-M2-Stable"],
+  "minimax": ["MiniMax-M2.7", "MiniMax-M2.7-highspeed", "MiniMax-M2.5", "MiniMax-M2.5-highspeed", "MiniMax-M2.1", "MiniMax-M2.1-highspeed", "MiniMax-M2", "MiniMax-M2-Stable"],
   "alibaba": ["qwen3-max", "qwen3.5-plus", "qwen3.5-flash", "qwen-plus", "qwen-flash", "qwen-turbo", "qwq-plus", "qwen3-coder-plus", "deepseek-v3.2", "deepseek-v3.1", "deepseek-r1", "deepseek-v3", "kimi-k2.5", "MiniMax-M2.5", "glm-5"],
   "moonshotai": ["moonshot-v1-8k", "moonshot-v1-32k", "moonshot-v1-128k", "kimi-k2", "kimi-k2.5", "kimi-k2-thinking", "kimi-k2-thinking-turbo", "kimi-k2-turbo"],
   "huggingface": ["meta-llama/Llama-3.1-8B-Instruct", "meta-llama/Llama-3.1-70B-Instruct", "meta-llama/Llama-3.3-70B-Instruct", "meta-llama/Llama-4-Maverick-17B-128E-Instruct", "deepseek-ai/DeepSeek-V3.1", "deepseek-ai/DeepSeek-V3-0324", "deepseek-ai/DeepSeek-R1", "deepseek-ai/DeepSeek-R1-Distill-Llama-70B", "Qwen/Qwen3-32B", "Qwen/Qwen3-Coder-480B-A35B-Instruct", "Qwen/Qwen2.5-VL-7B-Instruct", "google/gemma-3-27b-it", "moonshotai/Kimi-K2-Instruct"],
@@ -39,7 +54,67 @@ export const NON_API_TRANSLATE_PROVIDERS_MAP: Record<typeof NON_API_TRANSLATE_PR
   "microsoft-translate": "Microsoft Translator",
 }
 
-export const PURE_TRANSLATE_PROVIDERS = ["google-translate", "microsoft-translate", "deeplx"] as const
+export const PURE_TRANSLATE_PROVIDERS = ["google-translate", "microsoft-translate", "deeplx", "deepl"] as const
+
+const OPENAI_GPT5_REASONING_EFFORT_POLICIES: OpenAIGPT5ReasoningEffortPolicy[] = [
+  {
+    pattern: /^gpt-5\.4-pro$/,
+    supportedValues: ["medium", "high", "xhigh"],
+    recommendedValue: "medium",
+  },
+  {
+    pattern: /^gpt-5\.2-pro$/,
+    supportedValues: ["medium", "high", "xhigh"],
+    recommendedValue: "medium",
+  },
+  {
+    pattern: /^gpt-5-pro$/,
+    supportedValues: ["high"],
+    recommendedValue: "high",
+  },
+  {
+    pattern: /^(?:gpt-5\.4|gpt-5\.4-mini|gpt-5\.4-nano)$/,
+    supportedValues: ["none", "low", "medium", "high", "xhigh"],
+    recommendedValue: "none",
+  },
+  {
+    pattern: /^gpt-5\.2$/,
+    supportedValues: ["none", "low", "medium", "high", "xhigh"],
+    recommendedValue: "none",
+  },
+  {
+    pattern: /^(?:gpt-5\.1|gpt-5\.1-codex|gpt-5\.1-codex-mini)$/,
+    supportedValues: ["none", "low", "medium", "high"],
+    recommendedValue: "none",
+  },
+  {
+    pattern: /^(?:gpt-5|gpt-5-mini|gpt-5-nano|gpt-5-codex)$/,
+    supportedValues: ["minimal", "low", "medium", "high"],
+    recommendedValue: "minimal",
+  },
+  {
+    pattern: /^(?:gpt-5-chat-latest|gpt-5\.1-chat-latest|gpt-5\.2-chat-latest|gpt-5\.3-chat-latest)$/,
+    supportedValues: [],
+  },
+]
+
+const OPENAI_GPT5_RECOMMENDED_MODEL_OPTIONS: Array<{
+  pattern: RegExp
+  options: Record<string, JSONValue>
+}> = OPENAI_GPT5_REASONING_EFFORT_POLICIES.flatMap(({ pattern, recommendedValue }) => {
+  if (recommendedValue === undefined) {
+    return []
+  }
+
+  return [{
+    pattern,
+    options: { reasoningEffort: recommendedValue } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
+  }]
+})
+
+export function getOpenAIGPT5ReasoningEffortPolicy(model: string): OpenAIGPT5ReasoningEffortPolicy | undefined {
+  return OPENAI_GPT5_REASONING_EFFORT_POLICIES.find(({ pattern }) => pattern.test(model))
+}
 
 /**
  * Model options configuration.
@@ -52,12 +127,12 @@ export const LLM_MODEL_OPTIONS: Array<{
 }> = [
   // Gemini - specific patterns first
   {
-    pattern: /^gemini-3-.*-preview$/,
-    options: { thinkingConfig: { thinkingLevel: "low", includeThoughts: false } } satisfies GoogleGenerativeAIProviderOptions as Record<string, JSONValue>,
+    pattern: /^gemini-3(?:\.1)?-.*-preview(?:-customtools)?$/,
+    options: { thinkingConfig: { thinkingLevel: "minimal", includeThoughts: false } } satisfies GoogleGenerativeAIProviderOptions as Record<string, JSONValue>,
   },
   {
-    pattern: /^gemini-2\.5-pro/,
-    options: { thinkingConfig: { thinkingBudget: 128, includeThoughts: false } } satisfies GoogleGenerativeAIProviderOptions as Record<string, JSONValue>,
+    pattern: /^gemini-2\.5-/,
+    options: { thinkingConfig: { thinkingBudget: 0, includeThoughts: false } } satisfies GoogleGenerativeAIProviderOptions as Record<string, JSONValue>,
   },
   {
     // Default for all other Gemini models
@@ -71,45 +146,66 @@ export const LLM_MODEL_OPTIONS: Array<{
     options: { thinking: { type: "disabled" } } satisfies AnthropicProviderOptions as Record<string, JSONValue>,
   },
 
-  // OpenAI o1/o3 reasoning models - use 'minimal'
+  // OpenAI reasoning models - use the lowest supported reasoning effort
   {
-    pattern: /^(o1-|o3-)/,
+    pattern: /^(?:o1|o3|o4-mini)(?:-|$)/,
     options: { reasoningEffort: "minimal" } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
   },
 
-  // OpenAI gpt-5.x-chat-latest and gpt-5.2-pro - use 'medium'
+  // OpenAI GPT-5 defaults use the lowest supported reasoning effort per model.
+  // GPT-5 chat-latest variants are intentionally omitted because their docs do not advertise reasoning.effort.
+  ...OPENAI_GPT5_RECOMMENDED_MODEL_OPTIONS,
+
+  // xAI Grok reasoning-capable text models - keep effort at the lowest supported level
   {
-    pattern: /^gpt-5(\.\d-chat-latest|\.2-pro)/,
-    options: { reasoningEffort: "medium" } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
+    pattern: /^grok-(?:4(?:-1)?(?:-fast-reasoning)?|4(?:-latest|-0709)?|3(?:-mini)?(?:-latest)?)$/,
+    options: { reasoningEffort: "low" } satisfies XaiProviderOptions as Record<string, JSONValue>,
   },
 
-  // OpenAI gpt-5-pro - use 'high'
+  // OpenAI-compatible reasoning models exposed by Groq/Cerebras and similar providers
   {
-    pattern: /^gpt-5-pro/,
-    options: { reasoningEffort: "high" } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
+    pattern: /^(?:openai\/)?gpt-oss-(?:20|120)b$/i,
+    options: { reasoningEffort: "none" } satisfies GroqProviderOptions as Record<string, JSONValue>,
   },
 
-  // OpenAI GPT-5.1+ - use 'none' (minimal not supported)
+  // DeepSeek reasoning models - disable thinking by default
   {
-    pattern: /^gpt-5\.\d/,
-    options: { reasoningEffort: "none" } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
+    pattern: /^deepseek-(?:reasoner|v4-(?:flash|pro))$/,
+    options: { thinking: { type: "disabled" } } satisfies DeepSeekLanguageModelOptions as Record<string, JSONValue>,
   },
 
-  // OpenAI GPT-5 models (before 5.1) - use 'minimal' (none not supported)
+  // Cohere reasoning models - disable thinking by default
   {
-    pattern: /^gpt-5/,
-    options: { reasoningEffort: "minimal" } satisfies OpenAIResponsesProviderOptions as Record<string, JSONValue>,
+    pattern: /^command-a-reasoning(?:-.+)?$/,
+    options: { thinking: { type: "disabled" } } satisfies CohereLanguageModelOptions as Record<string, JSONValue>,
+  },
+
+  // Fireworks reasoning-focused models - disable thinking/history by default
+  {
+    pattern: /^accounts\/fireworks\/models\/(?:kimi-k2(?:[a-z0-9.-].*)?|minimax-m2(?:[.-].*)?)$/i,
+    options: { thinking: { type: "disabled" }, reasoningHistory: "disabled" } satisfies FireworksProviderOptions as Record<string, JSONValue>,
+  },
+
+  // Kimi K2 models - disable thinking/history by default.
+  // Keep instruct variants untouched; they should not receive Moonshot's `thinking` options.
+  // Keep this broad because recommendation matching is model-name based rather than provider-scoped.
+  {
+    pattern: /(?:^|\/)kimi-k2(?!-instruct(?:[a-z0-9.-].*)?$)(?:[a-z0-9.-].*)?$/i,
+    options: { thinking: { type: "disabled" }, reasoningHistory: "disabled" } satisfies MoonshotAIProviderOptions as Record<string, JSONValue>,
+  },
+
+  // Qwen models - disable thinking by default.
+  // Keep this broad because recommendation matching is model-name based rather than provider-scoped.
+  // Exclude Cerebras-style `qwen-3-*` ids; they do not support Alibaba's `enableThinking`.
+  // Keep explicit thinking-only variants (for example `qwq-*` and `*-thinking`) untouched.
+  {
+    pattern: /(?:^|\/)qwen(?!-3-)(?!.*[/.-](?:thinking|qwq)(?:[/.-]|$)).*$/i,
+    options: { enableThinking: false } satisfies AlibabaProviderOptions as Record<string, JSONValue>,
   },
 
   // GLM models - disable thinking (compatibility issues)
   {
     pattern: /^GLM-/i,
     options: { thinking: { type: "disabled" } },
-  },
-
-  // Qwen/QwQ models - disable thinking
-  {
-    pattern: /^qwen/,
-    options: { enableThinking: false },
   },
 ]

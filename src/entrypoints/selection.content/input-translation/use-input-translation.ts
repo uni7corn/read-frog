@@ -1,5 +1,7 @@
 import { useAtom } from "jotai"
 import { useCallback, useEffect, useRef } from "react"
+import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
+import { createFeatureUsageContext, trackFeatureAttempt } from "@/utils/analytics"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { translateTextForInput } from "@/utils/host/translate/translate-variants"
 
@@ -42,14 +44,15 @@ function showSpinner(element: HTMLElement): () => void {
   spinner.id = SPINNER_ID
 
   // Use the same border spinner style as page translation
-  // Colors: primary green (#4ade80 / oklch(76.5% 0.177 163.223)) and muted gray
+  // Colors: brand yellow (oklch(76.034% 0.12361 82.191)) and muted gray
   spinner.style.cssText = `
+    --rf-brand: oklch(76.034% 0.12361 82.191);
     position: absolute !important;
     display: inline-block !important;
     width: 10px !important;
     height: 10px !important;
     border: 3px solid #e5e5e5 !important;
-    border-top: 3px solid #4ade80 !important;
+    border-top: 3px solid var(--rf-brand) !important;
     border-radius: 50% !important;
     box-sizing: content-box !important;
     z-index: 999999 !important;
@@ -74,8 +77,9 @@ function showSpinner(element: HTMLElement): () => void {
     )
   }
   else {
-    // For reduced motion, show static spinner with muted color
-    spinner.style.borderTopColor = "#a3a3a3"
+    // For reduced motion, keep the spinner static but preserve the brand
+    // segment so the loading state remains visible without animation.
+    spinner.style.borderTopColor = "var(--rf-brand)"
   }
 
   // Calculate position - vertically centered relative to the element
@@ -189,7 +193,13 @@ export function useInputTranslation() {
     const originalText = text
 
     try {
-      const translatedText = await translateTextForInput(text, fromLang, toLang)
+      const translatedText = await trackFeatureAttempt(
+        createFeatureUsageContext(
+          ANALYTICS_FEATURE.INPUT_TRANSLATION,
+          ANALYTICS_SURFACE.INPUT_TRANSLATION,
+        ),
+        () => translateTextForInput(text, fromLang, toLang),
+      )
 
       // Check if element content changed during translation (user input)
       let currentText: string

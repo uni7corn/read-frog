@@ -1,8 +1,15 @@
 import path from "node:path"
 import process from "node:process"
 import { defineConfig } from "wxt"
+import { z } from "zod"
+import { createExtensionClientEnvSchema, isLocalPackagesEnabled, resolveExtensionEnv } from "./src/env/shared"
 
 const WXT_API_KEY_PATTERN = /^WXT_.*API_KEY/
+const ALLOWED_BUNDLED_API_KEYS = new Set([
+  "WXT_POSTHOG_API_KEY",
+])
+const useLocalPackages = isLocalPackagesEnabled(process.env)
+const shouldSkipEnvValidation = process.env.WXT_SKIP_ENV_VALIDATION === "true"
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -11,7 +18,7 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react", "@wxt-dev/i18n/module"],
   manifestVersion: 3,
   // WXT top level alias - will be automatically synced to tsconfig.json paths and Vite alias
-  alias: process.env.WXT_USE_LOCAL_PACKAGES === "true"
+  alias: useLocalPackages
     ? {
         "@read-frog/definitions": path.resolve(__dirname, "../read-frog-monorepo/packages/definitions/src"),
         "@read-frog/api-contract": path.resolve(__dirname, "../read-frog-monorepo/packages/api-contract/src"),
@@ -34,7 +41,7 @@ export default defineConfig({
       "identity",
       "scripting",
       "webNavigation",
-      ...(browser !== "firefox" ? ["offscreen"] : []),
+      ...(browser !== "firefox" ? ["offscreen", "sidePanel"] : []),
     ],
     host_permissions: [
       "*://*/*", // Required for scripting.executeScript in any frame
@@ -57,7 +64,11 @@ export default defineConfig({
       browser_specific_settings: {
         gecko: {
           id: "{bd311a81-4530-4fcc-9178-74006155461b}",
-          strict_min_version: "109.0",
+          strict_min_version: "112.0",
+          data_collection_permissions: {
+            required: ["none"],
+            optional: ["technicalAndInteraction"],
+          },
         },
       },
     }),
@@ -68,42 +79,40 @@ export default defineConfig({
   },
   dev: {
     server: {
+      // Prefer 3333 over WXT's default 3000 while still allowing WXT to pick
+      // another open port when 3333 is already taken.
       port: 3333,
+      strictPort: false,
     },
   },
   vite: configEnv => ({
-    plugins: configEnv.mode === "production"
-      ? [
-          {
-            name: "check-api-key-env",
-            buildStart() {
-              const apiKeyVars = Object.keys(process.env)
-                .filter(key => WXT_API_KEY_PATTERN.test(key))
+    plugins: [
+      ...(configEnv.mode === "production"
+        ? [
+            {
+              name: "check-api-key-env",
+              buildStart() {
+                z.object(createExtensionClientEnvSchema(
+                  configEnv.mode === "production",
+                  shouldSkipEnvValidation,
+                ))
+                  .parse(resolveExtensionEnv(process.env))
 
-              if (apiKeyVars.length > 0) {
-                throw new Error(
-                  `\n\nFound WXT_*_API_KEY environment variables that may be bundled:\n`
-                  + `${apiKeyVars.map(k => `   - ${k}`).join("\n")}\n\n`
-                  + `Please unset these variables before building for production.\n`,
-                )
-              }
+                const apiKeyVars = Object.keys(process.env)
+                  .filter(key => WXT_API_KEY_PATTERN.test(key))
+                  .filter(key => !ALLOWED_BUNDLED_API_KEYS.has(key))
 
-              // Check required env vars only for zip builds
-              if (process.env.WXT_ZIP_MODE) {
-                const requiredEnvVars = ["WXT_GOOGLE_CLIENT_ID"]
-                const missing = requiredEnvVars.filter(key => !process.env[key])
-
-                if (missing.length > 0) {
+                if (apiKeyVars.length > 0) {
                   throw new Error(
-                    `\n\nMissing required environment variables for zip:\n`
-                    + `${missing.map(k => `   - ${k}`).join("\n")}\n\n`
-                    + `Set them in .env.production or your environment.\n`,
+                    `\n\nFound WXT_*_API_KEY environment variables that may be bundled:\n`
+                    + `${apiKeyVars.map(k => `   - ${k}`).join("\n")}\n\n`
+                    + `Please unset these variables before building for production.\n`,
                   )
                 }
-              }
+              },
             },
-          },
-        ]
-      : [],
+          ]
+        : []),
+    ],
   }),
 })

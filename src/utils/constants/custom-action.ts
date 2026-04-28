@@ -2,6 +2,7 @@ import type {
   SelectionToolbarCustomActionOutputField,
   SelectionToolbarCustomActionOutputType,
 } from "@/types/config/selection-toolbar"
+import { getRandomUUID } from "@/utils/crypto-polyfill"
 import { getUniqueName } from "@/utils/name"
 
 export const ICON_PATTERN = /^[^:\s]+:[^:\s]+$/
@@ -14,7 +15,7 @@ export function createOutputSchemaField(
   speaking = false,
 ): SelectionToolbarCustomActionOutputField {
   return {
-    id: id ?? crypto.randomUUID(),
+    id: id ?? getRandomUUID(),
     name,
     type,
     description,
@@ -63,7 +64,7 @@ export function getOutputSchemaFieldNameError(
   return undefined
 }
 
-export const SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS = ["selection", "paragraphs", "targetLanguage", "webTitle"] as const
+export const SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS = ["selection", "paragraphs", "targetLanguage", "webTitle", "webContent"] as const
 
 export type SelectionToolbarCustomActionToken = (typeof SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS)[number]
 

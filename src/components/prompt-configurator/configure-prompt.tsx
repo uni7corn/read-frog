@@ -16,9 +16,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/base-ui/sheet"
 import { QuickInsertableTextarea } from "@/components/ui/insertable-textarea"
-import { DEFAULT_TRANSLATE_PROMPT_ID, getTokenCellText, TOKENS } from "@/utils/constants/prompt"
+import { DEFAULT_TRANSLATE_PROMPT_ID } from "@/utils/constants/prompt"
+import { getRandomUUID } from "@/utils/crypto-polyfill"
 import { cn } from "@/utils/styles/utils"
-import { usePromptAtoms } from "./context"
+import { usePromptAtoms, usePromptInsertCells } from "./context"
 
 export function ConfigurePrompt({
   originPrompt,
@@ -29,13 +30,14 @@ export function ConfigurePrompt({
   className?: string
 } & React.ComponentProps<"button">) {
   const promptAtoms = usePromptAtoms()
+  const insertCells = usePromptInsertCells()
   const [config, setConfig] = useAtom(promptAtoms.config)
   const isExportMode = useAtomValue(promptAtoms.exportMode)
 
   const inEdit = !!originPrompt
   const isDefault = originPrompt?.id === DEFAULT_TRANSLATE_PROMPT_ID
 
-  const defaultPrompt = { id: crypto.randomUUID(), name: "", systemPrompt: "", prompt: "" }
+  const defaultPrompt = { id: getRandomUUID(), name: "", systemPrompt: "", prompt: "" }
   const initialPrompt = originPrompt ?? defaultPrompt
 
   const [prompt, setPrompt] = useState<TranslatePromptObj>(initialPrompt)
@@ -52,7 +54,7 @@ export function ConfigurePrompt({
 
   const clearCachePrompt = () => {
     setPrompt({
-      id: crypto.randomUUID(),
+      id: getRandomUUID(),
       name: "",
       systemPrompt: "",
       prompt: "",
@@ -117,10 +119,7 @@ export function ConfigurePrompt({
               className="min-h-40 max-h-80"
               disabled={isDefault}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt({ ...prompt, systemPrompt: e.target.value })}
-              insertCells={TOKENS.map(token => ({
-                text: getTokenCellText(token),
-                description: i18n.t(`options.translation.personalizedPrompts.editPrompt.promptCellInput.${token}`),
-              }))}
+              insertCells={insertCells}
             />
           </Field>
           <Field>
@@ -130,10 +129,7 @@ export function ConfigurePrompt({
               className="max-h-60"
               disabled={isDefault}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPrompt({ ...prompt, prompt: e.target.value })}
-              insertCells={TOKENS.map(token => ({
-                text: getTokenCellText(token),
-                description: i18n.t(`options.translation.personalizedPrompts.editPrompt.promptCellInput.${token}`),
-              }))}
+              insertCells={insertCells}
             />
           </Field>
         </FieldGroup>

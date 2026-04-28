@@ -1,9 +1,12 @@
 export interface ControlsConfig {
+  findVideoContainer?: () => HTMLElement | null
   measureHeight: (container: HTMLElement) => number
   checkVisibility: (container: HTMLElement) => boolean
 }
 
 export interface PlatformConfig {
+  embedded?: boolean
+
   selectors: {
     video: string
     playerContainer: string
@@ -12,7 +15,8 @@ export interface PlatformConfig {
   }
 
   events: {
-    navigate?: string
+    navigateStart?: string
+    navigateFinish?: string
   }
 
   controls?: ControlsConfig

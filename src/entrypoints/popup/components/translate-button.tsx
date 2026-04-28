@@ -1,9 +1,12 @@
 import { browser, i18n } from "#imports"
 import { useAtom, useAtomValue } from "jotai"
 import { Button } from "@/components/ui/base-ui/button"
+import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
+import { createFeatureUsageContext } from "@/utils/analytics"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { sendMessage } from "@/utils/message"
 import { formatHotkey } from "@/utils/os.ts"
+import { isPageTranslationShortcutEmpty } from "@/utils/page-translation-shortcut"
 import { cn } from "@/utils/styles/utils"
 import { isPageTranslatedAtom } from "../atoms/auto-translate"
 import { isIgnoreTabAtom } from "../atoms/ignore"
@@ -24,9 +27,13 @@ export default function TranslateButton({ className }: { className?: string }) {
     })
 
     if (currentTab.id) {
+      const nextEnabled = !isPageTranslated
       void sendMessage("tryToSetEnablePageTranslationByTabId", {
         tabId: currentTab.id,
-        enabled: !isPageTranslated,
+        enabled: nextEnabled,
+        analyticsContext: nextEnabled
+          ? createFeatureUsageContext(ANALYTICS_FEATURE.PAGE_TRANSLATION, ANALYTICS_SURFACE.POPUP)
+          : undefined,
       })
 
       setIsPageTranslated(prev => !prev)
@@ -35,6 +42,8 @@ export default function TranslateButton({ className }: { className?: string }) {
 
   const isSiteBlocked = mode === "whitelist" ? !isCurrentSiteInWhitelist : isCurrentSiteInBlacklist
   const isDisabled = isIgnoreTab || isSiteBlocked
+  const formattedShortcut = formatHotkey(translateConfig.page.shortcut)
+  const shortcutSuffix = isPageTranslationShortcutEmpty(translateConfig.page.shortcut) ? "" : ` (${formattedShortcut})`
 
   return (
     <Button
@@ -47,7 +56,7 @@ export default function TranslateButton({ className }: { className?: string }) {
     >
       {isPageTranslated
         ? i18n.t("popup.showOriginal")
-        : `${i18n.t("popup.translate")} (${formatHotkey(translateConfig.page.shortcut)})`}
+        : `${i18n.t("popup.translate")}${shortcutSuffix}`}
     </Button>
   )
 }

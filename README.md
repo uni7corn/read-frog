@@ -6,7 +6,7 @@ An open-source AI-powered language learning extension for browsers.<br/>
 Supports immersive translation, article analysis, multiple AI models, and more.<br/>
 Master languages effortlessly and deeply with AI, right in your browser.
 
-**English** · [简体中文](./README.zh-CN.md) · [Official Website](https://readfrog.app) · [Tutorial](https://www.readfrog.app/tutorial) · [Changelog](https://www.readfrog.app/changelog) · [Blog](https://www.readfrog.app/blog)
+**English** · [简体中文](./README.zh-CN.md) · [Official Website](https://readfrog.app) · [Tutorial](https://www.readfrog.app/docs) · [Changelog](https://www.readfrog.app/changelog) · [Blog](https://www.readfrog.app/blog)
 
 <!-- SHIELD GROUP -->
 
@@ -46,7 +46,6 @@ Master languages effortlessly and deeply with AI, right in your browser.
   - [🤖 20+ AI Providers](#-20-ai-providers)
   - [🎬 Subtitle Translation](#-subtitle-translation)
   - [🔊 Text-to-Speech (TTS)](#-text-to-speech-tts)
-  - [📖 Read Article](#-read-article)
 - [🤝 Contribute](#-contribute)
   - [Contribute Code](#contribute-code)
 - [📜 Commercial License Grant](#-commercial-license-grant)
@@ -134,7 +133,7 @@ The extension automatically re-translates all visible content when you switch mo
 
 ### 🧠 [Context-Aware Translation][docs-tutorial]
 
-Enable AI to understand the full context of what you're reading. When activated, Read Frog uses Mozilla's Readability library to extract the article's title and content, providing this context to the AI for more accurate, contextually-appropriate translations.
+Enable AI to understand the full context of what you're reading. When activated, Read Frog extracts the page title and a concise Markdown version of the page content, providing this context to the AI for more accurate, contextually-appropriate translations.
 
 This means technical terms get translated correctly within their domain, literary expressions maintain their nuance, and ambiguous phrases are interpreted based on the surrounding content rather than in isolation.
 
@@ -226,20 +225,6 @@ Automatic language detection (basic or LLM-powered) with per-language voice mapp
 
 </div>
 
-<!-- ![][image-feat-read] -->
-
-### 📖 [Read Article][docs-tutorial]
-
-One-click deep article analysis. Read Frog extracts the main content using Mozilla's Readability, detects the source language, and generates a summary and introduction in your target language.
-
-Then it provides sentence-by-sentence translations with vocabulary explanations tailored to your language level (beginner, intermediate, or advanced). Each sentence includes key word definitions, grammatical analysis, and contextual explanations. It's like having a personal language tutor analyze every article you read.
-
-<div align="right">
-
-[![Back to top][back-to-top]](#readme-top)
-
-</div>
-
 ## 🤝 Contribute
 
 Contributions of all types are more than welcome.
@@ -254,7 +239,7 @@ Project Structure: [DeepWiki](https://deepwiki.com/mengxi-ream/read-frog)
 
 Ask AI to understand the project: [Dosu](https://app.dosu.dev/29569286-71ba-47dd-b038-c7ab1b9d0df7/documents)
 
-Check out the [Contribution Guide](https://readfrog.app/en/tutorial/code-contribution/contribution-guide) for more details.
+Check out the [Contribution Guide](https://readfrog.app/en/docs/code-contribution/contribution-guide) for more details.
 
 ReadFrog is dual-licensed under GPLv3 and a commercial license.
 
@@ -308,8 +293,6 @@ Every donation helps us build a better language learning experience. Thank you f
 
 [![Sponsors][sponsor-image]][sponsor-link]
 
-(will support Afdian in the future)
-
 <div align="right">
 
 [![Back to top][back-to-top]](#readme-top)
@@ -353,4 +336,4 @@ Every donation helps us build a better language learning experience. Thank you f
 
 <!-- Feature docs link -->
 
-[docs-tutorial]: https://readfrog.app/tutorial
+[docs-tutorial]: https://readfrog.app/docs

@@ -1,14 +1,14 @@
-import type { AllProviderTypes, APIProviderTypes, LLMProviderModels, ProviderConfig, ProvidersConfig } from "@/types/config/provider"
+import type { AllProviderTypes, APIProviderTypes, LLMProviderModels, LLMProviderTypes, ProviderConfig, ProvidersConfig } from "@/types/config/provider"
 import type { Theme } from "@/types/config/theme"
 import { i18n } from "#imports"
 import customProviderLogo from "@/assets/providers/custom-provider.svg?url&no-inline"
 import deeplxLogoDark from "@/assets/providers/deeplx-dark.svg?url&no-inline"
 import deeplxLogoLight from "@/assets/providers/deeplx-light.svg?url&no-inline"
 import tensdaqLogoColor from "@/assets/providers/tensdaq-color.svg?url&no-inline"
+import { env } from "@/env"
 import { API_PROVIDER_TYPES, CUSTOM_LLM_PROVIDER_TYPES, NON_API_TRANSLATE_PROVIDERS, NON_API_TRANSLATE_PROVIDERS_MAP, NON_CUSTOM_LLM_PROVIDER_TYPES, PURE_API_PROVIDER_TYPES, PURE_TRANSLATE_PROVIDERS, TRANSLATE_PROVIDER_TYPES } from "@/types/config/provider"
 import { omit, pick } from "@/types/utils"
 import { getLobeIconsCDNUrlFn } from "../logo"
-import { WEBSITE_URL } from "./url"
 
 export const DEFAULT_LLM_PROVIDER_MODELS: LLMProviderModels = {
   "openrouter": {
@@ -127,7 +127,7 @@ export const DEFAULT_LLM_PROVIDER_MODELS: LLMProviderModels = {
     customModel: null,
   },
   "minimax": {
-    model: "MiniMax-M2",
+    model: "MiniMax-M2.7",
     isCustomModel: false,
     customModel: null,
   },
@@ -165,6 +165,11 @@ export const PROVIDER_ITEMS: Record<AllProviderTypes, { logo: (theme: Theme) => 
       name: "DeepLX",
       website: "https://deeplx.owo.network/",
     },
+    "deepl": {
+      logo: (theme: Theme) => theme === "light" ? deeplxLogoLight : deeplxLogoDark,
+      name: "DeepL",
+      website: "https://www.deepl.com/pro-api",
+    },
     "siliconflow": {
       logo: getLobeIconsCDNUrlFn("siliconcloud-color"),
       name: "SiliconFlow",
@@ -183,7 +188,7 @@ export const PROVIDER_ITEMS: Record<AllProviderTypes, { logo: (theme: Theme) => 
     "openai-compatible": {
       logo: () => customProviderLogo,
       name: "Custom Provider",
-      website: `${WEBSITE_URL}/tutorial/providers/openai-compatible-providers`,
+      website: `${env.WXT_WEBSITE_URL}/docs/providers/openai-compatible-providers`,
     },
     "openai": {
       logo: getLobeIconsCDNUrlFn("openai"),
@@ -399,6 +404,13 @@ export const DEFAULT_PROVIDER_CONFIG = {
     provider: "deeplx",
     baseURL: "https://api.deeplx.org",
   },
+  "deepl": {
+    id: "deepl-default",
+    name: PROVIDER_ITEMS.deepl.name,
+    description: i18n.t("options.apiProviders.providers.description.deepl"),
+    enabled: true,
+    provider: "deepl",
+  },
   "bedrock": {
     id: "bedrock-default",
     name: PROVIDER_ITEMS.bedrock.name,
@@ -406,6 +418,7 @@ export const DEFAULT_PROVIDER_CONFIG = {
     enabled: true,
     provider: "bedrock",
     model: DEFAULT_LLM_PROVIDER_MODELS.bedrock,
+    connectionOptions: { region: "us-east-1" },
   },
   "groq": {
     id: "groq-default",
@@ -519,6 +532,7 @@ export const DEFAULT_PROVIDER_CONFIG = {
     description: i18n.t("options.apiProviders.providers.description.minimax"),
     enabled: true,
     provider: "minimax",
+    baseURL: "https://api.minimaxi.com/anthropic/v1",
     model: DEFAULT_LLM_PROVIDER_MODELS.minimax,
   },
   "alibaba": {
@@ -527,6 +541,7 @@ export const DEFAULT_PROVIDER_CONFIG = {
     description: i18n.t("options.apiProviders.providers.description.alibaba"),
     enabled: true,
     provider: "alibaba",
+    baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     model: DEFAULT_LLM_PROVIDER_MODELS.alibaba,
   },
   "moonshotai": {
@@ -546,6 +561,22 @@ export const DEFAULT_PROVIDER_CONFIG = {
     model: DEFAULT_LLM_PROVIDER_MODELS.huggingface,
   },
 } as const satisfies Record<AllProviderTypes, ProviderConfig>
+
+export interface ConnectionOptionFieldDef {
+  key: string
+  labelKey: string
+  type: "text" | "password"
+  placeholder?: string
+}
+
+// https://ai-sdk.dev/providers/ai-sdk-providers
+export const PROVIDER_CONNECTION_OPTIONS_FIELDS: Partial<
+  Record<LLMProviderTypes, ConnectionOptionFieldDef[]>
+> = {
+  bedrock: [
+    { key: "region", labelKey: "region", type: "text", placeholder: "us-east-1" },
+  ],
+}
 
 export const DEFAULT_PROVIDER_CONFIG_LIST: ProvidersConfig = [
   DEFAULT_PROVIDER_CONFIG["microsoft-translate"],
@@ -612,4 +643,4 @@ export const PROVIDER_GROUPS = {
   },
 } as const satisfies Record<string, { types: readonly APIProviderTypes[], tutorialSlug: string }>
 
-export const SPECIFIC_TUTORIAL_PROVIDER_TYPES = ["ollama", "deeplx"] as const satisfies readonly APIProviderTypes[]
+export const SPECIFIC_TUTORIAL_PROVIDER_TYPES = ["ollama", "deeplx", "deepl"] as const satisfies readonly APIProviderTypes[]

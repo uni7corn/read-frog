@@ -7,7 +7,12 @@ dataTypes:
   number: Sayı
 contextMenu:
   translate: Çevir
+  translateSelection: '"%s" Çevir'
   showOriginal: Orijinali Göster
+sidePanel:
+  firefoxUserActionHint: Firefox'ta Read Frog'u tarayıcının kenar çubuğundan açın.
+  firefoxUserActionHelpText: Firefox kenar çubuğunu açmayı öğrenin
+  firefoxUserActionHelpUrl: https://support.mozilla.org/tr/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: Tema
   autoLang: Otomatik
@@ -129,11 +134,18 @@ options:
         noModelsFound: Model bulunamadı
       featureProviders: Özellik Sağlayıcıları
       advancedOptions: Gelişmiş Seçenekler
+      connectionOptionLabels:
+        region: Bölge
       temperature: Sıcaklık
       temperatureHint: Yanıtlardaki rastgeleliği kontrol eder. Düşük değerler (0) daha belirleyici, yüksek değerler daha yaratıcıdır. Aralık sağlayıcıya göre değişir. Sağlayıcı varsayılanını kullanmak için boş bırakın.
       providerOptions: Sağlayıcı Seçenekleri
       providerOptionsHint: Düşünme/akıl yürütme modu gibi standart dışı API özellikleri için sağlayıcıya özel seçenekler. Ayrıntılar için Vercel AI SDK belgelerine veya sağlayıcınızın resmi belgelerine bakın.
       providerOptionsDocsLink: Sağlayıcı Belgelerini Görüntüle
+      providerOptionsRecommendationTrigger: Önerilen sağlayıcı seçeneklerini görüntüle
+      providerOptionsRecommendationTitle: Önerilen sağlayıcı seçenekleri bulundu
+      providerOptionsRecommendationDescription: Önerilen yapılandırmayı gözden geçirip manuel olarak uygulayın.
+      providerOptionsRecommendationApply: Uygula
+      providerOptionsRecommendationApplied: Uygulandı
       invalidJson: Geçersiz JSON formatı
     providers:
       description:
@@ -149,6 +161,7 @@ options:
         ai302: Kullandıkça öde API ile en son ve en kapsamlı modelleri sağlar
         openaiCompatible: Üçüncü taraf ve OpenAI API uyumlu
         deeplx: Resmi olmayan DeepL API
+        deepl: Resmi DeepL API
         bedrock: Kurumsal düzeyde temel modeller için AWS yönetilen hizmeti
         groq: Ultra hızlı LLM çıkarım hızları için özel donanım
         deepinfra: Popüler açık kaynak modelleri için uygun maliyetli bulut çıkarımı
@@ -186,7 +199,6 @@ options:
       features:
         translate: Sayfa Çevirisi
         selectionToolbar_translate: Seçim Araç Çubuğu Çevirisi
-        selectionToolbar_vocabularyInsight: Seçim Araç Çubuğu Kelime Analizi
         tts: Metin Okuma
         inputTranslation: Giriş Çevirisi
         videoSubtitles: Video Altyazıları
@@ -276,18 +288,20 @@ options:
       clickAction:
         title: Tıklama Eylemi
         description: Yüzen butona tıklandığında gerçekleştirilecek eylemi seçin
-        panel: Paneli Aç
+        panel: Yan Paneli Aç
         translate: Sayfa Çevirisini Aç/Kapat
     selectionToolbar:
       globalToggle:
         title: Seçim Araç Çubuğunu Etkinleştir
-        description: Hızlı çeviri ve kelime analizi için web sayfalarında metin seçerken araç çubuğunu görüntüle
+        description: Web sayfalarında metin seçtiğinizde araç çubuğunu göstererek hızlı çeviri, seslendirme ve AI eylemleri sunar
+      opacity:
+        title: Opaklık
+        description: Seçim araç çubuğunun ve buradan açılan genişletilmiş pencerenin opaklığını ayarlayın
       featureToggles:
         title: Özellik Açma/Kapama
         description: Seçim araç çubuğunda hangi yerleşik özelliklerin gösterileceğini seçin
         translate: Çeviri
         speak: Sesli Okuma
-        vocabularyInsight: Kelime Analizi
       closeMenu:
         disableForSite: Bu site için devre dışı bırak
         disableGlobally: Genel olarak devre dışı bırak
@@ -315,9 +329,6 @@ options:
         translate:
           title: Seçim Çevirisi
           description: Seçim araç çubuğu çeviri özelliği için sağlayıcı ve model yapılandırın
-        vocabularyInsight:
-          title: Kelime Analizi
-          description: Seçim araç çubuğunda kelime/ifade analizi için sağlayıcı ve model yapılandırın
       customActions:
         title: Özel AI Eylemleri
         description: Seçilen metin için kendi yapılandırılmış AI eylemlerinizi ekleyin
@@ -360,11 +371,48 @@ options:
             description: Bu çıktı alanı kaldırılacaktır.
             confirm: Sil
             cancel: İptal
+          notebase:
+            title: Notebase Bağlantısı
+            description: Bu eylemin yapılandırılmış sonuçlarını uzak bir Notebase'e kaydedin.
+            loginRequiredTitle: Notebase yapılandırmak için giriş yapın
+            loginRequiredDescription: notebase seçmeden veya eşlemeleri düzenlemeden önce readfrog.app'te oturum açın.
+            loginAction: Giriş yap
+            tableLabel: Notebase
+            tablePlaceholder: Bir notebase seçin
+            tableClearOption: Notebase bağlama
+            refreshAction: Yenile
+            emptyTitle: Henüz Notebase yok
+            emptyDescription: readfrog.app'te bir notebase oluşturun, sonra alanları eşlemek için buraya dönün.
+            openNotebaseAction: Notebase'i Aç
+            betaLockedTitle: Bu hesap Notebase beta programında değil
+            betaLockedDescription: Bu action yapılandırmasını koruyabilirsiniz, ancak Notebase seçimi ve sonuç senkronizasyonu şimdilik yalnızca seçili beta hesapları için açık.
+            tableUnavailableTitle: Seçilen notebase artık kullanılamıyor
+            tableUnavailableDescription: Tekrar kaydetmeden önce yenileyin veya başka bir notebase seçin.
+            tableUnavailableOption: kullanılamıyor
+            schemaErrorTitle: notebase şeması yüklenemedi
+            schemaErrorDescription: Kısa süre sonra yeniden yenilemeyi deneyin.
+            schemaLoading: notebase şeması yükleniyor...
+            mappingsLabel: Alan Eşlemeleri
+            mappingsEmpty: Henüz eşleme yok. Alanları kaydetmeye hazır olduğunuzda bir tane ekleyin.
+            addMappingAction: Eşleme Ekle
+            removeMappingAction: Eşlemeyi Kaldır
+            localFieldLabel: Eylem alanı
+            localFieldPlaceholder: Bir eylem alanı seçin
+            remoteFieldLabel: Notebase alanı
+            remoteFieldPlaceholder: Bir notebase alanı seçin
+            columnUnavailableOption: silinmiş
+            invalidMappingsTitle: Bazı eşlemeler ilgi gerektiriyor
+            invalidMappingsDescription: Geçersiz eşlemeler korunur, ancak siz düzeltmeden önce Save to Notebase devre dışı kalır.
+            mappingMissingLocal: Eşlenen eylem alanı artık yok.
+            mappingMissingRemote: Eşlenen notebase alanı artık yok.
+            mappingMissingSchema: Bu eşlemeyi doğrulamak için notebase şemasını yenileyin.
+            mappingIncompatible: Alan türleri artık eşleşmiyor.
           tokens:
             selection: Seçilen metin içeriği
             paragraphs: Seçimle kesişen paragraf metni; boş satırlarla birleştirilir ve özel AI eylemlerine gönderilirken ilk 2000 karaktere kısaltılır
             targetLanguage: Kullanıcının hedef dili
             webTitle: Web sayfası başlığı
+            webContent: Geçerli sayfadan çıkarılan ve ilk 2000 karaktere kısaltılan web sayfası içeriği
           delete: Sil
           deleteDialog:
             title: Özel eylem silinsin mi?
@@ -383,7 +431,7 @@ options:
       title: Bağlam Menüsü
       translate:
         title: Bağlam Menüsü Çevirisini Etkinleştir
-        description: Hızlı sayfa çevirisi için tarayıcı sağ tıklama menüsüne çeviri seçeneği ekle
+        description: Sayfa veya seçili metni hızlıca çevirmek için tarayıcı sağ tıklama menüsüne çeviri seçenekleri ekle
   translation:
     title: Çeviri
     requestQueueConfig:
@@ -431,6 +479,7 @@ options:
           input: Çevrilecek metin içeriği
           targetLanguage: Hedef dil
           webTitle: Web sayfası başlığı
+          webContent: Web sayfası içeriği (ilk 2000 karaktere kısaltılır)
           webSummary: Web sayfası özeti (AI Akıllı Bağlam gerektirir)
         save: Değişiklikleri Kaydet
         close: İptal
@@ -540,9 +589,9 @@ options:
         description: Temel algılama hızlı ve ücretsizdir. LLM algılama daha doğrudur ancak gecikme ve API maliyetleri ekler.
     aiContentAware:
       title: AI Akıllı Bağlam Çevirisi
-      description: AI'ya makale bağlamı sağlayarak çeviri kalitesini artırın
+      description: AI'ya web sayfası bağlamı sağlayarak çeviri kalitesini artırın
       enable: AI Akıllı Bağlam Çevirisini Etkinleştir
-      enableDescription: AI, çeviri doğruluğunu artırmak için makale özetini kullanır. LLM sağlayıcısı gerektirir. Bir sayfayı çevirmeye başlarken gecikme ekler ve API maliyetlerini artırır.
+      enableDescription: AI, çeviri doğruluğunu artırmak için web sayfası özetini kullanır. LLM sağlayıcısı gerektirir. Bir sayfayı çevirmeye başlarken gecikme ekler ve API maliyetlerini artırır.
   tts:
     title: Metinden Konuşmaya
     description: Konuş butonunu Edge TTS ses ayarlarıyla özelleştirin.
@@ -575,6 +624,13 @@ options:
       batchRequestCount: Toplu İstek Sayısı
   config:
     title: Yapılandırma
+    about:
+      title: Hakkında
+      description: Read Frog Nisan 2025'te doğdu
+      mission: Read Frog, yapay zeka çağında yüksek kaliteli eğitime daha eşit erişimi genişletmek için, dil öğrenimi, tıp ve bilgi yoğun diğer alanlarda gerçek bir öğretmene daha yakın hissettiren öğrenme deneyimlerini daha ulaşılabilir maliyetlerle sunmayı hedefler.
+      analytics:
+        title: Kullanıcı deneyimini geliştirmemize yardımcı ol
+        tooltip: Açık olduğunda Read Frog, özelliklerin güvenilir çalıştığını doğrulamak, performansı ve UX ayrıntılarını iyileştirmek ve sıradaki önceliklerimizi belirlemek için anonim kullanım sinyalleri gönderir.
     sync:
       title: Manuel Yapılandırma Senkronizasyonu
       description: Yapılandırma ayarlarınızı manuel olarak içe ve dışa aktarın
@@ -743,7 +799,13 @@ options:
         description: Her çevirinin içerik hacmini kontrol etmek için her toplu çeviri için maksimum paragraf sayısı
     customPrompts:
       title: Özel Altyazı İstemleri
-      description: Altyazı çevirisi için istem şablonlarını özelleştirin (web sayfası çeviri istemlerinden bağımsız)
+      description: Altyazı çevirisi için istem şablonlarını özelleştirin (web sayfası çeviri istemlerinden ayrı)
+      editPrompt:
+        promptCellInput:
+          input: Çevrilecek altyazı metni
+          targetLanguage: Hedef dil
+          videoTitle: Video başlığı
+          videoSummary: Video özeti (AI Akıllı Bağlam gerektirir)
   whatsNew:
     title: Yenilikler
   survey:
@@ -795,14 +857,20 @@ action:
   copied: Kopyalandı
   regenerate: Yeniden oluştur
   viewContextDetails: Bağlam
+  saveToNotebase: Notebase'e Kaydet
+  saveToNotebaseSaving: Kaydediliyor...
+  saveToNotebaseSuccess: Notebase'e kaydedildi
+  saveToNotebaseFailed: Notebase'e kaydetme başarısız oldu
+  saveToNotebaseLoginRequired: Notebase'e kaydetmek için readfrog.app'te oturum açın
+  saveToNotebaseBetaRequired: Bu hesap henüz Notebase beta erişimine sahip değil
+  saveToNotebaseTableUnavailable: Seçilen Notebase artık kullanılamıyor
+  saveToNotebaseConnectionInvalid: Bu Notebase bağlantısı güncel değil. Custom AI Actions içinde yenileyin ve eşlemeleri düzeltin.
+  saveToNotebaseNoMappings: Kaydetmeden önce en az bir geçerli eşleme ekleyin
   contextDetailsTitleLabel: Başlık
   contextDetailsParagraphsLabel: Paragraflar
   translation: Çeviri
   speak: Oku
   playing: Çalınıyor
-  vocabularyInsight: Kelime analizi
-  vocabularyInsightDeprecation: Bu özellik, 2 hafta içinde Özel AI Eyleminin Sözlük özelliği ile değiştirilecektir. Sözlük Eylemi daha esnek ve güçlü bir deneyim sunar.
-  vocabularyInsightDeprecationLink: Sözlük Eylemini Ayarla
 thinking:
   label: Düşünüyor
   complete: Düşünme tamamlandı
@@ -811,6 +879,8 @@ thinking:
 shortcutKeySelector:
   placeholder: Lütfen kısayolu girin
 subtitles:
+  actions:
+    downloadSource: Kaynak altyazıları indir
   state:
     loading: Read Frog altyazılar yükleniyor
     error: Bir hata oluştu

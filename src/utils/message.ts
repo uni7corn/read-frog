@@ -1,4 +1,5 @@
 import type { LangCodeISO6393 } from "@read-frog/definitions"
+import type { FeatureUsageContext, FeatureUsedEventProperties } from "@/types/analytics"
 import type {
   BackgroundGenerateTextPayload,
   BackgroundGenerateTextResponse,
@@ -25,26 +26,33 @@ interface ProtocolMap {
   // navigation
   openPage: (data: { url: string, active?: boolean }) => void
   openOptionsPage: () => void
+  toggleSidePanel: (data?: { source?: "content-script" | "extension-user-action" }) => Promise<{ ok: true, action: "opened" | "closed" } | { ok: false, reason: "missing-window" | "unsupported" | "toggle-failed" | "requires-extension-user-action" }>
   // config
   getInitialConfig: () => Config | null
   // translation state
   getEnablePageTranslationByTabId: (data: { tabId: number }) => boolean | undefined
   getEnablePageTranslationFromContentScript: () => Promise<boolean>
-  tryToSetEnablePageTranslationByTabId: (data: { tabId: number, enabled: boolean }) => void
-  tryToSetEnablePageTranslationOnContentScript: (data: { enabled: boolean }) => void
+  tryToSetEnablePageTranslationByTabId: (data: { tabId: number, enabled: boolean, analyticsContext?: FeatureUsageContext }) => void
+  tryToSetEnablePageTranslationOnContentScript: (data: { enabled: boolean, analyticsContext?: FeatureUsageContext }) => void
   setAndNotifyPageTranslationStateChangedByManager: (data: { enabled: boolean }) => void
   notifyTranslationStateChanged: (data: { enabled: boolean }) => void
   // for auto start page translation
   checkAndAskAutoPageTranslation: (data: { url: string, detectedCodeOrUnd: LangCodeISO6393 | "und" }) => void
   // ask host to start page translation
-  askManagerToTogglePageTranslation: (data: { enabled: boolean }) => void
+  askManagerToTogglePageTranslation: (data: { enabled: boolean, analyticsContext?: FeatureUsageContext }) => void
+  openSelectionTranslationFromContextMenu: (data: { selectionText: string }) => void
+  openSelectionCustomActionFromContextMenu: (data: { actionId: string, selectionText: string }) => void
+  // analytics
+  trackFeatureUsedEvent: (data: FeatureUsedEventProperties) => void
   // user guide
   pinStateChanged: (data: { isPinned: boolean }) => void
   getPinState: () => boolean
   returnPinState: (data: { isPinned: boolean }) => void
   // request
-  enqueueTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, articleTitle?: string | null, articleTextContent?: string | null }) => Promise<string>
-  enqueueSubtitlesTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, videoTitle?: string, subtitlesContext?: string }) => Promise<string>
+  enqueueTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, webTitle?: string | null, webContent?: string | null, webSummary?: string | null }) => Promise<string>
+  getOrGenerateWebPageSummary: (data: { webTitle: string, webContent: string, providerConfig: ProviderConfig }) => Promise<string | null>
+  enqueueSubtitlesTranslateRequest: (data: { text: string, langConfig: Config["language"], providerConfig: ProviderConfig, scheduleAt: number, hash: string, videoTitle?: string | null, summary?: string | null }) => Promise<string>
+  getSubtitlesSummary: (data: { videoTitle: string, subtitlesContext: string, providerConfig: ProviderConfig }) => Promise<string | null>
   backgroundGenerateText: (data: BackgroundGenerateTextPayload) => Promise<BackgroundGenerateTextResponse>
   // AI subtitle segmentation
   aiSegmentSubtitles: (data: { jsonContent: string, providerId: string }) => Promise<string>

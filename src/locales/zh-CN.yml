@@ -7,7 +7,12 @@ dataTypes:
   number: 数字
 contextMenu:
   translate: 翻译
+  translateSelection: 翻译“%s”
   showOriginal: 显示原文
+sidePanel:
+  firefoxUserActionHint: 在 Firefox 中，请从浏览器侧边栏打开陪读蛙。
+  firefoxUserActionHelpText: 查看 Firefox 侧边栏说明
+  firefoxUserActionHelpUrl: https://support.mozilla.org/zh-CN/kb/use-sidebar-access-tools-and-vertical-tabs
 popup:
   theme: 主题
   autoLang: 自动检测
@@ -130,11 +135,18 @@ options:
         noModelsFound: 未找到模型
       featureProviders: 功能提供商
       advancedOptions: 高级选项
+      connectionOptionLabels:
+        region: 区域
       temperature: 温度
       temperatureHint: 控制响应的随机性。较低的值（0）更确定性，较高的值更具创造性。范围因提供商而异。留空则使用提供商默认值。
       providerOptions: 提供商选项
       providerOptionsHint: 用于非标准 API 功能（如思考/推理模式）的提供商特定选项。详情请参阅 Vercel AI SDK 文档或您的提供商官方文档。
       providerOptionsDocsLink: 查看提供商文档
+      providerOptionsRecommendationTrigger: 查看推荐的提供商选项
+      providerOptionsRecommendationTitle: 检测到推荐的提供商选项
+      providerOptionsRecommendationDescription: 请先检查，再手动应用推荐配置。
+      providerOptionsRecommendationApply: 应用
+      providerOptionsRecommendationApplied: 已应用
       invalidJson: JSON 格式无效
     providers:
       description:
@@ -150,6 +162,7 @@ options:
         ai302: 提供最新、全面的模型和按量付费 API
         openaiCompatible: OpenAI API 兼容的第三方
         deeplx: 非官方 DeepL API
+        deepl: 官方 DeepL API
         bedrock: 面向企业级基础模型的 AWS 托管服务
         groq: 专注于超高速 LLM 推理速度的专用硬件
         deepinfra: 面向热门开源模型的经济高效云推理
@@ -187,7 +200,6 @@ options:
       features:
         translate: 网页翻译
         selectionToolbar_translate: 划词翻译
-        selectionToolbar_vocabularyInsight: 划词词汇解析
         tts: 文本转语音
         inputTranslation: 输入翻译
         videoSubtitles: 视频字幕
@@ -267,7 +279,7 @@ options:
         title: 启用悬浮按钮
         description: 在网页上显示悬浮按钮，快速访问陪读蛙功能
       closeMenu:
-        disableForSite: 禁用此网站
+        disableForSite: 当前网站禁用
         disableGlobally: 全局禁用
       disabledSites:
         title: 悬浮按钮禁用网站
@@ -277,20 +289,22 @@ options:
       clickAction:
         title: 点击行为
         description: 选择点击悬浮按钮时执行的操作
-        panel: 打开面板
+        panel: 打开侧边栏
         translate: 切换页面翻译
     selectionToolbar:
       globalToggle:
         title: 启用选择工具栏
-        description: 在网页上选择文本时显示工具栏，快速翻译和词汇解析
+        description: 在网页上选择文本时显示工具栏，快速翻译、朗读和使用 AI 指令
+      opacity:
+        title: 透明度
+        description: 调整选择工具栏及其展开内容窗的透明度
       featureToggles:
         title: 功能开关
         description: 选择在选择工具栏中显示哪些内置功能
         translate: 翻译
         speak: 朗读
-        vocabularyInsight: 词汇解析
       closeMenu:
-        disableForSite: 禁用此网站
+        disableForSite: 当前网站禁用
         disableGlobally: 全局禁用
       disabledSites:
         title: 选择工具栏禁用网站
@@ -316,9 +330,6 @@ options:
         translate:
           title: 划词翻译
           description: 配置选择工具栏翻译功能使用的提供商与模型
-        vocabularyInsight:
-          title: 词汇解析
-          description: 配置选择工具栏词汇/短语解析功能使用的提供商与模型
       customActions:
         title: 自定义 AI 指令
         description: 为划词添加你自己的结构化 AI 操作
@@ -361,11 +372,48 @@ options:
             description: 此输出字段将被移除。
             confirm: 删除
             cancel: 取消
+          notebase:
+            title: 笔记库连接
+            description: 将这个指令的结构化结果保存到远程笔记库。
+            loginRequiredTitle: 登录后才能配置笔记库
+            loginRequiredDescription: 先在 readfrog.app 登录，然后再选择笔记库和编辑映射。
+            loginAction: 去登录
+            tableLabel: 笔记库
+            tablePlaceholder: 选择一个笔记库
+            tableClearOption: 不连接笔记库
+            refreshAction: 刷新
+            emptyTitle: 还没有笔记库
+            emptyDescription: 先去 readfrog.app 创建一个笔记库，再回来映射字段。
+            openNotebaseAction: 打开笔记库
+            betaLockedTitle: 当前账号尚未加入 Notebase Beta
+            betaLockedDescription: 你可以继续保留当前 action 配置，但选择笔记库和同步结果目前仅对部分 Beta 账号开放。
+            tableUnavailableTitle: 选中的笔记库已不可用
+            tableUnavailableDescription: 请刷新，或重新选择一个笔记库后再保存。
+            tableUnavailableOption: 不可用
+            schemaErrorTitle: 加载笔记库 schema 失败
+            schemaErrorDescription: 请稍后再试一次刷新。
+            schemaLoading: 正在加载笔记库 schema...
+            mappingsLabel: 字段映射
+            mappingsEmpty: 还没有映射，准备好后可以添加。
+            addMappingAction: 添加映射
+            removeMappingAction: 删除映射
+            localFieldLabel: 指令字段
+            localFieldPlaceholder: 选择一个指令字段
+            remoteFieldLabel: 笔记库字段
+            remoteFieldPlaceholder: 选择一个笔记库字段
+            columnUnavailableOption: 已删除
+            invalidMappingsTitle: 有些映射需要处理
+            invalidMappingsDescription: 无效映射会被保留，但在修复前会禁用“保存到笔记库”。
+            mappingMissingLocal: 映射的指令字段已经不存在。
+            mappingMissingRemote: 映射的笔记库字段已经不存在。
+            mappingMissingSchema: 刷新笔记库 schema 后才能校验这个映射。
+            mappingIncompatible: 字段类型已经不匹配。
           tokens:
             selection: 选中的文本内容
             paragraphs: 与选区相交的段落内容，会以空行拼接，传给自定义 AI 指令时会截断到前 2000 个字符
             targetLanguage: 用户的目标语言
             webTitle: 网页标题
+            webContent: 当前网页提取出的正文内容（截断到前 2000 个字符）
           delete: 删除
           deleteDialog:
             title: 删除自定义 AI 指令？
@@ -498,7 +546,7 @@ options:
       title: 右键菜单
       translate:
         title: 启用右键翻译
-        description: 在浏览器右键菜单中添加翻译选项，快速翻译页面
+        description: 在浏览器右键菜单中添加翻译选项，快速翻译页面或所选文本
   translation:
     title: 翻译
     requestQueueConfig:
@@ -546,6 +594,7 @@ options:
           input: 需要翻译的文本内容
           targetLanguage: 目标语言
           webTitle: 网页标题
+          webContent: 网页正文内容（截断到前 2000 个字符）
           webSummary: 网页摘要（需启用 AI 智能上下文）
         save: 保存
         close: 取消
@@ -655,9 +704,9 @@ options:
         description: 基础检测快速且免费。LLM 检测更准确，但会增加延迟和 API 费用。
     aiContentAware:
       title: AI 智能上下文翻译
-      description: 通过向 AI 提供文章上下文来提高翻译质量
+      description: 通过向 AI 提供网页上下文来提高翻译质量
       enable: 启用 AI 智能上下文翻译
-      enableDescription: AI 使用文章摘要来提高翻译准确性。需要 LLM 翻译提供商。刚开始翻译页面时会有延迟，并增加 API 费用。
+      enableDescription: AI 使用网页摘要来提高翻译准确性。需要 LLM 翻译提供商。刚开始翻译页面时会有延迟，并增加 API 费用。
   tts:
     title: 文本转语音
     description: 使用 Edge TTS 语音参数来自定义朗读按钮。
@@ -690,6 +739,13 @@ options:
       batchRequestCount: 批量请求数量
   config:
     title: 配置
+    about:
+      title: 关于
+      description: Read Frog 出生于 2025 年 4 月
+      mission: Read Frog 致力于在 AI 时代扩大高质量教育机会的平等可及性，通过更低成本地提供尽可能接近真人教师的学习体验，覆盖语言学习、医学以及其他知识密集型领域。
+      analytics:
+        title: 帮助改进用户体验
+        tooltip: 开启后，Read Frog 会发送匿名的产品使用信号，用于验证功能是否稳定、优化性能与交互细节，并帮助我们决定接下来优先投入的方向。
     sync:
       title: 手动配置同步
       description: 手动导入和导出您的配置设置
@@ -858,7 +914,13 @@ options:
         description: 每个批量翻译的最大段落数，用于控制单次翻译的内容量
     customPrompts:
       title: 自定义字幕提示词
-      description: 自定义字幕翻译的提示词模板（与网页翻译提示词独立）
+      description: 自定义字幕翻译的提示词模板（与网页翻译提示词分离）
+      editPrompt:
+        promptCellInput:
+          input: 要翻译的字幕文本
+          targetLanguage: 目标语言
+          videoTitle: 视频标题
+          videoSummary: 视频摘要（需启用 AI 智能上下文）
   whatsNew:
     title: 最近更新
   survey:
@@ -910,14 +972,20 @@ action:
   copied: 已复制
   regenerate: 重新生成
   viewContextDetails: 上下文
+  saveToNotebase: 保存到笔记库
+  saveToNotebaseSaving: 保存中...
+  saveToNotebaseSuccess: 已保存到笔记库
+  saveToNotebaseFailed: 保存到笔记库失败
+  saveToNotebaseLoginRequired: 请先在 readfrog.app 登录后再保存到笔记库
+  saveToNotebaseBetaRequired: 当前账号尚未加入 Notebase Beta
+  saveToNotebaseTableUnavailable: 选中的笔记库已不可用
+  saveToNotebaseConnectionInvalid: 当前笔记库连接已经过期，请到 Custom AI Actions 中刷新并修复映射
+  saveToNotebaseNoMappings: 至少添加一个有效映射后才能保存
   contextDetailsTitleLabel: 标题
   contextDetailsParagraphsLabel: 段落内容
   translation: 翻译
   speak: 朗读
   playing: 播放中
-  vocabularyInsight: 词汇解析
-  vocabularyInsightDeprecation: 此功能将在 2 周后被自定义 AI 动作的词典功能替代。词典动作提供更灵活和强大的体验。
-  vocabularyInsightDeprecationLink: 设置词典动作
 thinking:
   label: 思考中
   complete: 思考完成
@@ -926,6 +994,8 @@ thinking:
 shortcutKeySelector:
   placeholder: 请输入快捷键
 subtitles:
+  actions:
+    downloadSource: 下载原字幕
   state:
     loading: Read Frog 字幕加载中
     error: 发生错误

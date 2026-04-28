@@ -1,7 +1,7 @@
 import { semanticVersionSchema } from "@read-frog/definitions"
 import { describe, expect, it } from "vitest"
 import { z } from "zod"
-import { hasNewBlogPost } from "../blog"
+import { buildBilibiliEmbedUrl, extractBilibiliVideoId, hasNewBlogPost, resolveBlogLocale } from "../blog"
 
 describe("hasNewBlogPost", () => {
   const baseDate = new Date("2025-01-01")
@@ -145,5 +145,66 @@ describe("semanticVersionSchema", () => {
         expect(zodError.issues.length).toBeGreaterThan(0)
       }
     })
+  })
+})
+
+describe("bilibili helpers", () => {
+  const videoUrl = "https://www.bilibili.com/video/BV1JoAszwEfF/?vd_source=2c109749b890f71dc77161d6ddf1d5ce"
+
+  it("extracts the BVID from a bilibili watch URL", () => {
+    expect(extractBilibiliVideoId(videoUrl)).toBe("BV1JoAszwEfF")
+  })
+
+  it("builds an autoplay embed URL from a bilibili watch URL", () => {
+    const embedUrl = buildBilibiliEmbedUrl(videoUrl)
+
+    expect(embedUrl).not.toBeNull()
+
+    const parsedUrl = new URL(embedUrl!)
+    expect(parsedUrl.origin).toBe("https://player.bilibili.com")
+    expect(parsedUrl.pathname).toBe("/player.html")
+    expect(parsedUrl.searchParams.get("bvid")).toBe("BV1JoAszwEfF")
+    expect(parsedUrl.searchParams.get("autoplay")).toBe("1")
+    expect(parsedUrl.searchParams.get("muted")).toBe("1")
+  })
+
+  it("returns null when the URL does not contain a bilibili video id", () => {
+    expect(buildBilibiliEmbedUrl("https://readfrog.app/blog")).toBeNull()
+  })
+
+  it("returns null when the URL is not hosted on bilibili", () => {
+    expect(extractBilibiliVideoId("https://readfrog.app/blog?bvid=BV1JoAszwEfF")).toBeNull()
+  })
+})
+
+describe("resolveBlogLocale", () => {
+  it("maps simplified Chinese locales to zh", () => {
+    expect(resolveBlogLocale("zh")).toBe("zh")
+    expect(resolveBlogLocale("zh-CN")).toBe("zh")
+    expect(resolveBlogLocale("zh_Hans")).toBe("zh")
+  })
+
+  it("maps traditional Chinese locales to zh", () => {
+    expect(resolveBlogLocale("zh-TW")).toBe("zh")
+    expect(resolveBlogLocale("zh_Hant")).toBe("zh")
+    expect(resolveBlogLocale("zh-HK")).toBe("zh")
+  })
+
+  it("keeps English as en", () => {
+    expect(resolveBlogLocale("en")).toBe("en")
+    expect(resolveBlogLocale("en-US")).toBe("en")
+  })
+
+  it("falls back unsupported locales to en", () => {
+    expect(resolveBlogLocale("ja")).toBe("en")
+    expect(resolveBlogLocale("vi")).toBe("en")
+    expect(resolveBlogLocale("pt-BR")).toBe("en")
+  })
+
+  it("falls back empty locale values to en", () => {
+    expect(resolveBlogLocale("")).toBe("en")
+    expect(resolveBlogLocale("   ")).toBe("en")
+    expect(resolveBlogLocale(null)).toBe("en")
+    expect(resolveBlogLocale(undefined)).toBe("en")
   })
 })

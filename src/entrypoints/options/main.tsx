@@ -5,11 +5,9 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { Provider as JotaiProvider } from "jotai"
 import { useHydrateAtoms } from "jotai/utils"
 import * as React from "react"
-import ReactDOM from "react-dom/client"
 import { HashRouter } from "react-router"
 import FrogToast from "@/components/frog-toast"
 import { HelpButton } from "@/components/help-button"
-import { ChartThemeProvider } from "@/components/providers/chart-theme-provider"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { RecoveryBoundary } from "@/components/recovery/recovery-boundary"
 import { SidebarProvider } from "@/components/ui/base-ui/sidebar"
@@ -18,6 +16,7 @@ import { configAtom } from "@/utils/atoms/config"
 import { baseThemeModeAtom } from "@/utils/atoms/theme"
 import { getLocalConfig } from "@/utils/config/storage"
 import { DEFAULT_CONFIG } from "@/utils/constants/config"
+import { renderPersistentReactRoot } from "@/utils/react-root"
 import { queryClient } from "@/utils/tanstack-query"
 import { applyTheme, getLocalThemeMode, isDarkMode } from "@/utils/theme"
 import App from "./app"
@@ -52,7 +51,7 @@ async function initApp() {
 
   applyTheme(document.documentElement, isDarkMode(themeMode) ? "dark" : "light")
 
-  ReactDOM.createRoot(root).render(
+  renderPersistentReactRoot(root, (
     <React.StrictMode>
       <JotaiProvider>
         <HydrateAtoms initialValues={[[configAtom, config], [baseThemeModeAtom, themeMode]]}>
@@ -60,25 +59,23 @@ async function initApp() {
             <HashRouter>
               <SidebarProvider>
                 <ThemeProvider>
-                  <ChartThemeProvider>
-                    <TooltipProvider>
-                      <FrogToast />
-                      <RecoveryBoundary>
-                        <AppSidebar />
-                        <App />
-                        <HelpButton />
-                        <SettingsSearch />
-                      </RecoveryBoundary>
-                    </TooltipProvider>
-                  </ChartThemeProvider>
+                  <TooltipProvider>
+                    <FrogToast />
+                    <RecoveryBoundary>
+                      <AppSidebar />
+                      <App />
+                      <HelpButton />
+                      <SettingsSearch />
+                    </RecoveryBoundary>
+                  </TooltipProvider>
                 </ThemeProvider>
               </SidebarProvider>
             </HashRouter>
           </QueryClientProvider>
         </HydrateAtoms>
       </JotaiProvider>
-    </React.StrictMode>,
-  )
+    </React.StrictMode>
+  ))
 }
 
 void initApp()

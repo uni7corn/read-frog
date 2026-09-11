@@ -1,5 +1,6 @@
-import { i18n } from "#imports"
+import { isExtensionContextInvalidatedError } from "@/utils/error/extension-context"
 import { extractAISDKErrorMessage } from "@/utils/error/extract-message"
+import { i18n } from "@/utils/i18n"
 
 export interface SelectionToolbarInlineError {
   title: string
@@ -7,7 +8,11 @@ export interface SelectionToolbarInlineError {
 }
 
 type SelectionToolbarErrorKind = "translate" | "customAction"
-type SelectionToolbarPrecheckErrorCode = "actionUnavailable" | "missingSelection" | "providerDisabled" | "providerUnavailable"
+type SelectionToolbarPrecheckErrorCode =
+  | "actionUnavailable"
+  | "missingSelection"
+  | "providerDisabled"
+  | "providerUnavailable"
 
 const UNEXPECTED_ERROR_MESSAGE = "Unexpected error occurred"
 
@@ -18,20 +23,26 @@ export function isAbortError(error: unknown) {
 function getErrorTitle(kind: SelectionToolbarErrorKind) {
   return kind === "translate"
     ? i18n.t("translationHub.translationFailed")
-    : i18n.t("options.floatingButtonAndToolbar.selectionToolbar.errors.customActionFailed")
+    : i18n.t("options.selectionToolbar.errors.customActionFailed")
 }
 
 function getErrorFallbackDescription(kind: SelectionToolbarErrorKind) {
   return kind === "translate"
     ? i18n.t("translationHub.translationFailedFallback")
-    : i18n.t("options.floatingButtonAndToolbar.selectionToolbar.errors.customActionFailedFallback")
+    : i18n.t("options.selectionToolbar.errors.customActionFailedFallback")
 }
 
 function getPrecheckErrorDescription(code: SelectionToolbarPrecheckErrorCode) {
-  return i18n.t(`options.floatingButtonAndToolbar.selectionToolbar.errors.${code}` as never)
+  return i18n.t(`options.selectionToolbar.errors.${code}` as never)
 }
 
 function toErrorDescription(kind: SelectionToolbarErrorKind, error: unknown) {
+  // Raw "Extension context invalidated." tells the user nothing actionable, and
+  // the popover's retry button can never recover from it — only a reload can.
+  if (isExtensionContextInvalidatedError(error)) {
+    return i18n.t("translation.extensionContextInvalidated")
+  }
+
   const message = extractAISDKErrorMessage(error)
   if (!message || message === UNEXPECTED_ERROR_MESSAGE) {
     return getErrorFallbackDescription(kind)

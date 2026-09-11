@@ -1,25 +1,32 @@
 import "@/utils/zod-config"
 import type { ContentScriptContext } from "#imports"
 import type { ThemeMode } from "@/types/config/theme"
-import { createShadowRootUi, defineContentScript } from "#imports"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { kebabCase } from "case-anything"
 import { Provider as JotaiProvider } from "jotai"
 import { useHydrateAtoms } from "jotai/utils"
 import ReactDOM from "react-dom/client"
+import { createShadowRootUi, defineContentScript } from "#imports"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { TooltipProvider } from "@/components/ui/base-ui/tooltip"
 import { baseThemeModeAtom } from "@/utils/atoms/theme"
 import { getLocalConfig } from "@/utils/config/storage"
 import { APP_NAME } from "@/utils/constants/app"
+import { primeGlossaryMatcher } from "@/utils/glossary/active-matcher"
+import { initI18n } from "@/utils/i18n"
+import { LocaleBoundary } from "@/utils/i18n/locale-boundary"
 import { ensureIconifyBackgroundFetch } from "@/utils/iconify/setup-background-fetch"
 import { protectSelectAllShadowRoot } from "@/utils/select-all"
-import { insertShadowRootUIWrapperInto } from "@/utils/shadow-root"
-import { isSiteEnabled } from "@/utils/site-control"
-import { addStyleToShadow } from "@/utils/styles"
+import { insertShadowRootUIWrapperInto, OVERLAY_SHADOW_ROOT_CSS } from "@/utils/shadow-root"
+import {
+  clearEffectiveSiteControlUrl,
+  getEffectiveSiteControlUrl,
+  isSiteEnabled,
+} from "@/utils/site-control"
 import { queryClient } from "@/utils/tanstack-query"
 import { getLocalThemeMode } from "@/utils/theme"
 import App from "./app"
+import { setupExternalSelectionSource } from "./external-selection-source"
 import "@/assets/styles/theme.css"
 
 function HydrateAtoms({
@@ -51,10 +58,10 @@ async function mountSelectionUI(ctx: ContentScriptContext) {
     name: `${kebabCase(APP_NAME)}-selection`,
     position: "overlay",
     anchor: "body",
+    css: OVERLAY_SHADOW_ROOT_CSS,
     onMount: (container, shadow, shadowHost) => {
-      const wrapper = insertShadowRootUIWrapperInto(container)
+      const wrapper = insertShadowRootUIWrapperInto(container, shadowHost)
       shadowWrapper = wrapper
-      addStyleToShadow(shadow)
       protectSelectAllShadowRoot(shadowHost, wrapper)
 
       const root = ReactDOM.createRoot(wrapper)
@@ -64,7 +71,9 @@ async function mountSelectionUI(ctx: ContentScriptContext) {
             <HydrateAtoms initialValues={[[baseThemeModeAtom, themeMode]]}>
               <ThemeProvider container={wrapper}>
                 <TooltipProvider>
-                  <App />
+                  <LocaleBoundary>
+                    <App uiContainer={container} portalContainer={shadow} />
+                  </LocaleBoundary>
                 </TooltipProvider>
               </ThemeProvider>
             </HydrateAtoms>
@@ -85,18 +94,47 @@ async function mountSelectionUI(ctx: ContentScriptContext) {
 export default defineContentScript({
   matches: ["*://*/*", "file:///*"],
   cssInjectionMode: "ui",
-  allFrames: true,
   async main(ctx) {
     // Prevent double injection (manifest-based + programmatic injection)
-    if (window.__READ_FROG_SELECTION_INJECTED__)
-      return
+    if (window.__READ_FROG_SELECTION_INJECTED__) return
     window.__READ_FROG_SELECTION_INJECTED__ = true
+
+    ctx.onInvalidated(() => {
+      window.__READ_FROG_SELECTION_INJECTED__ = false
+      clearEffectiveSiteControlUrl()
+    })
 
     // Check global site control
     const config = await getLocalConfig()
-    if (!isSiteEnabled(window.location.href, config)) {
+    const siteControlUrl = getEffectiveSiteControlUrl(window.location.href)
+    if (!isSiteEnabled(siteControlUrl, config)) {
+      window.__READ_FROG_SELECTION_INJECTED__ = false
+      clearEffectiveSiteControlUrl()
       return
     }
+
+    // Warm the glossary before any selection happens, so the translate path
+    // reads a compiled matcher instead of waiting on a message round trip.
+    // Terms are stored per target language, so the warm-up needs the configured
+    // one; a failure here costs nothing but the warm-up.
+    //
+    // Below the guards, not above them: this is the only message any content
+    // script sends at page load, and sending it on a site the user switched the
+    // extension off for — where the toolbar never mounts, so the matcher can
+    // never be read — is work they asked us not to do. `primeGlossaryMatcher`
+    // swallows its own failures, so no catch is needed here.
+    // `config?.` because `isSiteEnabled` tolerates a null config rather than
+    // narrowing it; `glossary` itself is always present once config is, since
+    // its schema carries a default.
+    if (config?.glossary.enabled) primeGlossaryMatcher(config.language.targetCode)
+
+    // Answer ebook bridge handshakes before the React UI finishes mounting
+    const cleanupExternalSelectionSource = setupExternalSelectionSource()
+    if (cleanupExternalSelectionSource) {
+      ctx.onInvalidated(cleanupExternalSelectionSource)
+    }
+
+    await initI18n(config?.uiLanguage)
 
     void mountSelectionUI(ctx)
   },

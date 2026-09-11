@@ -1,4 +1,4 @@
-import { i18n } from "#imports"
+import { i18n } from "@/utils/i18n"
 import { sendMessage } from "@/utils/message"
 import { cn } from "@/utils/styles/utils"
 
@@ -10,29 +10,24 @@ export function APIConfigWarning({ className }: { className?: string }) {
         className,
       )}
     >
-      {i18n.t("noAPIKeyConfig.warningWithLink.youMust")}
-      {" "}
+      {i18n.t("noAPIKeyConfig.warningWithLink.youMust")}{" "}
       <a
-        href="https://readfrog.app/tutorial/api-key"
+        href="https://readfrog.app/docs/api-key"
         target="_blank"
         rel="noreferrer"
         className="underline"
       >
         {i18n.t("noAPIKeyConfig.warningWithLink.setTheAPIKey")}
-      </a>
-      {" "}
-      {i18n.t("noAPIKeyConfig.warningWithLink.firstOnThe")}
-      {" "}
+      </a>{" "}
+      {i18n.t("noAPIKeyConfig.warningWithLink.firstOnThe")}{" "}
       <button
         type="button"
         className="cursor-pointer underline"
         onClick={() => sendMessage("openOptionsPage", undefined)}
       >
         {i18n.t("noAPIKeyConfig.warningWithLink.optionsPage")}
-      </button>
-      {" "}
-      {i18n.t("noAPIKeyConfig.warningWithLink.page")}
-      .
+      </button>{" "}
+      {i18n.t("noAPIKeyConfig.warningWithLink.page")}.
     </div>
   )
 }

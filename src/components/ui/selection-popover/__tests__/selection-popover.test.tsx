@@ -6,9 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { SelectionPopover } from ".."
 
 let latestRndProps: Record<string, any> | null = null
-const updatePositionSpy = vi.fn()
-const updateSizeSpy = vi.fn()
-const onOpenChangeSpy = vi.fn()
+const updatePositionSpy = vi.fn<(...args: any[]) => any>()
+const updateSizeSpy = vi.fn<(...args: any[]) => any>()
+const onOpenChangeSpy = vi.fn<(...args: any[]) => any>()
 let rafCallbacks = new Map<number, FrameRequestCallback>()
 let nextRafId = 1
 let mockRndOffset = { left: 0, top: 0 }
@@ -45,42 +45,46 @@ function flushRaf() {
   act(() => {
     const callbacks = [...rafCallbacks.values()]
     rafCallbacks.clear()
-    callbacks.forEach(callback => callback(0))
+    callbacks.forEach((callback) => callback(0))
   })
 }
 
 vi.mock("react-rnd", async () => {
-  const React = await import("react")
+  const ReactModule = await import("react")
 
   function MockRnd({ ref, ...props }: any) {
+    // oxlint-disable-next-line react/globals -- test double captures the latest props so assertions can read them
     latestRndProps = props
-    const elementRef = React.useRef<HTMLDivElement>(null)
-    const appliedDefaultRef = React.useRef(false)
+    const elementRef = ReactModule.useRef<HTMLDivElement>(null)
+    const appliedDefaultRef = ReactModule.useRef(false)
 
-    React.useImperativeHandle(ref, () => ({
-      updatePosition: (position: { x: number, y: number }) => {
-        updatePositionSpy(position)
-        updateMockRect({
-          left: position.x + mockRndOffset.left,
-          top: position.y + mockRndOffset.top,
-        })
-      },
-      updateSize: (size: { width: number, height: number }) => {
-        updateSizeSpy(size)
-        updateMockRect({ width: size.width, height: size.height })
-      },
-      getSelfElement: () => elementRef.current,
-    }), [])
+    ReactModule.useImperativeHandle(
+      ref,
+      () => ({
+        updatePosition: (position: { x: number; y: number }) => {
+          updatePositionSpy(position)
+          updateMockRect({
+            left: position.x + mockRndOffset.left,
+            top: position.y + mockRndOffset.top,
+          })
+        },
+        updateSize: (size: { width: number; height: number }) => {
+          updateSizeSpy(size)
+          updateMockRect({ width: size.width, height: size.height })
+        },
+        getSelfElement: () => elementRef.current,
+      }),
+      [],
+    )
 
-    React.useLayoutEffect(() => {
+    ReactModule.useLayoutEffect(() => {
       if (!elementRef.current) {
         return
       }
 
       if (props.position) {
         updateMockRect({ left: props.position.x, top: props.position.y })
-      }
-      else if (!appliedDefaultRef.current && props.default) {
+      } else if (!appliedDefaultRef.current && props.default) {
         appliedDefaultRef.current = true
         updateMockRect({
           left: props.default.x,
@@ -136,8 +140,8 @@ let resizeObservers: MockResizeObserver[] = []
 
 class MockResizeObserver {
   callback: ResizeObserverCallback
-  observe = vi.fn()
-  disconnect = vi.fn()
+  observe = vi.fn<(...args: any[]) => any>()
+  disconnect = vi.fn<(...args: any[]) => any>()
 
   constructor(callback: ResizeObserverCallback) {
     this.callback = callback
@@ -147,7 +151,9 @@ class MockResizeObserver {
 
 function triggerResizeObserver() {
   act(() => {
-    resizeObservers.forEach(observer => observer.callback([], observer as unknown as ResizeObserver))
+    resizeObservers.forEach((observer) =>
+      observer.callback([], observer as unknown as ResizeObserver),
+    )
   })
 }
 
@@ -189,7 +195,7 @@ function buildTriggerRect({
   } as DOMRect
 }
 
-function expectLatestPosition(position: { x: number, y: number }) {
+function expectLatestPosition(position: { x: number; y: number }) {
   expect(latestRndProps?.position).toEqual(position)
   expect(mockRndRect.left).toBe(position.x)
   expect(mockRndRect.top).toBe(position.y)
@@ -201,15 +207,27 @@ function renderPopover({
   title = "Test Popover",
   onOpenChange = onOpenChangeSpy,
   triggerRect = buildTriggerRect(),
+  contentProps,
+}: {
+  customTrigger?: boolean
+  triggerLabel?: string
+  title?: string
+  onOpenChange?: typeof onOpenChangeSpy
+  triggerRect?: DOMRect
+  contentProps?: Partial<React.ComponentProps<typeof SelectionPopover.Content>>
 } = {}) {
   render(
     <SelectionPopover.Root onOpenChange={onOpenChange}>
       <SelectionPopover.Trigger
-        render={customTrigger ? <button data-testid="custom-trigger" className="custom-trigger" /> : undefined}
+        render={
+          customTrigger ? (
+            <button data-testid="custom-trigger" className="custom-trigger" type="button" />
+          ) : undefined
+        }
       >
         {triggerLabel}
       </SelectionPopover.Trigger>
-      <SelectionPopover.Content>
+      <SelectionPopover.Content {...contentProps}>
         <SelectionPopover.Header className="border-b">
           <SelectionPopover.Title>{title}</SelectionPopover.Title>
           <div className="flex items-center gap-1">
@@ -237,8 +255,8 @@ function renderPopover({
 }
 
 function renderTwoPopovers() {
-  const firstOnOpenChange = vi.fn()
-  const secondOnOpenChange = vi.fn()
+  const firstOnOpenChange = vi.fn<(...args: any[]) => any>()
+  const secondOnOpenChange = vi.fn<(...args: any[]) => any>()
 
   render(
     <>
@@ -279,8 +297,12 @@ function renderTwoPopovers() {
   const firstTrigger = screen.getByRole("button", { name: "Open first popover" })
   const secondTrigger = screen.getByRole("button", { name: "Open second popover" })
 
-  vi.spyOn(firstTrigger, "getBoundingClientRect").mockReturnValue(buildTriggerRect({ left: 120, top: 140 }))
-  vi.spyOn(secondTrigger, "getBoundingClientRect").mockReturnValue(buildTriggerRect({ left: 320, top: 240 }))
+  vi.spyOn(firstTrigger, "getBoundingClientRect").mockReturnValue(
+    buildTriggerRect({ left: 120, top: 140 }),
+  )
+  vi.spyOn(secondTrigger, "getBoundingClientRect").mockReturnValue(
+    buildTriggerRect({ left: 320, top: 240 }),
+  )
 
   return {
     firstOnOpenChange,
@@ -291,31 +313,41 @@ function renderTwoPopovers() {
 }
 
 function PortalledBoundary() {
-  return createPortal(
-    <div data-testid="portalled-boundary">
-      Portalled boundary
-    </div>,
-    document.body,
-  )
+  return createPortal(<div data-testid="portalled-boundary">Portalled boundary</div>, document.body)
 }
 
-function ReopenablePopoverHarness() {
+function ReopenablePopoverHarness({
+  onReuseRequestSpy,
+}: {
+  onReuseRequestSpy?: (details: { anchor: { x: number; y: number } | null }) => void
+} = {}) {
   const [open, setOpen] = React.useState(false)
   const [sourceSelection, setSourceSelection] = React.useState("First selection")
   const [snapshotSelection, setSnapshotSelection] = React.useState<string | null>(null)
   const [sessionKey, setSessionKey] = React.useState(0)
 
-  const handleOpenChange = React.useCallback((nextOpen: boolean) => {
-    if (nextOpen) {
-      setSnapshotSelection(sourceSelection)
-      setSessionKey(prev => prev + 1)
-      setOpen(true)
-      return
-    }
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (nextOpen) {
+        setSnapshotSelection(sourceSelection)
+        setSessionKey((prev) => prev + 1)
+        setOpen(true)
+        return
+      }
 
-    setSnapshotSelection(null)
-    setOpen(false)
-  }, [sourceSelection])
+      setSnapshotSelection(null)
+      setOpen(false)
+    },
+    [sourceSelection],
+  )
+
+  const handleReuseRequest = React.useCallback(
+    (details: { anchor: { x: number; y: number } | null }) => {
+      onReuseRequestSpy?.(details)
+      setSnapshotSelection(sourceSelection)
+    },
+    [onReuseRequestSpy, sourceSelection],
+  )
 
   return (
     <div>
@@ -323,7 +355,11 @@ function ReopenablePopoverHarness() {
         Switch selection
       </button>
 
-      <SelectionPopover.Root open={open} onOpenChange={handleOpenChange}>
+      <SelectionPopover.Root
+        open={open}
+        onOpenChange={handleOpenChange}
+        onReuseRequest={handleReuseRequest}
+      >
         <SelectionPopover.Trigger>Open popover</SelectionPopover.Trigger>
         <SelectionPopover.Content key={sessionKey}>
           <SelectionPopover.Header className="border-b">
@@ -339,6 +375,71 @@ function ReopenablePopoverHarness() {
         </SelectionPopover.Content>
       </SelectionPopover.Root>
     </div>
+  )
+}
+
+function ControlledPinHarness({ onPinnedChange }: { onPinnedChange: (pinned: boolean) => void }) {
+  const [pinned, setPinned] = React.useState(false)
+
+  const handlePinnedChange = React.useCallback(
+    (nextPinned: boolean) => {
+      onPinnedChange(nextPinned)
+      setPinned(nextPinned)
+    },
+    [onPinnedChange],
+  )
+
+  return (
+    <SelectionPopover.Root
+      pinned={pinned}
+      onPinnedChange={handlePinnedChange}
+      onOpenChange={onOpenChangeSpy}
+    >
+      <SelectionPopover.Trigger>Open popover</SelectionPopover.Trigger>
+      <SelectionPopover.Content>
+        <SelectionPopover.Header className="border-b">
+          <SelectionPopover.Title>Controlled Pin Popover</SelectionPopover.Title>
+          <div className="flex items-center gap-1">
+            <SelectionPopover.Pin />
+            <SelectionPopover.Close />
+          </div>
+        </SelectionPopover.Header>
+        <SelectionPopover.Body>
+          <div>Popover content</div>
+        </SelectionPopover.Body>
+      </SelectionPopover.Content>
+    </SelectionPopover.Root>
+  )
+}
+
+function ActionsPopoverHarness({
+  actionsRef,
+  onReuseRequest,
+}: {
+  actionsRef: React.RefObject<{
+    requestOpen: (anchor?: { x: number; y: number } | null) => void
+  } | null>
+  onReuseRequest?: (details: { anchor: { x: number; y: number } | null }) => void
+}) {
+  return (
+    <SelectionPopover.Root
+      actionsRef={actionsRef}
+      onReuseRequest={onReuseRequest}
+      onOpenChange={onOpenChangeSpy}
+    >
+      <SelectionPopover.Content>
+        <SelectionPopover.Header className="border-b">
+          <SelectionPopover.Title>Actions Popover</SelectionPopover.Title>
+          <div className="flex items-center gap-1">
+            <SelectionPopover.Pin />
+            <SelectionPopover.Close />
+          </div>
+        </SelectionPopover.Header>
+        <SelectionPopover.Body>
+          <div>Popover content</div>
+        </SelectionPopover.Body>
+      </SelectionPopover.Content>
+    </SelectionPopover.Root>
   )
 }
 
@@ -366,12 +467,14 @@ describe("selectionPopover", () => {
     updateSizeSpy.mockReset()
 
     globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver
-    window.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
-      const id = nextRafId++
-      rafCallbacks.set(id, callback)
-      return id
-    })
-    window.cancelAnimationFrame = vi.fn((id: number) => {
+    window.requestAnimationFrame = vi.fn<(...args: any[]) => any>(
+      (callback: FrameRequestCallback) => {
+        const id = nextRafId++
+        rafCallbacks.set(id, callback)
+        return id
+      },
+    )
+    window.cancelAnimationFrame = vi.fn<(...args: any[]) => any>((id: number) => {
       rafCallbacks.delete(id)
     })
 
@@ -422,12 +525,27 @@ describe("selectionPopover", () => {
     })
   })
 
+  it("applies configured opacity on the popover surface instead of the viewport host", () => {
+    const { element } = renderPopover()
+
+    expect(element.parentElement?.style.opacity).toBe("")
+    expect(element.style.opacity).toBe("var(--rf-selection-opacity, 1)")
+  })
+
   it("keeps the body shrinkable so overflow can scroll after viewport changes", () => {
     const { element } = renderPopover()
 
     expect(element).toHaveStyle({ display: "flex" })
-    expect(screen.getByText("Test Popover").parentElement?.parentElement).toHaveClass("flex-1", "h-full", "min-h-0")
-    expect(screen.getByText("Popover content").parentElement).toHaveClass("min-h-0", "flex-1", "overflow-y-auto")
+    expect(screen.getByText("Test Popover").parentElement?.parentElement).toHaveClass(
+      "flex-1",
+      "h-full",
+      "min-h-0",
+    )
+    expect(screen.getByText("Popover content").parentElement).toHaveClass(
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+    )
   })
 
   it("renders the popover inside a fixed viewport host so page scroll does not move it", () => {
@@ -472,6 +590,53 @@ describe("selectionPopover", () => {
     expect(screen.queryByTestId("mock-rnd")).not.toBeInTheDocument()
   })
 
+  it("keeps the popover open when pointer dismissal is disabled", async () => {
+    render(
+      <SelectionPopover.Root onOpenChange={onOpenChangeSpy} disablePointerDismissal>
+        <SelectionPopover.Trigger>Open popover</SelectionPopover.Trigger>
+        <SelectionPopover.Content>
+          <SelectionPopover.Header className="border-b">
+            <SelectionPopover.Title>Test Popover</SelectionPopover.Title>
+            <div className="flex items-center gap-1">
+              <SelectionPopover.Pin />
+              <SelectionPopover.Close />
+            </div>
+          </SelectionPopover.Header>
+          <SelectionPopover.Body>
+            <div>Popover content</div>
+          </SelectionPopover.Body>
+        </SelectionPopover.Content>
+      </SelectionPopover.Root>,
+    )
+
+    const trigger = screen.getByRole("button", { name: "Open popover" })
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue(buildTriggerRect())
+
+    fireEvent.click(trigger)
+    flushRaf()
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const mouseDownEvent = new MouseEvent("mousedown", { bubbles: true })
+    Object.defineProperty(mouseDownEvent, "composedPath", {
+      value: () => [document.body, document, window],
+    })
+    const clickEvent = new MouseEvent("click", { bubbles: true })
+    Object.defineProperty(clickEvent, "composedPath", {
+      value: () => [document.body, document, window],
+    })
+
+    act(() => {
+      document.body.dispatchEvent(mouseDownEvent)
+      document.body.dispatchEvent(clickEvent)
+    })
+
+    expect(screen.getByTestId("mock-rnd")).toBeInTheDocument()
+    expect(onOpenChangeSpy).not.toHaveBeenCalledWith(false)
+  })
+
   it("keeps a pinned popover open when clicking outside", async () => {
     renderPopover()
 
@@ -496,7 +661,10 @@ describe("selectionPopover", () => {
     })
 
     expect(screen.getByTestId("mock-rnd")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
     expect(onOpenChangeSpy).not.toHaveBeenCalledWith(false)
   })
 
@@ -544,7 +712,10 @@ describe("selectionPopover", () => {
     const { trigger } = renderPopover()
 
     fireEvent.click(screen.getByRole("button", { name: "Pin popover" }))
-    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute("aria-pressed", "true")
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Close" }))
     expect(screen.queryByTestId("mock-rnd")).not.toBeInTheDocument()
@@ -552,11 +723,51 @@ describe("selectionPopover", () => {
     fireEvent.click(trigger)
     flushRaf()
 
-    expect(screen.getByRole("button", { name: "Pin popover" })).toHaveAttribute("aria-pressed", "false")
+    expect(screen.getByRole("button", { name: "Pin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    )
+  })
+
+  it("restores focus to the trigger by default when closing", async () => {
+    const { trigger } = renderPopover()
+    const closeButton = screen.getByRole("button", { name: "Close" })
+
+    closeButton.focus()
+    expect(closeButton).toHaveFocus()
+
+    fireEvent.click(closeButton)
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(trigger).toHaveFocus()
+  })
+
+  it("supports opting out of trigger focus restoration on close", async () => {
+    const { trigger } = renderPopover({
+      contentProps: {
+        finalFocus: false,
+      },
+    })
+    const closeButton = screen.getByRole("button", { name: "Close" })
+
+    closeButton.focus()
+    expect(closeButton).toHaveFocus()
+
+    fireEvent.click(closeButton)
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(document.activeElement).not.toBe(trigger)
   })
 
   it("closes a pinned popover when another popover opens", () => {
-    const { firstOnOpenChange, secondOnOpenChange, firstTrigger, secondTrigger } = renderTwoPopovers()
+    const { firstOnOpenChange, secondOnOpenChange, firstTrigger, secondTrigger } =
+      renderTwoPopovers()
 
     fireEvent.click(firstTrigger)
     flushRaf()
@@ -571,7 +782,7 @@ describe("selectionPopover", () => {
     expect(screen.getByText("Second content")).toBeInTheDocument()
   })
 
-  it("restarts the same popover session when clicking the same trigger again", () => {
+  it("restarts the same popover session when clicking the same trigger again while unpinned", () => {
     render(<ReopenablePopoverHarness />)
 
     const trigger = screen.getByRole("button", { name: "Open popover" })
@@ -582,20 +793,149 @@ describe("selectionPopover", () => {
 
     expect(screen.getByText("First selection")).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole("button", { name: "Pin popover" }))
-    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute("aria-pressed", "true")
-
     const firstElement = screen.getByTestId("mock-rnd")
-
-    fireEvent.click(screen.getByRole("button", { name: "Switch selection" }))
-    expect(screen.getByText("First selection")).toBeInTheDocument()
 
     fireEvent.click(trigger)
     flushRaf()
 
-    expect(screen.getByText("Second selection")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Pin popover" })).toHaveAttribute("aria-pressed", "false")
+    expect(screen.getByText("First selection")).toBeInTheDocument()
     expect(screen.getByTestId("mock-rnd")).not.toBe(firstElement)
+  })
+
+  it("reuses a pinned popover in place when clicking the same trigger again", () => {
+    const onReuseRequestSpy = vi.fn<(...args: any[]) => any>()
+    render(<ReopenablePopoverHarness onReuseRequestSpy={onReuseRequestSpy} />)
+
+    const trigger = screen.getByRole("button", { name: "Open popover" })
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue(buildTriggerRect())
+
+    fireEvent.click(trigger)
+    flushRaf()
+
+    expect(screen.getByText("First selection")).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "Pin popover" }))
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+
+    const firstElement = screen.getByTestId("mock-rnd")
+    const positionBeforeReuse = latestRndProps?.position
+    updatePositionSpy.mockReset()
+    updateSizeSpy.mockReset()
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch selection" }))
+    fireEvent.click(trigger)
+    flushRaf()
+
+    expect(screen.getByText("Second selection")).toBeInTheDocument()
+    expect(onReuseRequestSpy).toHaveBeenCalledWith({ anchor: { x: 120, y: 140 } })
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+    expect(screen.getByTestId("mock-rnd")).toBe(firstElement)
+    expect(latestRndProps?.position).toEqual(positionBeforeReuse)
+    expect(updatePositionSpy).not.toHaveBeenCalled()
+    expect(updateSizeSpy).not.toHaveBeenCalled()
+  })
+
+  it("notifies pinned-state changes through onPinnedChange", () => {
+    const onPinnedChangeSpy = vi.fn<(...args: any[]) => any>()
+    render(<ControlledPinHarness onPinnedChange={onPinnedChangeSpy} />)
+
+    const trigger = screen.getByRole("button", { name: "Open popover" })
+    vi.spyOn(trigger, "getBoundingClientRect").mockReturnValue(buildTriggerRect())
+
+    fireEvent.click(trigger)
+    flushRaf()
+
+    fireEvent.click(screen.getByRole("button", { name: "Pin popover" }))
+    expect(onPinnedChangeSpy).toHaveBeenLastCalledWith(true)
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    expect(onPinnedChangeSpy).toHaveBeenLastCalledWith(false)
+  })
+
+  it("opens at the requested anchor through actionsRef.requestOpen", () => {
+    const actionsRef = React.createRef<{
+      requestOpen: (anchor?: { x: number; y: number } | null) => void
+    }>()
+    render(<ActionsPopoverHarness actionsRef={actionsRef} />)
+
+    expect(screen.queryByTestId("mock-rnd")).not.toBeInTheDocument()
+
+    act(() => {
+      actionsRef.current?.requestOpen({ x: 200, y: 160 })
+    })
+
+    expect(onOpenChangeSpy).toHaveBeenLastCalledWith(true)
+    expect(screen.getByTestId("mock-rnd")).toBeInTheDocument()
+  })
+
+  it("restarts an unpinned popover through actionsRef.requestOpen", () => {
+    const actionsRef = React.createRef<{
+      requestOpen: (anchor?: { x: number; y: number } | null) => void
+    }>()
+    const onReuseRequestSpy = vi.fn<(...args: any[]) => any>()
+    render(<ActionsPopoverHarness actionsRef={actionsRef} onReuseRequest={onReuseRequestSpy} />)
+
+    act(() => {
+      actionsRef.current?.requestOpen({ x: 200, y: 160 })
+    })
+    flushRaf()
+
+    onOpenChangeSpy.mockReset()
+
+    act(() => {
+      actionsRef.current?.requestOpen({ x: 400, y: 320 })
+    })
+
+    expect(onOpenChangeSpy).toHaveBeenLastCalledWith(false)
+
+    flushRaf()
+
+    expect(onOpenChangeSpy).toHaveBeenLastCalledWith(true)
+    expect(onReuseRequestSpy).not.toHaveBeenCalled()
+    expect(screen.getByTestId("mock-rnd")).toBeInTheDocument()
+  })
+
+  it("reuses a pinned popover through actionsRef.requestOpen without moving it", () => {
+    const actionsRef = React.createRef<{
+      requestOpen: (anchor?: { x: number; y: number } | null) => void
+    }>()
+    const onReuseRequestSpy = vi.fn<(...args: any[]) => any>()
+    render(<ActionsPopoverHarness actionsRef={actionsRef} onReuseRequest={onReuseRequestSpy} />)
+
+    act(() => {
+      actionsRef.current?.requestOpen({ x: 200, y: 160 })
+    })
+    flushRaf()
+
+    fireEvent.click(screen.getByRole("button", { name: "Pin popover" }))
+
+    const firstElement = screen.getByTestId("mock-rnd")
+    const positionBeforeReuse = latestRndProps?.position
+    onOpenChangeSpy.mockReset()
+
+    act(() => {
+      actionsRef.current?.requestOpen({ x: 400, y: 320 })
+    })
+    flushRaf()
+
+    expect(onReuseRequestSpy).toHaveBeenCalledWith({ anchor: { x: 400, y: 320 } })
+    expect(onOpenChangeSpy).not.toHaveBeenCalled()
+    expect(screen.getByTestId("mock-rnd")).toBe(firstElement)
+    expect(latestRndProps?.position).toEqual(positionBeforeReuse)
+    expect(screen.getByRole("button", { name: "Unpin popover" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    )
   })
 
   it("keeps growing downward until streamed content reaches the viewport bottom", async () => {

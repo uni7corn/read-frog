@@ -1,19 +1,32 @@
+import type { FloatingButtonSide } from "@/types/config/floating-button"
 import { RiTranslate } from "@remixicon/react"
 import { IconCheck } from "@tabler/icons-react"
 import { useAtomValue } from "jotai"
+import { i18n } from "@/utils/i18n"
 import { sendMessage } from "@/utils/message"
 import { cn } from "@/utils/styles/utils"
 import { enablePageTranslationAtom } from "../../atoms"
 import HiddenButton from "./components/hidden-button"
 
-export default function TranslateButton({ className }: { className: string }) {
+export default function TranslateButton({
+  className,
+  side = "right",
+  expanded = false,
+}: {
+  className?: string
+  side?: FloatingButtonSide
+  expanded?: boolean
+}) {
   const translationState = useAtomValue(enablePageTranslationAtom)
   const isEnabled = translationState.enabled
 
   return (
     <HiddenButton
       icon={<RiTranslate className="h-5 w-5" />}
+      label={i18n.t("options.floatingButton.tooltips.togglePageTranslation")}
       className={className}
+      side={side}
+      expanded={expanded}
       onClick={() => {
         void sendMessage("tryToSetEnablePageTranslationOnContentScript", { enabled: !isEnabled })
       }}

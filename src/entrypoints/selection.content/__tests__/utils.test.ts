@@ -151,12 +151,14 @@ describe("readSelectionSnapshot", () => {
 
     expect(readSelectionSnapshot(selection)).toMatchObject({
       text: "Beta",
-      ranges: [expect.objectContaining({
-        startContainer: selectionNode,
-        startOffset: 0,
-        endContainer: selectionNode,
-        endOffset: 4,
-      })],
+      ranges: [
+        expect.objectContaining({
+          startContainer: selectionNode,
+          startOffset: 0,
+          endContainer: selectionNode,
+          endOffset: 4,
+        }),
+      ],
     })
   })
 
@@ -176,7 +178,7 @@ describe("readSelectionSnapshot", () => {
     range.setStart(selectionNode, 0)
     range.setEnd(selectionNode, selectionNode.textContent?.length ?? 0)
 
-    const getComposedRanges = vi.fn(() => [range])
+    const getComposedRanges = vi.fn<(...args: any[]) => any>(() => [range])
     const selection = {
       toString: () => "Beta",
       anchorNode: selectionNode,
@@ -210,7 +212,7 @@ describe("readSelectionSnapshot", () => {
     range.setStart(selectedText, 0)
     range.setEnd(selectedText, selectedText.textContent?.length ?? 0)
 
-    const getComposedRanges = vi.fn(() => [range])
+    const getComposedRanges = vi.fn<(...args: any[]) => any>(() => [range])
     const selection = {
       toString: () => "Beta",
       anchorNode: selectedText,
@@ -249,7 +251,7 @@ describe("readSelectionSnapshot", () => {
     range.setStart(selectedText, 0)
     range.setEnd(selectedText, selectedText.textContent?.length ?? 0)
 
-    const getComposedRanges = vi.fn(() => [range])
+    const getComposedRanges = vi.fn<(...args: any[]) => any>(() => [range])
     const selection = {
       toString: () => "Beta",
       anchorNode: selectedText,
@@ -266,6 +268,75 @@ describe("readSelectionSnapshot", () => {
     })
   })
 
+  it("passes the Read Frog subtitles shadow root when selection boundaries expose only the host", () => {
+    document.body.innerHTML = `
+      <div id="read-frog-subtitles-ui-host"></div>
+      <main><span id="fallback">against</span></main>
+    `
+
+    const subtitlesHost = document.getElementById("read-frog-subtitles-ui-host")
+    const fallbackNode = document.getElementById("fallback")?.firstChild
+    if (!subtitlesHost || !fallbackNode) {
+      throw new Error("Selection fixtures not found")
+    }
+
+    const subtitlesShadowRoot = subtitlesHost.attachShadow({ mode: "open" })
+    const subtitleLine = document.createElement("div")
+    subtitleLine.className = "subtitles-main"
+    subtitleLine.textContent =
+      "fears that anti-immigration protests could descend into widespread violence against foreigners."
+    subtitlesShadowRoot.appendChild(subtitleLine)
+
+    const subtitleNode = subtitleLine.firstChild
+    if (!subtitleNode) {
+      throw new Error("Subtitle text node not found")
+    }
+
+    const selectedWordStart = subtitleNode.textContent?.indexOf("against") ?? -1
+    if (selectedWordStart < 0) {
+      throw new Error("Selected word not found in subtitle")
+    }
+
+    const subtitleRange = document.createRange()
+    subtitleRange.setStart(subtitleNode, selectedWordStart)
+    subtitleRange.setEnd(subtitleNode, selectedWordStart + "against".length)
+
+    const fallbackRange = document.createRange()
+    fallbackRange.setStart(fallbackNode, 0)
+    fallbackRange.setEnd(fallbackNode, fallbackNode.textContent?.length ?? 0)
+
+    const getComposedRanges = vi.fn<(...args: any[]) => any>(
+      (options?: { shadowRoots?: ShadowRoot[] }) =>
+        options?.shadowRoots?.includes(subtitlesShadowRoot) ? [subtitleRange] : [],
+    )
+    const selection = {
+      toString: () => "against",
+      anchorNode: subtitlesHost,
+      focusNode: subtitlesHost,
+      rangeCount: 1,
+      getRangeAt: () => fallbackRange,
+      getComposedRanges,
+    } as unknown as Selection
+
+    const snapshot = readSelectionSnapshot(selection)
+
+    expect(getComposedRanges).toHaveBeenCalledWith({
+      shadowRoots: [subtitlesShadowRoot],
+    })
+    expect(snapshot?.ranges[0]).toMatchObject({
+      startContainer: subtitleNode,
+      startOffset: selectedWordStart,
+      endContainer: subtitleNode,
+      endOffset: selectedWordStart + "against".length,
+    })
+    expect(buildContextSnapshot(snapshot)).toEqual({
+      text: "fears that anti-immigration protests could descend into widespread violence against foreigners.",
+      paragraphs: [
+        "fears that anti-immigration protests could descend into widespread violence against foreigners.",
+      ],
+    })
+  })
+
   it("falls back to getRangeAt when getComposedRanges returns no ranges", () => {
     document.body.innerHTML = `<div id="selection">Beta</div>`
 
@@ -278,8 +349,8 @@ describe("readSelectionSnapshot", () => {
     range.setStart(selectionNode, 0)
     range.setEnd(selectionNode, selectionNode.textContent?.length ?? 0)
 
-    const getRangeAt = vi.fn(() => range)
-    const getComposedRanges = vi.fn(() => [])
+    const getRangeAt = vi.fn<(...args: any[]) => any>(() => range)
+    const getComposedRanges = vi.fn<(...args: any[]) => any>(() => [])
     const selection = {
       toString: () => "Beta",
       anchorNode: selectionNode,
@@ -291,12 +362,14 @@ describe("readSelectionSnapshot", () => {
 
     expect(readSelectionSnapshot(selection)).toMatchObject({
       text: "Beta",
-      ranges: [expect.objectContaining({
-        startContainer: selectionNode,
-        startOffset: 0,
-        endContainer: selectionNode,
-        endOffset: 4,
-      })],
+      ranges: [
+        expect.objectContaining({
+          startContainer: selectionNode,
+          startOffset: 0,
+          endContainer: selectionNode,
+          endOffset: 4,
+        }),
+      ],
     })
     expect(getRangeAt).toHaveBeenCalledWith(0)
   })

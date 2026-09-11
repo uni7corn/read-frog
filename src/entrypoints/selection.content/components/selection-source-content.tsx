@@ -1,6 +1,7 @@
 import { IconChevronDown, IconChevronUp } from "@tabler/icons-react"
 import { Activity, useState } from "react"
 import { Button } from "@/components/ui/base-ui/button"
+import { ScrollArea } from "@/components/ui/base-ui/scroll-area"
 import { Separator } from "@/components/ui/base-ui/separator"
 import { cn } from "@/utils/styles/utils"
 import { CopyButton } from "./copy-button"
@@ -26,14 +27,24 @@ export function SelectionSourceContent({
     <>
       <div className="space-y-2">
         <div className="flex items-start justify-between gap-2">
-          <p className="min-w-0 flex-1 text-sm whitespace-pre-wrap wrap-break-words text-zinc-600 dark:text-zinc-400">
-            {displayText}
-          </p>
+          <ScrollArea
+            className="min-w-0 flex-1"
+            viewportClassName={cn(actionsExpanded && "max-h-18")}
+          >
+            <p
+              className={cn(
+                "text-sm [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-zinc-600 dark:text-zinc-400",
+                !actionsExpanded && "line-clamp-3",
+              )}
+            >
+              {displayText}
+            </p>
+          </ScrollArea>
           <Button
             variant="ghost-secondary"
             size="icon-xs"
             className="size-5.5 shrink-0"
-            onClick={() => setActionsExpanded(prev => !prev)}
+            onClick={() => setActionsExpanded((prev) => !prev)}
           >
             <Activity mode={actionsExpanded ? "visible" : "hidden"}>
               <IconChevronUp />
@@ -50,7 +61,9 @@ export function SelectionSourceContent({
           </div>
         </Activity>
       </div>
-      <Separator className={cn("opacity-60", actionsExpanded ? "mt-1.5" : "mt-3", separatorClassName)} />
+      <Separator
+        className={cn("opacity-60", actionsExpanded ? "mt-1.5" : "mt-3", separatorClassName)}
+      />
     </>
   )
 }

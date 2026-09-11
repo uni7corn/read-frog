@@ -1,4 +1,3 @@
-import { i18n } from "#imports"
 import { Icon } from "@iconify/react"
 import debounce from "debounce"
 import { useAtom, useAtomValue, useSetAtom } from "jotai"
@@ -6,7 +5,15 @@ import { useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/base-ui/button"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
 import { detectLanguage } from "@/utils/content/language"
-import { detectedSourceLangCodeAtom, exchangeLangCodesAtom, inputTextAtom, sourceLangCodeAtom, targetLangCodeAtom } from "../atoms"
+import { i18n } from "@/utils/i18n"
+import {
+  detectedLangCodeAtom,
+  detectedSourceLangCodeAtom,
+  exchangeLangCodesAtom,
+  inputTextAtom,
+  sourceLangCodeAtom,
+  targetLangCodeAtom,
+} from "../atoms"
 import { SearchableLanguageSelector } from "./searchable-language-selector"
 
 export function LanguageControlPanel() {
@@ -14,19 +21,21 @@ export function LanguageControlPanel() {
   const [targetLangCode, setTargetLangCode] = useAtom(targetLangCodeAtom)
   const exchangeLangCodes = useSetAtom(exchangeLangCodesAtom)
   const inputText = useAtomValue(inputTextAtom)
-  const [detectedSourceLangCode, setDetectedSourceLangCode] = useAtom(detectedSourceLangCodeAtom)
+  const setDetectedSourceLangCode = useSetAtom(detectedSourceLangCodeAtom)
+  const detectedLangCode = useAtomValue(detectedLangCodeAtom)
   const languageDetection = useAtomValue(configFieldsAtomMap.languageDetection)
 
   // Debounced language detection from input text
   const enableLLM = languageDetection.mode === "llm"
   const debouncedDetect = useMemo(
-    () => debounce(async (text: string) => {
-      const detected = await detectLanguage(text, {
-        minLength: 1,
-        enableLLM,
-      })
-      setDetectedSourceLangCode(detected)
-    }, 1000),
+    () =>
+      debounce(async (text: string) => {
+        const detected = await detectLanguage(text, {
+          minLength: 1,
+          enableLLM,
+        })
+        setDetectedSourceLangCode(detected)
+      }, 1000),
     [setDetectedSourceLangCode, enableLLM],
   )
 
@@ -35,12 +44,10 @@ export function LanguageControlPanel() {
     return () => debouncedDetect.clear()
   }, [inputText, debouncedDetect])
 
-  const detectedLangCode = detectedSourceLangCode ?? "eng"
-
   return (
-    <div className="flex items-center gap-3 w-full">
+    <div className="flex w-full items-center gap-3">
       <SearchableLanguageSelector
-        className="flex-1 min-w-0"
+        className="min-w-0 flex-1"
         value={sourceLangCode}
         onValueChange={setSourceLangCode}
         detectedLangCode={detectedLangCode}
@@ -52,7 +59,6 @@ export function LanguageControlPanel() {
           variant="ghost"
           size="icon"
           onClick={exchangeLangCodes}
-          disabled={sourceLangCode === "auto"}
           title={i18n.t("translationHub.exchangeLanguages")}
         >
           <Icon icon="tabler:arrows-exchange" className="h-4 w-4" />
@@ -60,11 +66,10 @@ export function LanguageControlPanel() {
       </div>
 
       <SearchableLanguageSelector
-        className="flex-1 min-w-0"
+        className="min-w-0 flex-1"
         value={targetLangCode}
         onValueChange={(value) => {
-          if (value !== "auto")
-            setTargetLangCode(value)
+          if (value !== "auto") setTargetLangCode(value)
         }}
         label={i18n.t("side.targetLang")}
       />

@@ -1,4 +1,3 @@
-import { i18n } from "#imports"
 import { useAtom } from "jotai"
 import { useEffect, useMemo, useRef } from "react"
 import { useLocation, useNavigate } from "react-router"
@@ -11,6 +10,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/base-ui/command"
+import { i18n } from "@/utils/i18n"
 import { commandPaletteOpenAtom } from "./atoms"
 import { SEARCH_ITEMS } from "./search-items"
 import {
@@ -18,6 +18,10 @@ import {
   getSectionIdFromSearch,
   scrollToSectionWhenReady,
 } from "./section-scroll"
+
+function tSearchKey(key: string) {
+  return i18n.t(key as never)
+}
 
 export function SettingsSearch() {
   const [open, setOpen] = useAtom(commandPaletteOpenAtom)
@@ -29,7 +33,7 @@ export function SettingsSearch() {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        setOpen(prev => !prev)
+        setOpen((prev) => !prev)
       }
     }
     document.addEventListener("keydown", handleKeyDown)
@@ -42,8 +46,7 @@ export function SettingsSearch() {
       const existing = groups.get(item.pageKey)
       if (existing) {
         existing.push(item)
-      }
-      else {
+      } else {
         groups.set(item.pageKey, [item])
       }
     }
@@ -92,14 +95,14 @@ export function SettingsSearch() {
         <CommandList>
           <CommandEmpty>{i18n.t("options.commandPalette.noResults")}</CommandEmpty>
           {Array.from(groupedItems.entries(), ([pageKey, items]) => (
-            <CommandGroup key={pageKey} heading={i18n.t(pageKey)}>
-              {items.map(item => (
+            <CommandGroup key={pageKey} heading={tSearchKey(pageKey)}>
+              {items.map((item) => (
                 <CommandItem
                   key={item.sectionId}
                   value={buildSearchValue(item)}
                   onSelect={() => handleSelect(item)}
                 >
-                  <span>{i18n.t(item.titleKey)}</span>
+                  <span>{tSearchKey(item.titleKey)}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -111,9 +114,9 @@ export function SettingsSearch() {
 }
 
 function buildSearchValue(item: (typeof SEARCH_ITEMS)[number]): string {
-  const parts = [i18n.t(item.titleKey)]
+  const parts = [tSearchKey(item.titleKey)]
   if (item.descriptionKey) {
-    parts.push(i18n.t(item.descriptionKey))
+    parts.push(tSearchKey(item.descriptionKey))
   }
   return parts.join(" ")
 }

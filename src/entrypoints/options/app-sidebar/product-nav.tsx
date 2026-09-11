@@ -1,6 +1,6 @@
-import { i18n } from "#imports"
 import { Icon } from "@iconify/react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAtomValue } from "jotai"
+import { Link, useLocation } from "react-router"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -8,84 +8,45 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/base-ui/sidebar"
-import { getLastViewedBlogDate, getLatestBlogDate, hasNewBlogPost, saveLastViewedBlogDate } from "@/utils/blog"
-import { WEBSITE_URL } from "@/utils/constants/url"
-import { cn } from "@/utils/styles/utils"
-import { getLastViewedSurvey, hasNewSurvey, saveLastViewedSurvey } from "@/utils/survey"
-import { version } from "../../../../package.json"
-import { AnimatedIndicator } from "./animated-indicator"
-
-const SURVEY_URL = "https://tally.so/r/kdNN5R"
+import { configFieldsAtomMap } from "@/utils/atoms/config"
+import { buildFeaturebasePortalUrl } from "@/utils/featurebase"
+import { i18n } from "@/utils/i18n"
+import { resolveUiLocale } from "@/utils/i18n/locale-map"
 
 export function ProductNav() {
-  const { open } = useSidebar()
-  const queryClient = useQueryClient()
+  const uiLanguage = useAtomValue(configFieldsAtomMap.uiLanguage)
+  const locale = resolveUiLocale(uiLanguage)
+  const { pathname } = useLocation()
 
-  const { data: lastViewedDate } = useQuery({
-    queryKey: ["last-viewed-blog-date"],
-    queryFn: getLastViewedBlogDate,
-  })
-
-  const { data: latestBlogPost } = useQuery({
-    queryKey: ["latest-blog-post"],
-    queryFn: () => getLatestBlogDate(`${WEBSITE_URL}/api/blog/latest`, "en", version),
-  })
-
-  const { data: lastViewedSurveyUrl } = useQuery({
-    queryKey: ["last-viewed-survey"],
-    queryFn: getLastViewedSurvey,
-  })
-
-  const handleWhatsNewClick = async () => {
-    if (latestBlogPost) {
-      await saveLastViewedBlogDate(latestBlogPost.date)
-      await queryClient.invalidateQueries({ queryKey: ["last-viewed-blog-date"] })
-    }
-  }
-
-  const handleSurveyClick = async () => {
-    await saveLastViewedSurvey(SURVEY_URL)
-    await queryClient.invalidateQueries({ queryKey: ["last-viewed-survey"] })
-  }
-
-  const showBlogIndicator = hasNewBlogPost(
-    lastViewedDate ?? null,
-    latestBlogPost?.date ?? null,
-  )
-
-  const showSurveyIndicator = hasNewSurvey(lastViewedSurveyUrl ?? null, SURVEY_URL)
-
-  const blogUrl = latestBlogPost?.url
-    ? `${WEBSITE_URL}${latestBlogPost.url}`
-    : `${WEBSITE_URL}/blog?latest-indicator=true`
+  const roadmapHref = buildFeaturebasePortalUrl({ destination: "roadmap", locale })
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{i18n.t("options.sidebar.product")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          <SidebarMenuItem className="relative">
+          <SidebarMenuItem>
             <SidebarMenuButton
-              render={<a href={blogUrl} target="_blank" rel="noopener noreferrer" onClick={handleWhatsNewClick} />}
-              className={cn(showBlogIndicator && "text-primary font-semibold hover:text-primary active:text-primary")}
+              render={<a href={roadmapHref} target="_blank" rel="noopener noreferrer" />}
+              tooltip={i18n.t("options.product.roadmap")}
             >
-              <Icon icon="tabler:sparkles" />
-              <span>{i18n.t("options.whatsNew.title")}</span>
+              <Icon icon="tabler:route" />
+              <span>{i18n.t("options.product.roadmap")}</span>
             </SidebarMenuButton>
-            <AnimatedIndicator show={showBlogIndicator && open} />
           </SidebarMenuItem>
 
-          <SidebarMenuItem className="relative">
+          {/* Feedback used to leave for the portal; it is a page now, and the portal is one
+              of the ways to reach us listed on it. */}
+          <SidebarMenuItem>
             <SidebarMenuButton
-              render={<a href={SURVEY_URL} target="_blank" rel="noopener noreferrer" onClick={handleSurveyClick} />}
-              className={cn(showSurveyIndicator && "text-primary font-semibold hover:text-primary active:text-primary")}
+              render={<Link to="/help-and-community" />}
+              isActive={pathname === "/help-and-community"}
+              tooltip={i18n.t("options.helpAndCommunity.title")}
             >
-              <Icon icon="tabler:message-question" />
-              <span>{i18n.t("options.survey.title")}</span>
+              <Icon icon="tabler:message-circle" />
+              <span>{i18n.t("options.helpAndCommunity.title")}</span>
             </SidebarMenuButton>
-            <AnimatedIndicator show={showSurveyIndicator && open} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>

@@ -2,10 +2,12 @@ import type {
   SelectionToolbarCustomActionOutputField,
   SelectionToolbarCustomActionOutputType,
 } from "@/types/config/selection-toolbar"
+import { getRandomUUID } from "@/utils/crypto-polyfill"
 import { getUniqueName } from "@/utils/name"
 
 export const ICON_PATTERN = /^[^:\s]+:[^:\s]+$/
 export const DEFAULT_ACTION_NAME = "Custom AI Action"
+export const BUILT_IN_DICTIONARY_ACTION_ID = "default-dictionary"
 export function createOutputSchemaField(
   name: string,
   type: SelectionToolbarCustomActionOutputType = "string",
@@ -14,7 +16,7 @@ export function createOutputSchemaField(
   speaking = false,
 ): SelectionToolbarCustomActionOutputField {
   return {
-    id: id ?? crypto.randomUUID(),
+    id: id ?? getRandomUUID(),
     name,
     type,
     description,
@@ -22,8 +24,11 @@ export function createOutputSchemaField(
   }
 }
 
-export function getNextOutputFieldName(fields: SelectionToolbarCustomActionOutputField[], prefix: string): string {
-  const existingNames = new Set(fields.map(f => f.name))
+export function getNextOutputFieldName(
+  fields: SelectionToolbarCustomActionOutputField[],
+  prefix: string,
+): string {
+  const existingNames = new Set(fields.map((f) => f.name))
   existingNames.add(prefix)
   return getUniqueName(prefix, existingNames, "")
 }
@@ -42,8 +47,9 @@ export function isDuplicateOutputSchemaFieldName(
   currentFieldId?: string,
 ) {
   const normalizedName = normalizeOutputSchemaFieldName(name)
-  return fields.some(field =>
-    field.id !== currentFieldId && normalizeOutputSchemaFieldName(field.name) === normalizedName,
+  return fields.some(
+    (field) =>
+      field.id !== currentFieldId && normalizeOutputSchemaFieldName(field.name) === normalizedName,
   )
 }
 
@@ -63,10 +69,19 @@ export function getOutputSchemaFieldNameError(
   return undefined
 }
 
-export const SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS = ["selection", "paragraphs", "targetLanguage", "webTitle"] as const
+export const SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS = [
+  "selection",
+  "paragraphs",
+  "targetLanguage",
+  "webTitle",
+  "webContent",
+] as const
 
-export type SelectionToolbarCustomActionToken = (typeof SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS)[number]
+export type SelectionToolbarCustomActionToken =
+  (typeof SELECTION_TOOLBAR_CUSTOM_ACTION_TOKENS)[number]
 
-export function getSelectionToolbarCustomActionTokenCellText(token: SelectionToolbarCustomActionToken) {
+export function getSelectionToolbarCustomActionTokenCellText(
+  token: SelectionToolbarCustomActionToken,
+) {
   return `{{${token}}}`
 }

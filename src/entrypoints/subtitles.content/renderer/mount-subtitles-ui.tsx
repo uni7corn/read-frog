@@ -1,20 +1,31 @@
+import type { SubtitlesProvidersAdapter } from "../universal-adapter"
 import type { PlatformConfig } from "@/entrypoints/subtitles.content/platforms"
-import { Provider as JotaiProvider } from "jotai"
 import ReactDOM from "react-dom/client"
-import { Toaster } from "sonner"
 import themeCSS from "@/assets/styles/theme.css?inline"
-import { ThemeProvider } from "@/components/providers/theme-provider"
 import { REACT_SHADOW_HOST_CLASS } from "@/utils/constants/dom-labels"
+import { READ_FROG_SUBTITLES_UI_HOST_ID, SUBTITLES_THEME } from "@/utils/constants/subtitles"
 import { waitForElement } from "@/utils/dom/wait-for-element"
+import { LocaleBoundary } from "@/utils/i18n/locale-boundary"
 import { ShadowWrapperContext } from "@/utils/react-shadow-host/create-shadow-host"
 import { ShadowHostBuilder } from "@/utils/react-shadow-host/shadow-host-builder"
-import { subtitlesStore } from "../atoms"
+import { applyTheme } from "@/utils/theme"
 import { SubtitlesContainer } from "../ui/subtitles-container"
+import { SubtitlesProviders } from "../ui/subtitles-ui-context"
+import { mountSubtitlesToast } from "./mount-subtitles-toast"
 
-export async function mountSubtitlesUI(config: PlatformConfig): Promise<void> {
+interface MountSubtitlesUIOptions {
+  adapter: SubtitlesProvidersAdapter
+  config: Pick<PlatformConfig, "selectors">
+  menuBelow?: boolean
+}
+
+export async function mountSubtitlesUI({
+  adapter,
+  config,
+  menuBelow,
+}: MountSubtitlesUIOptions): Promise<void> {
   const videoContainer = await waitForElement(config.selectors.playerContainer)
-  if (!videoContainer)
-    return
+  if (!videoContainer) return
 
   const parentEl = videoContainer as HTMLElement
   const computedStyle = window.getComputedStyle(parentEl)
@@ -22,7 +33,20 @@ export async function mountSubtitlesUI(config: PlatformConfig): Promise<void> {
     parentEl.style.position = "relative"
   }
 
+  const existingHost = document.getElementById(
+    READ_FROG_SUBTITLES_UI_HOST_ID,
+  ) as HTMLDivElement | null
+  if (existingHost) {
+    if (existingHost.parentElement === parentEl) {
+      return
+    }
+
+    ;(existingHost as any).__reactShadowContainerCleanup?.()
+    existingHost.remove()
+  }
+
   const shadowHost = document.createElement("div")
+  shadowHost.id = READ_FROG_SUBTITLES_UI_HOST_ID
   shadowHost.classList.add(REACT_SHADOW_HOST_CLASS)
   shadowHost.style.cssText = `
     position: absolute;
@@ -33,7 +57,7 @@ export async function mountSubtitlesUI(config: PlatformConfig): Promise<void> {
     pointer-events: none;
     z-index: 9999;
     transition: bottom 0.2s ease-out;
-    overflow: hidden;
+    overflow: visible;
   `
 
   const shadowRoot = shadowHost.attachShadow({ mode: "open" })
@@ -48,13 +72,17 @@ export async function mountSubtitlesUI(config: PlatformConfig): Promise<void> {
       right: "0",
       bottom: "0",
       pointerEvents: "none",
+      overflow: "visible",
     },
   })
   const reactContainer = hostBuilder.build()
+  applyTheme(reactContainer, SUBTITLES_THEME)
 
   const reactRoot = ReactDOM.createRoot(reactContainer)
+  const cleanupToast = mountSubtitlesToast()
 
   ;(shadowHost as any).__reactShadowContainerCleanup = () => {
+    cleanupToast()
     reactRoot?.unmount()
     hostBuilder.cleanup()
   }
@@ -62,14 +90,13 @@ export async function mountSubtitlesUI(config: PlatformConfig): Promise<void> {
   parentEl.appendChild(shadowHost)
 
   const app = (
-    <JotaiProvider store={subtitlesStore}>
-      <ShadowWrapperContext value={reactContainer}>
-        <ThemeProvider container={reactContainer}>
-          <SubtitlesContainer controlsConfig={config.controls} />
-          <Toaster richColors className="z-2147483647 notranslate" />
-        </ThemeProvider>
-      </ShadowWrapperContext>
-    </JotaiProvider>
+    <ShadowWrapperContext value={reactContainer}>
+      <SubtitlesProviders adapter={adapter} openBelow={menuBelow}>
+        <LocaleBoundary>
+          <SubtitlesContainer />
+        </LocaleBoundary>
+      </SubtitlesProviders>
+    </ShadowWrapperContext>
   )
 
   reactRoot.render(app)

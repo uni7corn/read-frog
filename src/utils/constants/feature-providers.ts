@@ -5,11 +5,11 @@ import { mergeWithArrayOverwrite } from "../atoms/config"
 import { getProviderConfigById } from "../config/helpers"
 
 export const FEATURE_KEYS = [
-  "translate",
+  "pageTranslation",
   "videoSubtitles",
-  "selectionToolbar.translate",
-  "selectionToolbar.vocabularyInsight",
+  "selectionTranslation",
   "inputTranslation",
+  "noteSuggestion",
 ] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -21,40 +21,54 @@ export interface FeatureProviderDef {
 }
 
 export const FEATURE_PROVIDER_DEFS = {
-  "translate": {
+  pageTranslation: {
     isProvider: isTranslateProvider,
-    getProviderId: (c: Config) => c.translate.providerId,
-    configPath: ["translate", "providerId"],
+    getProviderId: (c: Config) => c.pageTranslation.providerId,
+    configPath: ["pageTranslation", "providerId"],
   },
-  "videoSubtitles": {
+  videoSubtitles: {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.videoSubtitles.providerId,
     configPath: ["videoSubtitles", "providerId"],
   },
-  "selectionToolbar.translate": {
+  selectionTranslation: {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.selectionToolbar.features.translate.providerId,
     configPath: ["selectionToolbar", "features", "translate", "providerId"],
   },
-  "selectionToolbar.vocabularyInsight": {
-    isProvider: isLLMProvider,
-    getProviderId: (c: Config) => c.selectionToolbar.features.vocabularyInsight.providerId,
-    configPath: ["selectionToolbar", "features", "vocabularyInsight", "providerId"],
-  },
-  "inputTranslation": {
+  inputTranslation: {
     isProvider: isTranslateProvider,
     getProviderId: (c: Config) => c.inputTranslation.providerId,
     configPath: ["inputTranslation", "providerId"],
   },
+  noteSuggestion: {
+    isProvider: isLLMProvider,
+    getProviderId: (c: Config) => c.selectionToolbar.noteSuggestion.providerId,
+    configPath: ["selectionToolbar", "noteSuggestion", "providerId"],
+  },
 } as const satisfies Record<FeatureKey, FeatureProviderDef>
 
-/** Maps FeatureKey (with dots) to i18n-safe key (with underscores) for `options.general.featureProviders.features.*` */
-export const FEATURE_KEY_I18N_MAP: Record<FeatureKey, string> = {
-  "translate": "translate",
-  "videoSubtitles": "videoSubtitles",
-  "selectionToolbar.translate": "selectionToolbar_translate",
-  "selectionToolbar.vocabularyInsight": "selectionToolbar_vocabularyInsight",
-  "inputTranslation": "inputTranslation",
+/** Maps FeatureKey (with dots) to i18n-safe key (with underscores) for `options.apiProviders.featureProviders.features.*` */
+export const FEATURE_KEY_I18N_MAP = {
+  pageTranslation: "pageTranslation",
+  videoSubtitles: "videoSubtitles",
+  selectionTranslation: "selectionTranslation",
+  inputTranslation: "inputTranslation",
+  noteSuggestion: "noteSuggestion",
+} as const satisfies Record<FeatureKey, string>
+
+export type FeatureLabelI18nKey =
+  `options.apiProviders.featureProviders.features.${(typeof FEATURE_KEY_I18N_MAP)[FeatureKey]}`
+
+export function getFeatureLabelI18nKey(featureKey: FeatureKey): FeatureLabelI18nKey {
+  return `options.apiProviders.featureProviders.features.${FEATURE_KEY_I18N_MAP[featureKey]}`
+}
+
+export type FeatureDescriptionI18nKey =
+  `options.apiProviders.featureProviders.descriptions.${(typeof FEATURE_KEY_I18N_MAP)[FeatureKey]}`
+
+export function getFeatureDescriptionI18nKey(featureKey: FeatureKey): FeatureDescriptionI18nKey {
+  return `options.apiProviders.featureProviders.descriptions.${FEATURE_KEY_I18N_MAP[featureKey]}`
 }
 
 export function resolveProviderConfig(config: Config, featureKey: FeatureKey) {
@@ -87,8 +101,7 @@ export function buildFeatureProviderPatch(
 
   for (const key of FEATURE_KEYS) {
     const newId = assignments[key]
-    if (newId === undefined)
-      continue
+    if (newId === undefined) continue
 
     const def = FEATURE_PROVIDER_DEFS[key]
 
@@ -96,13 +109,13 @@ export function buildFeatureProviderPatch(
     let current: Record<string, unknown> = fragment
     for (let i = 0; i < def.configPath.length - 1; i++) {
       const next: Record<string, unknown> = {}
-      current[def.configPath[i]] = next
+      current[def.configPath[i]!] = next
       current = next
     }
-    current[def.configPath[def.configPath.length - 1]] = newId
+    current[def.configPath[def.configPath.length - 1]!] = newId
 
     patch = mergeWithArrayOverwrite(patch, fragment)
   }
 
-  return patch as Partial<Config>
+  return patch
 }

@@ -29,9 +29,7 @@ describe("translation error shadow portals", () => {
     const result = render(
       <Provider store={store}>
         <ShadowWrapperContext value={shadowWrapper}>
-          <TooltipProvider>
-            {ui}
-          </TooltipProvider>
+          <TooltipProvider>{ui}</TooltipProvider>
         </ShadowWrapperContext>
       </Provider>,
     )
@@ -78,5 +76,22 @@ describe("translation error shadow portals", () => {
     expect(hoverCard).toHaveTextContent("Translation Error")
     expect(hoverCard).toHaveTextContent("Request failed")
     expect(shadowWrapper.contains(hoverCard)).toBe(true)
+  })
+
+  it("swaps the stale-context error for a reload hint and drops the fake status code", async () => {
+    const error = { message: "Extension context invalidated." } as APICallError
+
+    const { container, shadowWrapper } = renderInShadow(<ErrorButton error={error} />)
+    fireEvent.mouseEnter(container.querySelector("[data-slot='hover-card-trigger']")!)
+
+    await waitFor(() => {
+      expect(shadowWrapper.querySelector("[data-slot='hover-card-content']")).toBeTruthy()
+    })
+
+    const hoverCard = shadowWrapper.querySelector("[data-slot='hover-card-content']")
+
+    expect(hoverCard).toHaveTextContent("translation.extensionContextInvalidated")
+    expect(hoverCard).not.toHaveTextContent("Extension context invalidated.")
+    expect(hoverCard).not.toHaveTextContent("Status Code")
   })
 })

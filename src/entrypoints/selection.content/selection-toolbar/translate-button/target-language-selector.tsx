@@ -1,4 +1,3 @@
-import { i18n } from "#imports"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 import { IconChevronDown } from "@tabler/icons-react"
 import { useAtom } from "jotai"
@@ -15,13 +14,14 @@ import {
 } from "@/components/ui/base-ui/combobox"
 import { useSelectionPopoverOverlayProps } from "@/components/ui/selection-popover"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
+import { i18n } from "@/utils/i18n"
 
 export function TargetLanguageSelector() {
   const [language, setLanguage] = useAtom(configFieldsAtomMap.language)
   const popoverOverlay = useSelectionPopoverOverlayProps()
   const languageItems = useMemo(() => getTargetLanguageItems(), [])
   const currentItem = useMemo(
-    () => languageItems.find(item => item.value === language.targetCode) ?? null,
+    () => languageItems.find((item) => item.value === language.targetCode) ?? null,
     [language.targetCode, languageItems],
   )
   const title = currentItem?.label ?? i18n.t("side.targetLang")
@@ -30,7 +30,7 @@ export function TargetLanguageSelector() {
     <Combobox
       value={currentItem}
       onValueChange={(item) => {
-        if (!item || item.value === "auto" || item.value === language.targetCode) {
+        if (!item || item.value === language.targetCode) {
           return
         }
 
@@ -41,7 +41,7 @@ export function TargetLanguageSelector() {
       autoHighlight
     >
       <ComboboxPrimitive.Trigger
-        render={(
+        render={
           <Button
             variant="ghost-secondary"
             size="sm"
@@ -50,7 +50,7 @@ export function TargetLanguageSelector() {
             title={title}
             data-rf-no-drag
           />
-        )}
+        }
       >
         <span className="min-w-0 truncate">{currentItem?.name ?? i18n.t("side.targetLang")}</span>
         <IconChevronDown className="size-3.5 text-muted-foreground" />
@@ -61,12 +61,9 @@ export function TargetLanguageSelector() {
         align="end"
         className="w-72"
       >
-        <ComboboxInput
-          showTrigger={false}
-          placeholder={i18n.t("translationHub.searchLanguages")}
-        />
+        <ComboboxInput showTrigger={false} placeholder={i18n.t("translationHub.searchLanguages")} />
         <ComboboxList>
-          {item => (
+          {(item) => (
             <ComboboxItem key={item.value} value={item}>
               {item.label}
             </ComboboxItem>

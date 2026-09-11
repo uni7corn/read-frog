@@ -1,6 +1,6 @@
+import type { Theme } from "@/types/config/theme"
 import { createContext } from "react"
 import ReactDOM from "react-dom/client"
-
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { TooltipProvider } from "@/components/ui/base-ui/tooltip"
 import { REACT_SHADOW_HOST_CLASS } from "../constants/dom-labels"
@@ -16,13 +16,13 @@ export function createReactShadowHost(
     className?: string
     cssContent?: string[]
     style?: Partial<CSSStyleDeclaration>
+    forcedTheme?: Theme
   },
 ) {
-  const { className, position, inheritStyles, cssContent, style } = options
+  const { className, position, inheritStyles, cssContent, style, forcedTheme } = options
 
   const shadowHost = document.createElement("div")
-  if (className)
-    shadowHost.className = className
+  if (className) shadowHost.className = className
 
   shadowHost.classList.add(REACT_SHADOW_HOST_CLASS)
   shadowHost.style.display = position
@@ -39,10 +39,8 @@ export function createReactShadowHost(
   const root = ReactDOM.createRoot(innerReactContainer)
   const wrappedComponent = (
     <ShadowWrapperContext value={innerReactContainer}>
-      <ThemeProvider container={innerReactContainer}>
-        <TooltipProvider>
-          {component}
-        </TooltipProvider>
+      <ThemeProvider container={innerReactContainer} forcedTheme={forcedTheme}>
+        <TooltipProvider>{component}</TooltipProvider>
       </ThemeProvider>
     </ShadowWrapperContext>
   )

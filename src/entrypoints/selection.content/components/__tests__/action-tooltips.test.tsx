@@ -12,15 +12,15 @@ import { SpeakButton } from "../speak-button"
 
 vi.mock("@/hooks/use-text-to-speech", () => ({
   useTextToSpeech: () => ({
-    play: vi.fn(),
-    stop: vi.fn(),
+    play: vi.fn<(...args: any[]) => any>(),
+    stop: vi.fn<(...args: any[]) => any>(),
     isFetching: false,
     isPlaying: false,
   }),
 }))
 
 describe("selection action tooltips", () => {
-  const writeTextMock = vi.fn()
+  const writeTextMock = vi.fn<(...args: any[]) => any>()
 
   Object.defineProperty(navigator, "clipboard", {
     configurable: true,
@@ -41,9 +41,7 @@ describe("selection action tooltips", () => {
 
     return render(
       <Provider store={store}>
-        <TooltipProvider>
-          {ui}
-        </TooltipProvider>
+        <TooltipProvider>{ui}</TooltipProvider>
       </Provider>,
     )
   }
@@ -65,6 +63,18 @@ describe("selection action tooltips", () => {
 
     return { tooltip, positioner }
   }
+
+  async function expectTooltipClosesOnHoverLeave(trigger: Element) {
+    await openTooltip(trigger)
+
+    fireEvent.mouseLeave(trigger)
+    fireEvent.blur(trigger)
+
+    await waitFor(() => {
+      expect(document.querySelector("[data-slot='tooltip-content']")).toBeNull()
+    })
+  }
+
   it("renders the copy tooltip above selection popovers", async () => {
     const { container } = renderWithProviders(<CopyButton text="Copied text" />)
     const trigger = container.querySelector("[data-slot='tooltip-trigger']")
@@ -89,7 +99,9 @@ describe("selection action tooltips", () => {
     fireEvent.click(trigger!)
 
     await waitFor(() => {
-      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent("action.copied")
+      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent(
+        "action.copied",
+      )
     })
 
     expect(writeTextMock).toHaveBeenCalledWith("Copied text")
@@ -108,7 +120,9 @@ describe("selection action tooltips", () => {
   })
 
   it("renders the regenerate tooltip above selection popovers", async () => {
-    const { container } = renderWithProviders(<RegenerateButton onRegenerate={vi.fn()} />)
+    const { container } = renderWithProviders(
+      <RegenerateButton onRegenerate={vi.fn<(...args: any[]) => any>()} />,
+    )
     const trigger = container.querySelector("[data-slot='tooltip-trigger']")
 
     expect(trigger).toBeTruthy()
@@ -145,12 +159,14 @@ describe("selection action tooltips", () => {
     fireEvent.click(trigger!)
 
     await waitFor(() => {
-      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent("action.speak")
+      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent(
+        "action.speak",
+      )
     })
   })
 
   it("keeps the regenerate tooltip open after click", async () => {
-    const onRegenerate = vi.fn()
+    const onRegenerate = vi.fn<(...args: any[]) => any>()
     const { container } = renderWithProviders(<RegenerateButton onRegenerate={onRegenerate} />)
     const trigger = container.querySelector("[data-slot='tooltip-trigger']")
 
@@ -162,7 +178,9 @@ describe("selection action tooltips", () => {
     fireEvent.click(trigger!)
 
     await waitFor(() => {
-      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent("action.regenerate")
+      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent(
+        "action.regenerate",
+      )
     })
 
     expect(onRegenerate).toHaveBeenCalledTimes(1)
@@ -182,7 +200,49 @@ describe("selection action tooltips", () => {
     fireEvent.click(trigger!)
 
     await waitFor(() => {
-      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent("action.viewContextDetails")
+      expect(document.querySelector("[data-slot='tooltip-content']")).toHaveTextContent(
+        "action.viewContextDetails",
+      )
     })
+  })
+
+  it("closes the copy tooltip after hover leave", async () => {
+    const { container } = renderWithProviders(<CopyButton text="Copied text" />)
+    const trigger = container.querySelector("[data-slot='tooltip-trigger']")
+
+    expect(trigger).toBeTruthy()
+
+    await expectTooltipClosesOnHoverLeave(trigger!)
+  })
+
+  it("closes the speak tooltip after hover leave", async () => {
+    const { container } = renderWithProviders(<SpeakButton text="Speak text" />)
+    const trigger = container.querySelector("[data-slot='tooltip-trigger']")
+
+    expect(trigger).toBeTruthy()
+
+    await expectTooltipClosesOnHoverLeave(trigger!)
+  })
+
+  it("closes the regenerate tooltip after hover leave", async () => {
+    const { container } = renderWithProviders(
+      <RegenerateButton onRegenerate={vi.fn<(...args: any[]) => any>()} />,
+    )
+    const trigger = container.querySelector("[data-slot='tooltip-trigger']")
+
+    expect(trigger).toBeTruthy()
+
+    await expectTooltipClosesOnHoverLeave(trigger!)
+  })
+
+  it("closes the context details tooltip after hover leave", async () => {
+    const { container } = renderWithProviders(
+      <ContextDetailsButton titleText="Title" paragraphsText="Context" />,
+    )
+    const trigger = container.querySelector("[data-slot='tooltip-trigger']")
+
+    expect(trigger).toBeTruthy()
+
+    await expectTooltipClosesOnHoverLeave(trigger!)
   })
 })

@@ -109,8 +109,8 @@ describe("conflict-merge", () => {
       const result = detectConflicts(base, local, remote)
 
       expect(result.conflicts).toHaveLength(2)
-      expect(result.conflicts.find(c => c.path.join(".") === "primitive")).toBeDefined()
-      expect(result.conflicts.find(c => c.path.join(".") === "number")).toBeDefined()
+      expect(result.conflicts.find((c) => c.path.join(".") === "primitive")).toBeDefined()
+      expect(result.conflicts.find((c) => c.path.join(".") === "number")).toBeDefined()
     })
 
     it("should handle array conflicts (arrays are atomic)", () => {
@@ -141,7 +141,7 @@ describe("conflict-merge", () => {
       const result = detectConflicts(base, local, remote)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.conflicts[0].path).toEqual(["nested", "value"])
+      expect(result.conflicts[0]!.path).toEqual(["nested", "value"])
     })
 
     it("should handle deeply nested object conflicts", () => {
@@ -162,10 +162,10 @@ describe("conflict-merge", () => {
       const result = detectConflicts(base, local, remote)
 
       expect(result.conflicts).toHaveLength(1)
-      expect(result.conflicts[0].path).toEqual(["nested", "deep", "count"])
-      expect(result.conflicts[0].baseValue).toBe(5)
-      expect(result.conflicts[0].localValue).toBe(10)
-      expect(result.conflicts[0].remoteValue).toBe(20)
+      expect(result.conflicts[0]!.path).toEqual(["nested", "deep", "count"])
+      expect(result.conflicts[0]!.baseValue).toBe(5)
+      expect(result.conflicts[0]!.localValue).toBe(10)
+      expect(result.conflicts[0]!.remoteValue).toBe(20)
     })
 
     it("should track one-sided changes from different sources as separate conflicts", () => {
@@ -187,7 +187,7 @@ describe("conflict-merge", () => {
     let safeParseSpy: ReturnType<typeof vi.spyOn>
 
     beforeEach(() => {
-      safeParseSpy = vi.spyOn(configSchema, "safeParse").mockImplementation(data => ({
+      safeParseSpy = vi.spyOn(configSchema, "safeParse").mockImplementation((data) => ({
         success: true,
         data: data as any,
       }))

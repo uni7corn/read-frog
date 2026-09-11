@@ -1,9 +1,13 @@
 import type { ThinkingSnapshot } from "@/types/background-stream"
-import { i18n } from "#imports"
 import { IconChevronDown } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { ThinkingIcon } from "@/components/icons/thinking-icon"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/base-ui/collapsible"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/base-ui/collapsible"
+import { i18n } from "@/utils/i18n"
 import { cn } from "@/utils/styles/utils"
 
 interface ThinkingProps {
@@ -15,29 +19,29 @@ interface ThinkingProps {
 
 const AUTO_SCROLL_BOTTOM_THRESHOLD = 8
 
-export function Thinking({
-  status,
-  content,
-  defaultExpanded = false,
-  className,
-}: ThinkingProps) {
+export function Thinking({ status, content, defaultExpanded = false, className }: ThinkingProps) {
   const [open, setOpen] = useState(defaultExpanded)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const shouldAutoScrollRef = useRef(true)
   const trimmedContent = content?.trim() ?? ""
   const hasContent = trimmedContent.length > 0
   const isThinking = status === "thinking"
-  const statusLabel = isThinking
-    ? i18n.t("thinking.label")
-    : i18n.t("thinking.complete")
+  const statusLabel = isThinking ? i18n.t("thinking.label") : i18n.t("thinking.complete")
   const containerClassName = cn(
     "rounded-lg border border-border/70 bg-muted/30 text-muted-foreground",
     className,
   )
-  const triggerClassName = "flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs"
-  const thinkingIconClassName = cn(
-    "shrink-0",
-    isThinking ? "text-primary" : "text-muted-foreground",
+  const triggerClassName =
+    "flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left text-xs"
+  // The morphing glyph and the shimmering label already carry the "in progress"
+  // signal; tinting the icon on top of them only competes with it.
+  const thinkingIconClassName = "shrink-0 text-muted-foreground"
+  // `shimmer` sweeps a highlight across the glyphs, taking the surrounding
+  // muted-foreground as its base; pointing the highlight at `foreground` is what
+  // makes the sweep visible against it.
+  const statusLabelClassName = cn(
+    "font-medium tracking-[0.01em]",
+    isThinking && "shimmer shimmer-color-foreground shimmer-duration-1500",
   )
 
   useEffect(() => {
@@ -48,7 +52,7 @@ export function Thinking({
 
   useEffect(() => {
     if (!open || !shouldAutoScrollRef.current) {
-      return
+      return undefined
     }
 
     const frame = requestAnimationFrame(() => {
@@ -63,6 +67,7 @@ export function Thinking({
     return () => {
       cancelAnimationFrame(frame)
     }
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the dependencies are re-run triggers, not values the effect body reads
   }, [open, trimmedContent])
 
   const handleContentScroll = () => {
@@ -83,7 +88,7 @@ export function Thinking({
         <div className={triggerClassName}>
           <span className="flex min-w-0 items-center gap-2">
             <ThinkingIcon animated={isThinking} className={thinkingIconClassName} />
-            <span className="font-medium tracking-[0.01em]">{statusLabel}</span>
+            <span className={statusLabelClassName}>{statusLabel}</span>
           </span>
         </div>
       </div>
@@ -91,21 +96,14 @@ export function Thinking({
   }
 
   return (
-    <Collapsible
-      open={open}
-      onOpenChange={setOpen}
-      className={containerClassName}
-    >
+    <Collapsible open={open} onOpenChange={setOpen} className={containerClassName}>
       <CollapsibleTrigger
         className={triggerClassName}
         aria-label={open ? i18n.t("thinking.collapse") : i18n.t("thinking.expand")}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <ThinkingIcon
-            animated={isThinking}
-            className={thinkingIconClassName}
-          />
-          <span className="font-medium tracking-[0.01em]">{statusLabel}</span>
+          <ThinkingIcon animated={isThinking} className={thinkingIconClassName} />
+          <span className={statusLabelClassName}>{statusLabel}</span>
         </span>
         <IconChevronDown
           className={cn(
@@ -119,7 +117,7 @@ export function Thinking({
         className="max-h-32 overflow-y-auto px-3 pb-2.5"
         onScroll={handleContentScroll}
       >
-        <p className="text-xs whitespace-pre-wrap wrap-break-words text-muted-foreground">
+        <p className="text-xs [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-muted-foreground">
           {trimmedContent}
         </p>
       </CollapsibleContent>

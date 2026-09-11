@@ -1,3 +1,4 @@
+import { getRandomUUID } from "@/utils/crypto-polyfill"
 import {
   EDGE_TTS_ENDPOINT_URL,
   EDGE_TTS_SIGNATURE_APP_ID,
@@ -20,7 +21,7 @@ function base64ToBytes(base64: string): Uint8Array {
 function bytesToBase64(bytes: Uint8Array): string {
   let binaryString = ""
   for (let i = 0; i < bytes.length; i++) {
-    binaryString += String.fromCharCode(bytes[i])
+    binaryString += String.fromCharCode(bytes[i]!)
   }
   return btoa(binaryString)
 }
@@ -54,18 +55,22 @@ export async function generateTranslatorSignature(
 ): Promise<string> {
   try {
     const encodedUrl = encodeURIComponent(url.split("://")[1] ?? "")
-    const requestId = crypto.randomUUID().replace(HYPHEN_PATTERN, "")
+    const requestId = getRandomUUID().replace(HYPHEN_PATTERN, "")
     const formattedDate = buildSignatureDate(now)
 
-    const payload = `${EDGE_TTS_SIGNATURE_APP_ID}${encodedUrl}${formattedDate}${requestId}`.toLowerCase()
+    const payload =
+      `${EDGE_TTS_SIGNATURE_APP_ID}${encodedUrl}${formattedDate}${requestId}`.toLowerCase()
     const key = base64ToBytes(getEdgeTTSSignatureSecretBase64())
     const signature = await hmacSha256(key, payload)
 
     return `${EDGE_TTS_SIGNATURE_APP_ID}::${bytesToBase64(signature)}::${formattedDate}::${requestId}`
-  }
-  catch (error) {
-    throw new EdgeTTSError("SIGNATURE_GENERATION_FAILED", "Failed to generate translator signature", {
-      cause: error,
-    })
+  } catch (error) {
+    throw new EdgeTTSError(
+      "SIGNATURE_GENERATION_FAILED",
+      "Failed to generate translator signature",
+      {
+        cause: error,
+      },
+    )
   }
 }

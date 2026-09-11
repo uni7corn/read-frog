@@ -1,17 +1,22 @@
 import type { VariantProps } from "class-variance-authority"
 import { cva } from "class-variance-authority"
 import * as React from "react"
-
 import { cn } from "@/utils/styles/utils"
 
 const alertVariants = cva(
-  "grid gap-0.5 rounded-lg border px-4 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4 w-full relative group/alert",
+  "group/alert relative grid w-full gap-0.5 rounded-lg border px-4 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default: "bg-card text-card-foreground",
         destructive:
-          "text-destructive border-destructive bg-destructive/5 *:data-[slot=alert-description]:text-card-foreground *:[svg]:text-current",
+          "border-destructive bg-destructive/5 text-destructive *:data-[slot=alert-description]:text-card-foreground *:[svg]:text-current",
+        // Amber rather than `destructive`: these are "this will not do what you
+        // expect" states, not failures. The description needs its own colour
+        // because AlertDescription hard-codes `text-muted-foreground`, which
+        // would otherwise win over the inherited amber.
+        warning:
+          "border-amber-200 bg-amber-50 text-amber-900 *:data-[slot=alert-description]:text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50 dark:*:data-[slot=alert-description]:text-amber-200/80 *:[svg]:text-current",
       },
     },
     defaultVariants: {
@@ -40,7 +45,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="alert-title"
       className={cn(
-        "[&_a]:hover:text-foreground font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3",
+        "font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
         className,
       )}
       {...props}
@@ -48,15 +53,12 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function AlertDescription({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function AlertDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-description"
       className={cn(
-        "text-muted-foreground min-w-0 text-sm text-balance break-words [overflow-wrap:anywhere] md:text-pretty [&_a]:hover:text-foreground [&_a]:underline [&_a]:underline-offset-3 [&_p:not(:last-child)]:mb-4",
+        "min-w-0 text-sm text-balance [overflow-wrap:anywhere] break-words text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
         className,
       )}
       {...props}

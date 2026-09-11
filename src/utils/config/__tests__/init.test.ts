@@ -2,13 +2,14 @@ import type { Config } from "@/types/config/config"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { isAPIProviderConfig } from "@/types/config/provider"
 import { CONFIG_SCHEMA_VERSION, DEFAULT_CONFIG } from "@/utils/constants/config"
+import { MICROSOFT_TRANSLATE_PROVIDER_ID } from "@/utils/constants/providers"
 
-const getItemMock = vi.fn()
-const getMetaMock = vi.fn()
-const setItemMock = vi.fn()
-const setMetaMock = vi.fn()
-const runMigrationMock = vi.fn()
-const loggerWarnMock = vi.fn()
+const getItemMock = vi.fn<(...args: any[]) => any>()
+const getMetaMock = vi.fn<(...args: any[]) => any>()
+const setItemMock = vi.fn<(...args: any[]) => any>()
+const setMetaMock = vi.fn<(...args: any[]) => any>()
+const runMigrationMock = vi.fn<(...args: any[]) => any>()
+const loggerWarnMock = vi.fn<(...args: any[]) => any>()
 
 vi.mock("#imports", () => ({
   storage: {
@@ -70,6 +71,15 @@ describe("initializeConfig", () => {
     runMigrationMock.mockImplementation(async (_nextVersion: number, config: Config) => config)
   })
 
+  function translateProviderIdsOf(config: Config) {
+    return [
+      config.pageTranslation.providerId,
+      config.selectionToolbar.features.translate.providerId,
+      config.inputTranslation.providerId,
+      config.videoSubtitles.providerId,
+    ]
+  }
+
   it("does not write when config and meta are already up to date", async () => {
     const config = buildStableConfig()
     getItemMock.mockResolvedValueOnce(config)
@@ -95,11 +105,64 @@ describe("initializeConfig", () => {
 
     expect(setItemMock).toHaveBeenCalledTimes(1)
     expect(setItemMock).toHaveBeenCalledWith("local:config", expect.any(Object))
+    const freshConfig = setItemMock.mock.calls[0]?.[1] as Config
+    for (const providerId of ["openai-default", "jalapenocloud-default", "atlascloud-default"]) {
+      expect(freshConfig.providersConfig.find((provider) => provider.id === providerId)).toEqual(
+        expect.objectContaining({ description: expect.any(String) }),
+      )
+    }
     expect(setMetaMock).toHaveBeenCalledTimes(1)
-    expect(setMetaMock).toHaveBeenCalledWith("local:config", expect.objectContaining({
+    expect(setMetaMock).toHaveBeenCalledWith(
+      "local:config",
+      expect.objectContaining({
+        schemaVersion: CONFIG_SCHEMA_VERSION,
+        lastModifiedAt: expect.any(Number),
+      }),
+    )
+  })
+
+  it("starts every translate feature on the globally reachable Microsoft default", async () => {
+    getItemMock.mockResolvedValueOnce(null)
+    getMetaMock.mockResolvedValueOnce(null)
+
+    const { initializeConfig } = await import("../init")
+    const { isFreshInstall } = await initializeConfig()
+
+    expect(isFreshInstall).toBe(true)
+    const freshConfig = setItemMock.mock.calls[0]?.[1] as Config
+    expect(translateProviderIdsOf(freshConfig)).toEqual([
+      MICROSOFT_TRANSLATE_PROVIDER_ID,
+      MICROSOFT_TRANSLATE_PROVIDER_ID,
+      MICROSOFT_TRANSLATE_PROVIDER_ID,
+      MICROSOFT_TRANSLATE_PROVIDER_ID,
+    ])
+  })
+
+  it("does not report a fresh install when a stored config is reused", async () => {
+    const config = buildStableConfig()
+    getItemMock.mockResolvedValueOnce(config)
+    getMetaMock.mockResolvedValueOnce({
       schemaVersion: CONFIG_SCHEMA_VERSION,
-      lastModifiedAt: expect.any(Number),
-    }))
+      lastModifiedAt: 123,
+    })
+
+    const { initializeConfig } = await import("../init")
+    const { isFreshInstall } = await initializeConfig()
+
+    expect(isFreshInstall).toBe(false)
+  })
+
+  it("reports recovery from an unparseable config as a fresh install so the provider probe reruns", async () => {
+    getItemMock.mockResolvedValueOnce({ not: "a config" })
+    getMetaMock.mockResolvedValueOnce({
+      schemaVersion: CONFIG_SCHEMA_VERSION,
+      lastModifiedAt: 123,
+    })
+
+    const { initializeConfig } = await import("../init")
+    const { isFreshInstall } = await initializeConfig()
+
+    expect(isFreshInstall).toBe(true)
   })
 
   it("runs migration and persists migrated config once", async () => {
@@ -111,7 +174,6 @@ describe("initializeConfig", () => {
         enabled: false,
       },
     }
-
     getItemMock.mockResolvedValueOnce(config)
     getMetaMock.mockResolvedValueOnce({
       schemaVersion: CONFIG_SCHEMA_VERSION - 1,
@@ -144,9 +206,12 @@ describe("initializeConfig", () => {
 
     expect(setItemMock).not.toHaveBeenCalled()
     expect(setMetaMock).toHaveBeenCalledTimes(1)
-    expect(setMetaMock).toHaveBeenCalledWith("local:config", expect.objectContaining({
-      schemaVersion: CONFIG_SCHEMA_VERSION,
-      lastModifiedAt: expect.any(Number),
-    }))
+    expect(setMetaMock).toHaveBeenCalledWith(
+      "local:config",
+      expect.objectContaining({
+        schemaVersion: CONFIG_SCHEMA_VERSION,
+        lastModifiedAt: expect.any(Number),
+      }),
+    )
   })
 })

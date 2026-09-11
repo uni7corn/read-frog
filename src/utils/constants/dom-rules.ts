@@ -1,5 +1,3 @@
-import { STATE_MESSAGE_CLASS, SUBTITLES_VIEW_CLASS, TRANSLATE_BUTTON_CLASS, YOUTUBE_NATIVE_SUBTITLES_CLASS } from "./subtitles"
-
 export const FORCE_BLOCK_TAGS = new Set([
   "BODY",
   "H1",
@@ -88,80 +86,31 @@ export const DONT_WALK_AND_TRANSLATE_TAGS = new Set([
   ...MATH_TAGS,
 ])
 
-export const DONT_WALK_BUT_TRANSLATE_TAGS = new Set([
-  "CODE",
-  "TIME",
-])
+export const DONT_WALK_BUT_TRANSLATE_TAGS = new Set(["CODE", "TIME"])
 
 // force translation style as inline node, but not force the node as inline node
-export const FORCE_INLINE_TRANSLATION_TAGS = new Set([
-  "A",
-  "BUTTON",
-  "SELECT",
-  "OPTION",
-  "SPAN",
-])
+export const FORCE_INLINE_TRANSLATION_TAGS = new Set(["A", "BUTTON", "SELECT", "OPTION", "SPAN"])
 
 export const MAIN_CONTENT_IGNORE_TAGS = new Set(["HEADER", "FOOTER", "NAV", "NOSCRIPT"])
 
-export const CUSTOM_DONT_WALK_INTO_ELEMENT_SELECTOR_MAP: Record<string, string[]> = {
-  "chatgpt.com": [
-    ".ProseMirror",
-  ],
-  "arxiv.org": [
-    ".ltx_listing",
-  ],
-  "www.reddit.com": [
-    "faceplate-screen-reader-content > *",
-    "reddit-header-large *",
-    "shreddit-comment-action-row > *",
-    "shreddit-post-flair",
-  ],
-  "www.youtube.com": [
-    "#masthead-container *",
-    "#guide-inner-content *",
-    "#metadata *",
-    "#channel-name",
-    ".translate-button",
-    ".yt-lockup-metadata-view-model__metadata",
-    ".yt-spec-avatar-shape__badge-text",
-    ".shortsLockupViewModelHostOutsideMetadataSubhead",
-    "ytd-comments-header-renderer",
-    "#top-row",
-    "#header-author",
-    "#reply-button-end",
-    "#more-replies",
-    "#info",
-    "#badges *",
-    `${YOUTUBE_NATIVE_SUBTITLES_CLASS}`,
-    `.${SUBTITLES_VIEW_CLASS}`,
-    `.${STATE_MESSAGE_CLASS}`,
-    `.${TRANSLATE_BUTTON_CLASS}`,
-  ],
-  "discord.com": [
-    "[id^=\"message-username\"]",
-    "span[class*=\"-timestamp\"]",
-    "div[class*=\"-repliedMessage\"]",
-    "li[class*=\"-containerDefault\"]",
-    "[class*=\"-subtitleContainer\"]",
-    "[class*=\"-formWithLoadedChatInput\"]",
-  ],
-  "github.com": [
-    "[aria-labelledby=\"folders-and-files\"] *",
-    "header *",
-    "#repository-container-header *",
-    "[class*=\"OverviewContent-module__Box_1--\"] *",
-  ],
-}
+/**
+ * Site-rule override families for the tag sets above. Each family name is
+ * simultaneously the schema key prefix (`<family>.add` / `<family>.remove`),
+ * the `ResolvedSiteRule` field name, and the consumer lookup key, so
+ * `resolved[family] ?? DEFAULT_TAG_SETS[family]` typechecks without a mapping
+ * table.
+ */
+export type TagSetFamily =
+  | "dontWalkTags"
+  | "dontWalkButTranslateTags"
+  | "mainContentIgnoreTags"
+  | "forceBlockTags"
+  | "forceInlineTranslationTags"
 
-export const CUSTOM_FORCE_BLOCK_TRANSLATION_SELECTOR_MAP: Record<string, string[]> = {
-  "github.com": [
-    "task-lists", // https://github.com/mengxi-ream/read-frog/issues/867
-  ],
-  "engoo.com": [
-    "#windowexercise-2 > div > div > div.css-ep7xq6 > div > div > div.css-19m2fbm *",
-  ],
-  "www.youtube.com": [
-    "yt-attributed-string > span",
-  ],
+export const DEFAULT_TAG_SETS: Record<TagSetFamily, ReadonlySet<string>> = {
+  dontWalkTags: DONT_WALK_AND_TRANSLATE_TAGS,
+  dontWalkButTranslateTags: DONT_WALK_BUT_TRANSLATE_TAGS,
+  mainContentIgnoreTags: MAIN_CONTENT_IGNORE_TAGS,
+  forceBlockTags: FORCE_BLOCK_TAGS,
+  forceInlineTranslationTags: FORCE_INLINE_TRANSLATION_TAGS,
 }

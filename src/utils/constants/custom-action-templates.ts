@@ -1,8 +1,11 @@
+import type { GeneratedI18nStructure } from "#i18n"
 import type { SelectionToolbarCustomAction } from "@/types/config/selection-toolbar"
-import { i18n } from "#imports"
+import { getRandomUUID } from "@/utils/crypto-polyfill"
+import { i18n } from "@/utils/i18n"
 import { createOutputSchemaField } from "./custom-action"
 
-const T_PREFIX = "options.floatingButtonAndToolbar.selectionToolbar.customActions.templates"
+const T_PREFIX = "options.selectionToolbar.customActions.templates"
+type I18nKey = keyof GeneratedI18nStructure
 
 export interface CustomActionTemplate {
   id: string
@@ -12,6 +15,11 @@ export interface CustomActionTemplate {
   createAction: (providerId: string) => SelectionToolbarCustomAction
 }
 
+type CustomActionTemplateDefinition = Omit<CustomActionTemplate, "nameKey" | "descriptionKey"> & {
+  nameKey: I18nKey
+  descriptionKey: I18nKey
+}
+
 export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
   {
     id: "dictionary",
@@ -19,7 +27,7 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
     descriptionKey: `${T_PREFIX}.dictionary.description`,
     icon: "tabler:book-2",
     createAction: (providerId: string): SelectionToolbarCustomAction => ({
-      id: crypto.randomUUID(),
+      id: getRandomUUID(),
       name: i18n.t(`${T_PREFIX}.dictionary.name`),
       enabled: true,
       icon: "tabler:book-2",
@@ -27,13 +35,50 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
       systemPrompt: i18n.t(`${T_PREFIX}.dictionary.systemPrompt`),
       prompt: i18n.t(`${T_PREFIX}.dictionary.prompt`),
       outputSchema: [
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldTerm`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldTermDescription`), "dictionary-term", true),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldPhonetic`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldPhoneticDescription`), "dictionary-phonetic"),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldPartOfSpeech`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldPartOfSpeechDescription`), "dictionary-part-of-speech"),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldDefinition`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldDefinitionDescription`), "dictionary-definition"),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldParagraphs`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldParagraphsDescription`), "dictionary-context", true),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldParagraphsTranslation`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldParagraphsTranslationDescription`), "dictionary-context-translation"),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.dictionary.fieldDifficulty`), "string", i18n.t(`${T_PREFIX}.dictionary.fieldDifficultyDescription`), "dictionary-difficulty"),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldTerm`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldTermDescription`),
+          "dictionary-term",
+          true,
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldPhonetic`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldPhoneticDescription`),
+          "dictionary-phonetic",
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldPartOfSpeech`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldPartOfSpeechDescription`),
+          "dictionary-part-of-speech",
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldDefinition`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldDefinitionDescription`),
+          "dictionary-definition",
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldSentence`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldSentenceDescription`),
+          "dictionary-context",
+          true,
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldSentenceTranslation`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldSentenceTranslationDescription`),
+          "dictionary-context-translation",
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.dictionary.fieldDifficulty`),
+          "string",
+          i18n.t(`${T_PREFIX}.dictionary.fieldDifficultyDescription`),
+          "dictionary-difficulty",
+        ),
       ],
     }),
   },
@@ -43,7 +88,7 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
     descriptionKey: `${T_PREFIX}.improveWriting.description`,
     icon: "tabler:pencil-check",
     createAction: (providerId: string): SelectionToolbarCustomAction => ({
-      id: crypto.randomUUID(),
+      id: getRandomUUID(),
       name: i18n.t(`${T_PREFIX}.improveWriting.name`),
       enabled: true,
       icon: "tabler:pencil-check",
@@ -51,8 +96,16 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
       systemPrompt: i18n.t(`${T_PREFIX}.improveWriting.systemPrompt`),
       prompt: i18n.t(`${T_PREFIX}.improveWriting.prompt`),
       outputSchema: [
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.improveWriting.fieldErrorAnalysis`), "string", i18n.t(`${T_PREFIX}.improveWriting.fieldErrorAnalysisDescription`)),
-        createOutputSchemaField(i18n.t(`${T_PREFIX}.improveWriting.fieldImprovedVersion`), "string", i18n.t(`${T_PREFIX}.improveWriting.fieldImprovedVersionDescription`)),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.improveWriting.fieldErrorAnalysis`),
+          "string",
+          i18n.t(`${T_PREFIX}.improveWriting.fieldErrorAnalysisDescription`),
+        ),
+        createOutputSchemaField(
+          i18n.t(`${T_PREFIX}.improveWriting.fieldImprovedVersion`),
+          "string",
+          i18n.t(`${T_PREFIX}.improveWriting.fieldImprovedVersionDescription`),
+        ),
       ],
     }),
   },
@@ -62,7 +115,7 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
     descriptionKey: `${T_PREFIX}.blank.description`,
     icon: "tabler:sparkles",
     createAction: (providerId: string): SelectionToolbarCustomAction => ({
-      id: crypto.randomUUID(),
+      id: getRandomUUID(),
       name: i18n.t(`${T_PREFIX}.blank.name`),
       enabled: true,
       icon: "tabler:sparkles",
@@ -70,8 +123,10 @@ export const CUSTOM_ACTION_TEMPLATES: CustomActionTemplate[] = [
       systemPrompt: "",
       prompt: "",
       outputSchema: [
-        createOutputSchemaField(i18n.t("options.floatingButtonAndToolbar.selectionToolbar.customActions.form.defaultFieldName")),
+        createOutputSchemaField(
+          i18n.t("options.selectionToolbar.customActions.form.defaultFieldName"),
+        ),
       ],
     }),
   },
-]
+] satisfies CustomActionTemplateDefinition[]

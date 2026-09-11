@@ -1,8 +1,10 @@
 import type { YoutubeTimedText } from "../fetchers/youtube/types"
 import { describe, expect, it } from "vitest"
 import { detectFormat } from "../fetchers/youtube/format-detector"
+import { parseAnimatedSubtitles } from "../fetchers/youtube/parser/animated-parser"
 import { parseKaraokeSubtitles } from "../fetchers/youtube/parser/karaoke-parser"
 import { parseScrollingAsrSubtitles } from "../fetchers/youtube/parser/scrolling-asr-parser"
+import { parseStylizedKaraokeSubtitles } from "../fetchers/youtube/parser/stylized-karaoke-parser"
 import { optimizeSubtitles } from "../processor/optimizer"
 
 describe("youTube Subtitle Parsers", () => {
@@ -13,6 +15,37 @@ describe("youTube Subtitle Parsers", () => {
         { tStartMs: 1000, dDurationMs: 2000, wpWinPosId: 2, segs: [{ utf8: "a" }] },
       ]
       expect(detectFormat(events)).toBe("karaoke")
+    })
+
+    it("should detect stylized karaoke format with repeated identical text on same track", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the wor/\u200Bst person" }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst /\u200Bperson" }],
+        },
+        {
+          tStartMs: 1400,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst per/\u200Bson" }],
+        },
+        {
+          tStartMs: 1600,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst person/" }],
+        },
+      ]
+
+      expect(detectFormat(events)).toBe("karaoke-stylized")
     })
 
     it("should detect scrolling-asr format (wWinId + aAppend: 1)", () => {
@@ -34,6 +67,36 @@ describe("youTube Subtitle Parsers", () => {
     it("should return standard for empty events", () => {
       expect(detectFormat([])).toBe("standard")
     })
+
+    it("should detect animated format (many short-duration events with wpWinPosId)", () => {
+      const events: YoutubeTimedText[] = Array.from({ length: 100 }, (_, i) => ({
+        tStartMs: 1000 + i * 67,
+        dDurationMs: 67,
+        wpWinPosId: 3 + (i % 20),
+        segs: [{ utf8: i % 5 === 0 ? "scrolling text" : "" }],
+      }))
+      expect(detectFormat(events)).toBe("animated")
+    })
+
+    it("should not detect animated for few events", () => {
+      const events: YoutubeTimedText[] = Array.from({ length: 10 }, (_, i) => ({
+        tStartMs: 1000 + i * 67,
+        dDurationMs: 67,
+        wpWinPosId: 3,
+        segs: [{ utf8: "text" }],
+      }))
+      expect(detectFormat(events)).not.toBe("animated")
+    })
+
+    it("should not detect animated for normal-duration events", () => {
+      const events: YoutubeTimedText[] = Array.from({ length: 100 }, (_, i) => ({
+        tStartMs: i * 3000,
+        dDurationMs: 2000,
+        wpWinPosId: 3,
+        segs: [{ utf8: "normal subtitle" }],
+      }))
+      expect(detectFormat(events)).not.toBe("animated")
+    })
   })
 
   describe("karaoke Parser", () => {
@@ -45,7 +108,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("漢字")
+      expect(result[0]!.text).toBe("漢字")
     })
 
     it("should use largest wpWinPosId if 3 is not available", () => {
@@ -56,7 +119,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("large")
+      expect(result[0]!.text).toBe("large")
     })
 
     it("should merge segs within event", () => {
@@ -71,9 +134,9 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("今日は晴れ")
-      expect(result[0].start).toBe(1000)
-      expect(result[0].end).toBe(4000)
+      expect(result[0]!.text).toBe("今日は晴れ")
+      expect(result[0]!.start).toBe(1000)
+      expect(result[0]!.end).toBe(4000)
     })
 
     it("should fix overlap between fragments", () => {
@@ -84,8 +147,8 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(2)
-      expect(result[0].end).toBe(2000) // Fixed from 6000 to 2000
-      expect(result[1].start).toBe(2000)
+      expect(result[0]!.end).toBe(2000) // Fixed from 6000 to 2000
+      expect(result[1]!.start).toBe(2000)
     })
 
     it("should deduplicate adjacent identical text", () => {
@@ -97,10 +160,10 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(2)
-      expect(result[0].text).toBe("Same")
-      expect(result[0].start).toBe(1000)
-      expect(result[0].end).toBe(3000) // Merged time range
-      expect(result[1].text).toBe("Different")
+      expect(result[0]!.text).toBe("Same")
+      expect(result[0]!.start).toBe(1000)
+      expect(result[0]!.end).toBe(3000) // Merged time range
+      expect(result[1]!.text).toBe("Different")
     })
 
     it("should clean zero-width spaces", () => {
@@ -109,7 +172,7 @@ describe("youTube Subtitle Parsers", () => {
       ]
       const result = parseKaraokeSubtitles(events)
 
-      expect(result[0].text).toBe("HelloWorld")
+      expect(result[0]!.text).toBe("HelloWorld")
     })
 
     it("should skip empty segs", () => {
@@ -120,7 +183,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Valid")
+      expect(result[0]!.text).toBe("Valid")
     })
 
     it("should skip events with only whitespace", () => {
@@ -131,7 +194,221 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseKaraokeSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Valid")
+      expect(result[0]!.text).toBe("Valid")
+    })
+  })
+
+  describe("stylized karaoke Parser", () => {
+    it("should select the dense main track and ignore sparse overlay tracks", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the wor/\u200Bst person" }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst /\u200Bperson" }],
+        },
+        {
+          tStartMs: 1400,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst person/" }],
+        },
+        { tStartMs: 1500, dDurationMs: 200, wpWinPosId: 3, segs: [{ utf8: "Sparse overlay" }] },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Do you think even the worst person")
+    })
+
+    it("should merge slash-shifted variants into one clean sentence", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BCan /\u200Bchange...?" }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BCan chan/\u200Bge...?" }],
+        },
+        {
+          tStartMs: 1400,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BCan change...?/" }],
+        },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Can change...?")
+      expect(result[0]!.start).toBe(1000)
+      expect(result[0]!.end).toBe(1600)
+    })
+
+    it("should merge progressive redraws across the same sentence family", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BThat /\u200Beverybody can be a good persons..." }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BThat e/\u200Bverybody can be a good persons..." }],
+        },
+        {
+          tStartMs: 1400,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BThat everybody can /\u200Bbe a good persons..." }],
+        },
+        {
+          tStartMs: 1600,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BThat everybody can be /\u200Ba good persons..." }],
+        },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("That everybody can be a good persons...")
+    })
+
+    it("should split when the sentence really changes", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst /\u200Bperson" }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BDo you think even the worst person/" }],
+        },
+        {
+          tStartMs: 2300,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BCan /\u200Bchange...?" }],
+        },
+        {
+          tStartMs: 2500,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "\u200BCan change...?/" }],
+        },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]!.text).toBe("Do you think even the worst person")
+      expect(result[1]!.text).toBe("Can change...?")
+    })
+
+    it("should keep off-track dialogue that ends before the main track starts", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 1000, dDurationMs: 1000, wpWinPosId: 2, segs: [{ utf8: "​嘿呀" }] },
+        { tStartMs: 2000, dDurationMs: 1000, wpWinPosId: 2, segs: [{ utf8: "​你一直很忙,對吧?" }] },
+        { tStartMs: 10000, dDurationMs: 200, wpWinPosId: 3, segs: [{ utf8: "​Can /​change...?" }] },
+        { tStartMs: 10200, dDurationMs: 200, wpWinPosId: 3, segs: [{ utf8: "​Can change...?/" }] },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(3)
+      expect(result[0]!.text).toBe("嘿呀")
+      expect(result[1]!.text).toBe("你一直很忙,對吧?")
+      expect(result[2]!.text).toBe("Can change...?")
+      expect(result[0]!.start).toBeLessThan(result[1]!.start)
+    })
+
+    it("should still drop off-track events that overlap the main track", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "​Do you think even the wor/​st person" }],
+        },
+        {
+          tStartMs: 1200,
+          dDurationMs: 200,
+          wpWinPosId: 2,
+          segs: [{ utf8: "​Do you think even the worst person/" }],
+        },
+        { tStartMs: 1100, dDurationMs: 200, wpWinPosId: 3, segs: [{ utf8: "Sparse overlay" }] },
+      ]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Do you think even the worst person")
+    })
+
+    it("should recover intro dialogue while still collapsing repeated song frames", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 217, dDurationMs: 1835, wpWinPosId: 2, pPenId: 2, segs: [{ utf8: "​嘿呀" }] },
+        {
+          tStartMs: 2052,
+          dDurationMs: 1936,
+          wpWinPosId: 2,
+          pPenId: 2,
+          segs: [{ utf8: "​你一直很忙,對吧?" }],
+        },
+        {
+          tStartMs: 58008,
+          dDurationMs: 2069,
+          wpWinPosId: 3,
+          segs: [{ utf8: "​你知道嗎，我總是在想" }],
+        },
+        {
+          tStartMs: 58008,
+          dDurationMs: 2069,
+          wpWinPosId: 3,
+          segs: [{ utf8: "​你知道嗎，我總是在想" }],
+        },
+        {
+          tStartMs: 58008,
+          dDurationMs: 2069,
+          wpWinPosId: 3,
+          segs: [{ utf8: "​你知道嗎，我總是在想" }],
+        },
+        { tStartMs: 60077, dDurationMs: 1935, wpWinPosId: 3, segs: [{ utf8: "​關於你我相戰" }] },
+      ] as YoutubeTimedText[]
+
+      const result = parseStylizedKaraokeSubtitles(events)
+
+      const texts = result.map((fragment) => fragment.text)
+      expect(texts).toContain("嘿呀")
+      expect(texts).toContain("你一直很忙,對吧?")
+      expect(texts.filter((text) => text === "你知道嗎，我總是在想")).toHaveLength(1)
+
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i]!.start).toBeGreaterThanOrEqual(result[i - 1]!.start)
+        expect(result[i - 1]!.end).toBeLessThanOrEqual(result[i]!.start)
+      }
     })
   })
 
@@ -157,10 +434,10 @@ describe("youTube Subtitle Parsers", () => {
 
       // Split at first sentence boundary when more text follows
       expect(result).toHaveLength(2)
-      expect(result[0].text).toBe("0°を超えた瞬間に氷が溶け始める。")
-      expect(result[0].start).toBe(44840)
-      expect(result[1].text).toBe("今までの温度上昇。")
-      expect(result[1].end).toBe(55320) // separator end time for last fragment
+      expect(result[0]!.text).toBe("0°を超えた瞬間に氷が溶け始める。")
+      expect(result[0]!.start).toBe(44840)
+      expect(result[1]!.text).toBe("今までの温度上昇。")
+      expect(result[1]!.end).toBe(55320) // separator end time for last fragment
     })
 
     it("should merge text across events until separator", () => {
@@ -185,23 +462,28 @@ describe("youTube Subtitle Parsers", () => {
 
       // Text accumulates across events, outputs at separator after sentence end
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("例えば筋トレは1日やっただけでは変化がない。")
-      expect(result[0].start).toBe(60039)
+      expect(result[0]!.text).toBe("例えば筋トレは1日やっただけでは変化がない。")
+      expect(result[0]!.start).toBe(60039)
     })
 
     it("should use separator to update end time without splitting", () => {
       const events: YoutubeTimedText[] = [
         { tStartMs: 1000, dDurationMs: 2000, wWinId: 1, segs: [{ utf8: "テスト" }] },
         { tStartMs: 2500, dDurationMs: 1500, wWinId: 1, aAppend: 1, segs: [{ utf8: "\n" }] },
-        { tStartMs: 3000, dDurationMs: 2000, wWinId: 1, segs: [{ utf8: "文章" }, { utf8: "。", tOffsetMs: 500 }] },
+        {
+          tStartMs: 3000,
+          dDurationMs: 2000,
+          wWinId: 1,
+          segs: [{ utf8: "文章" }, { utf8: "。", tOffsetMs: 500 }],
+        },
       ]
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("テスト文章。")
-      expect(result[0].start).toBe(1000)
+      expect(result[0]!.text).toBe("テスト文章。")
+      expect(result[0]!.start).toBe(1000)
       // end = last seg start (3000 + 500) + ESTIMATED_WORD_DURATION_MS (200) = 3700
-      expect(result[0].end).toBe(3700)
+      expect(result[0]!.end).toBe(3700)
     })
 
     it("should split on sentence boundary with separator events", () => {
@@ -213,8 +495,8 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(2)
-      expect(result[0].text).toBe("First.")
-      expect(result[1].text).toBe("Second.")
+      expect(result[0]!.text).toBe("First.")
+      expect(result[1]!.text).toBe("Second.")
     })
 
     it("should add space when merging English text across events", () => {
@@ -226,7 +508,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events, "en")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("being honest.")
+      expect(result[0]!.text).toBe("being honest.")
     })
 
     it("should not add space for non-English languages", () => {
@@ -238,7 +520,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events, "ja")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("ですね。")
+      expect(result[0]!.text).toBe("ですね。")
     })
 
     it("should fix overlap between fragments", () => {
@@ -257,8 +539,8 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(2)
-      expect(result[0].end).toBe(5000) // Fixed from 5700 to 5000
-      expect(result[1].start).toBe(5000)
+      expect(result[0]!.end).toBe(5000) // Fixed from 5700 to 5000
+      expect(result[1]!.start).toBe(5000)
     })
 
     it("should handle missing dDurationMs", () => {
@@ -269,7 +551,7 @@ describe("youTube Subtitle Parsers", () => {
 
       expect(result).toHaveLength(1)
       // end = tStartMs + ESTIMATED_WORD_DURATION_MS (200)
-      expect(result[0].end).toBe(1200)
+      expect(result[0]!.end).toBe(1200)
     })
 
     it("should merge segs within event", () => {
@@ -283,7 +565,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Hello World")
+      expect(result[0]!.text).toBe("Hello World")
     })
 
     it("should skip events with empty segs", () => {
@@ -294,7 +576,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Valid")
+      expect(result[0]!.text).toBe("Valid")
     })
 
     it("should skip events with only whitespace", () => {
@@ -305,7 +587,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = parseScrollingAsrSubtitles(events)
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Valid")
+      expect(result[0]!.text).toBe("Valid")
     })
 
     it("should split CJK lyrics at character limit when no punctuation", () => {
@@ -351,7 +633,120 @@ describe("youTube Subtitle Parsers", () => {
 
       // Should split when character count reaches 30
       expect(result.length).toBeGreaterThan(1)
-      expect(result[0].text.length).toBeLessThanOrEqual(30)
+      expect(result[0]!.text.length).toBeLessThanOrEqual(30)
+    })
+  })
+
+  describe("animated Parser", () => {
+    it("should deduplicate consecutive identical text frames", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 4688, dDurationMs: 67, wpWinPosId: 3, segs: [{ utf8: "閃避子彈！" }] },
+        { tStartMs: 4755, dDurationMs: 67, wpWinPosId: 4, segs: [{ utf8: "閃避子彈！" }] },
+        { tStartMs: 4822, dDurationMs: 67, wpWinPosId: 5, segs: [{ utf8: "閃避子彈！" }] },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("閃避子彈！")
+      expect(result[0]!.start).toBe(4688)
+      expect(result[0]!.end).toBe(4889)
+    })
+
+    it("should split when text changes between frames", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 24008, dDurationMs: 67, wpWinPosId: 3, segs: [{ utf8: "現在向你道別吧！" }] },
+        { tStartMs: 24075, dDurationMs: 67, wpWinPosId: 4, segs: [{ utf8: "現在向你道別吧！" }] },
+        {
+          tStartMs: 24200,
+          dDurationMs: 67,
+          wpWinPosId: 5,
+          segs: [{ utf8: "沒人會聽到你的哀求！" }],
+        },
+        {
+          tStartMs: 24300,
+          dDurationMs: 67,
+          wpWinPosId: 6,
+          segs: [{ utf8: "沒人會聽到你的哀求！" }],
+        },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]!.text).toBe("現在向你道別吧！")
+      expect(result[0]!.end).toBeLessThanOrEqual(24200)
+      expect(result[1]!.text).toBe("沒人會聽到你的哀求！")
+    })
+
+    it("should skip events with empty text", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 1000, dDurationMs: 67, wpWinPosId: 3, segs: [{ utf8: "" }] },
+        { tStartMs: 1067, dDurationMs: 67, wpWinPosId: 4, segs: [{ utf8: "" }] },
+        { tStartMs: 1134, dDurationMs: 67, wpWinPosId: 5, segs: [{ utf8: "Visible text." }] },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Visible text.")
+    })
+
+    it("should handle single event", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1,
+          dDurationMs: 3853,
+          wpWinPosId: 2,
+          segs: [{ utf8: "Warning: content may be disturbing." }],
+        },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Warning: content may be disturbing.")
+      expect(result[0]!.start).toBe(1)
+      expect(result[0]!.end).toBe(3854)
+    })
+
+    it("should clean zero-width spaces from text", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 1000, dDurationMs: 67, wpWinPosId: 3, segs: [{ utf8: "Hello​ world​" }] },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("Hello world")
+    })
+
+    it("should fix overlap between fragments", () => {
+      const events: YoutubeTimedText[] = [
+        { tStartMs: 1000, dDurationMs: 5000, wpWinPosId: 3, segs: [{ utf8: "First" }] },
+        { tStartMs: 4000, dDurationMs: 67, wpWinPosId: 4, segs: [{ utf8: "Second" }] },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(2)
+      expect(result[0]!.end).toBe(4000)
+      expect(result[1]!.start).toBe(4000)
+    })
+
+    it("should merge segments from multiple segs in one event", () => {
+      const events: YoutubeTimedText[] = [
+        {
+          tStartMs: 1000,
+          dDurationMs: 67,
+          wpWinPosId: 3,
+          segs: [{ utf8: "" }, { utf8: "" }, { utf8: "你所有的進步" }, { utf8: "" }],
+        },
+        {
+          tStartMs: 1067,
+          dDurationMs: 67,
+          wpWinPosId: 4,
+          segs: [{ utf8: "" }, { utf8: "" }, { utf8: "你所有的進步" }, { utf8: "" }],
+        },
+      ]
+      const result = parseAnimatedSubtitles(events)
+
+      expect(result).toHaveLength(1)
+      expect(result[0]!.text).toBe("你所有的進步")
     })
   })
 
@@ -364,19 +759,31 @@ describe("youTube Subtitle Parsers", () => {
       const result = optimizeSubtitles(fragments, "en")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("Hello world.")
+      expect(result[0]!.text).toBe("Hello world.")
     })
 
     it("should split on sentence boundaries when lines are long enough", () => {
       const fragments = [
-        { text: "This is the first complete sentence that really ends right here.", start: 0, end: 1000 },
-        { text: "And this is the second complete sentence that also ends right here.", start: 1000, end: 2000 },
+        {
+          text: "This is the first complete sentence that really ends right here.",
+          start: 0,
+          end: 1000,
+        },
+        {
+          text: "And this is the second complete sentence that also ends right here.",
+          start: 1000,
+          end: 2000,
+        },
       ]
       const result = optimizeSubtitles(fragments, "en")
 
       expect(result).toHaveLength(2)
-      expect(result[0].text).toBe("This is the first complete sentence that really ends right here.")
-      expect(result[1].text).toBe("And this is the second complete sentence that also ends right here.")
+      expect(result[0]!.text).toBe(
+        "This is the first complete sentence that really ends right here.",
+      )
+      expect(result[1]!.text).toBe(
+        "And this is the second complete sentence that also ends right here.",
+      )
     })
 
     it("should merge short English lines into target range", () => {
@@ -390,7 +797,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = optimizeSubtitles(fragments, "en")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("I agree. It is true. We can do this. Let's ship now.")
+      expect(result[0]!.text).toBe("I agree. It is true. We can do this. Let's ship now.")
     })
 
     it("should merge short non-English lines into target range", () => {
@@ -403,35 +810,43 @@ describe("youTube Subtitle Parsers", () => {
       const result = optimizeSubtitles(fragments, "zh")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("我们走吧。现在开始。马上出发。")
+      expect(result[0]!.text).toBe("我们走吧。现在开始。马上出发。")
     })
 
     it("should stop merging when exceeding English upper bound", () => {
       const fragments = [
         { text: "one two three four five six seven eight nine ten.", start: 0, end: 500 },
-        { text: "eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.", start: 500, end: 1000 },
+        {
+          text: "eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.",
+          start: 500,
+          end: 1000,
+        },
         { text: "extra words.", start: 1000, end: 1500 },
       ]
 
       const result = optimizeSubtitles(fragments, "en")
 
       expect(result).toHaveLength(2)
-      expect(result[0].text.split(/\s+/).length).toBe(20)
-      expect(result[1].text).toBe("extra words.")
+      expect(result[0]!.text.split(/\s+/).length).toBe(20)
+      expect(result[1]!.text).toBe("extra words.")
     })
 
     it("should use non-CJK range for French text", () => {
       const fragments = [
         { text: "one two three four five six seven.", start: 0, end: 500 },
         { text: "eight nine ten eleven twelve thirteen.", start: 500, end: 1000 },
-        { text: "fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three.", start: 1000, end: 1500 },
+        {
+          text: "fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty-one twenty-two twenty-three.",
+          start: 1000,
+          end: 1500,
+        },
       ]
 
       const result = optimizeSubtitles(fragments, "fr")
 
       expect(result).toHaveLength(2)
-      expect(result[0].text.split(/\s+/).length).toBe(13)
-      expect(result[1].text.split(/\s+/).length).toBe(10)
+      expect(result[0]!.text.split(/\s+/).length).toBe(13)
+      expect(result[1]!.text.split(/\s+/).length).toBe(10)
     })
 
     it("should treat Thai as CJK group and merge short lines", () => {
@@ -444,7 +859,7 @@ describe("youTube Subtitle Parsers", () => {
 
       // Both fragments are short (< 15 CJK min), should merge
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("สวัสดีครับ")
+      expect(result[0]!.text).toBe("สวัสดีครับ")
     })
 
     it("should split on timeout (gap > 1000ms)", () => {
@@ -465,7 +880,7 @@ describe("youTube Subtitle Parsers", () => {
       const result = optimizeSubtitles(fragments, "ja")
 
       expect(result).toHaveLength(1)
-      expect(result[0].text).toBe("今日は晴れです。")
+      expect(result[0]!.text).toBe("今日は晴れです。")
     })
 
     it("should split Chinese on timeout", () => {
@@ -476,8 +891,8 @@ describe("youTube Subtitle Parsers", () => {
       const result = optimizeSubtitles(fragments, "zh")
 
       expect(result).toHaveLength(2)
-      expect(result[0].text).toBe("你好")
-      expect(result[1].text).toBe("很高兴认识你")
+      expect(result[0]!.text).toBe("你好")
+      expect(result[1]!.text).toBe("很高兴认识你")
     })
 
     it("should return empty array for empty input", () => {

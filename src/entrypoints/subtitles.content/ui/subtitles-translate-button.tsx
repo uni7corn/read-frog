@@ -1,54 +1,50 @@
-import { useAtomValue } from "jotai"
-import { useEffect, useEffectEvent } from "react"
-import logo from "@/assets/icons/original/read-frog.png"
-import { getLocalConfig } from "@/utils/config/storage"
+import { useAtomValue, useSetAtom } from "jotai"
+import logo from "@/assets/icons/read-frog.png"
 import { TRANSLATE_BUTTON_CLASS } from "@/utils/constants/subtitles"
 import { cn } from "@/utils/styles/utils"
-import { subtitlesStore, subtitlesVisibleAtom } from "../atoms"
+import {
+  subtitlesSettingsPanelOpenAtom,
+  subtitlesSettingsPanelViewAtom,
+  subtitlesStore,
+  subtitlesVisibleAtom,
+} from "../atoms"
+import { ROOT_VIEW } from "./subtitles-settings-panel/views"
 
-export function SubtitleToggleButton(
-  { onToggle }:
-  {
-    onToggle: (enabled: boolean) => void
-  },
-) {
+export function SubtitlesTranslateButton() {
   const isVisible = useAtomValue(subtitlesVisibleAtom, { store: subtitlesStore })
-
-  const tryStartSubtitles = useEffectEvent(async () => {
-    const config = await getLocalConfig()
-    const autoStart = config?.videoSubtitles?.autoStart ?? false
-    if (autoStart) {
-      onToggle(true)
-    }
-  })
-
-  useEffect(() => {
-    void tryStartSubtitles()
-  }, [])
-
-  const handleClick = () => {
-    onToggle(!isVisible)
-  }
+  const panelOpen = useAtomValue(subtitlesSettingsPanelOpenAtom, { store: subtitlesStore })
+  const setPanelOpen = useSetAtom(subtitlesSettingsPanelOpenAtom, { store: subtitlesStore })
+  const setPanelView = useSetAtom(subtitlesSettingsPanelViewAtom, { store: subtitlesStore })
 
   return (
     <button
       type="button"
-      aria-label="Subtitle Translation Toggle"
-      onClick={handleClick}
-      className={`${TRANSLATE_BUTTON_CLASS} w-12 h-full flex items-center justify-center relative bg-transparent border-none p-0 m-0 cursor-pointer`}
+      aria-label="Subtitle Translation Panel"
+      aria-pressed={panelOpen}
+      onClick={() => {
+        setPanelView(ROOT_VIEW)
+        setPanelOpen((prev) => !prev)
+      }}
+      className={cn(
+        `${TRANSLATE_BUTTON_CLASS} relative m-0 flex h-full w-12 cursor-pointer items-center justify-center rounded-[14px] border-none p-0 transition-all duration-200`,
+        panelOpen ? "bg-accent shadow-inner" : "bg-transparent",
+      )}
     >
       <img
         src={logo}
         alt="Subtitle Toggle"
         className={cn(
-          "w-8 h-8 transition-opacity duration-200 object-contain block",
-          isVisible ? "opacity-100" : "opacity-70",
+          "block h-8 w-8 object-contain transition-all duration-200",
+          isVisible ? "opacity-100 saturate-110" : "opacity-75 saturate-90",
+          panelOpen && "scale-[1.02]",
         )}
       />
       <div
         className={cn(
-          "absolute bottom-1 right-0 px-1 py-0.5 rounded text-[8px] font-medium leading-none transition-colors duration-200",
-          isVisible ? "bg-green-500 text-white" : "bg-gray-500 text-white",
+          "absolute right-0 bottom-1 min-w-7 rounded-md px-1 py-0.5 text-center text-[8px] leading-none font-semibold tracking-[0.08em] transition-colors duration-200",
+          isVisible
+            ? "bg-primary text-primary-foreground shadow-sm"
+            : "bg-secondary text-secondary-foreground",
         )}
       >
         {isVisible ? "ON" : "OFF"}

@@ -1,26 +1,28 @@
-import { i18n } from "#imports"
 import selectionToolbarDemoImage from "@/assets/demo/selection-toolbar.png"
 import { GradientBackground } from "@/components/gradient-background"
+import { i18n } from "@/utils/i18n"
 import { PageLayout } from "../../components/page-layout"
-import { SelectionToolbarDisabledSites } from "./selection-toolbar-disabled-sites"
-import { SelectionToolbarFeatureToggles } from "./selection-toolbar-feature-toggles"
-import { SelectionToolbarGlobalToggle } from "./selection-toolbar-global-toggle"
+import { ActionsSection } from "./actions"
+import { DisplaySection } from "./display"
+import { EnableItem } from "./enable-item"
 
 export function SelectionToolbarPage() {
   return (
-    <PageLayout title={i18n.t("options.overlayTools.selectionToolbar.title")}>
+    <PageLayout
+      title={i18n.t("options.selectionToolbar.title")}
+      description={i18n.t("options.selectionToolbar.pageDescription")}
+      innerClassName="flex flex-col gap-10"
+    >
       <GradientBackground>
         <img
           src={selectionToolbarDemoImage}
-          alt={i18n.t("options.floatingButtonAndToolbar.selectionToolbarDemoImageAlt")}
-          className="w-100 h-auto"
+          alt={i18n.t("options.selectionToolbar.demoImageAlt")}
+          className="h-auto w-100"
         />
       </GradientBackground>
-      <div className="*:border-b [&>*:last-child]:border-b-0">
-        <SelectionToolbarGlobalToggle />
-        <SelectionToolbarFeatureToggles />
-        <SelectionToolbarDisabledSites />
-      </div>
+      <EnableItem />
+      <ActionsSection />
+      <DisplaySection />
     </PageLayout>
   )
 }

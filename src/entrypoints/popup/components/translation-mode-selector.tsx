@@ -1,88 +1,98 @@
 import type { TranslationMode as TranslationModeType } from "@/types/config/translate"
-import { i18n } from "#imports"
-import { deepmerge } from "deepmerge-ts"
+import { Icon } from "@iconify/react"
 import { useAtom, useAtomValue } from "jotai"
-import { HelpTooltip } from "@/components/help-tooltip"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/base-ui/select"
-import { TRANSLATION_MODES } from "@/types/config/translate"
-import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { filterEnabledProvidersConfig, getLLMProvidersConfig, getProviderConfigById } from "@/utils/config/helpers"
+import { Button } from "@/components/ui/base-ui/button"
+import { Kbd, KbdGroup } from "@/components/ui/base-ui/kbd"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/base-ui/tooltip"
+import { configAtom, configFieldsAtomMap } from "@/utils/atoms/config"
+import { i18n } from "@/utils/i18n"
+import { formatHotkeyParts } from "@/utils/os"
+import { isPageTranslationShortcutEmpty } from "@/utils/page-translation-shortcut"
+import { getTranslationOnlyBlockedReason } from "@/utils/providers/translation-only-gate"
+import { cn } from "@/utils/styles/utils"
+
+const TABLER_ICON_STROKE_WIDTH_CLASS = "[&_path]:[stroke-width:1.2]"
+
+const MODE_ICON: Record<TranslationModeType, { icon: string; className?: string }> = {
+  bilingual: { icon: "garden:translation-exists-stroke-16" },
+  translationOnly: { icon: "tabler:text-resize", className: TABLER_ICON_STROKE_WIDTH_CLASS },
+}
+
+const NEXT_MODE: Record<TranslationModeType, TranslationModeType> = {
+  bilingual: "translationOnly",
+  translationOnly: "bilingual",
+}
+
+const MODE_TOOLTIP_KEY = {
+  bilingual: {
+    current: "popup.translationModeToggle.tooltip.bilingual.current",
+    action: "popup.translationModeToggle.tooltip.bilingual.action",
+  },
+  translationOnly: {
+    current: "popup.translationModeToggle.tooltip.translationOnly.current",
+    action: "popup.translationModeToggle.tooltip.translationOnly.action",
+  },
+} as const
 
 export default function TranslationModeSelector() {
-  const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
-  const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
+  const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.pageTranslation)
+  const config = useAtomValue(configAtom)
   const currentMode = translateConfig.mode
+  const currentModeIcon = MODE_ICON[currentMode]
+  const nextMode = NEXT_MODE[currentMode]
+  const tooltipKey = MODE_TOOLTIP_KEY[currentMode]
+  // Entering translationOnly is blocked while the page-translate provider has
+  // no markup support (translation-only-gate.ts). Native `disabled` would
+  // swallow the hover events the tooltip needs, so the button stays focusable
+  // and the click becomes a no-op with the reason shown in the tooltip.
+  const blockedReason =
+    nextMode === "translationOnly" ? getTranslationOnlyBlockedReason(config) : null
+  const nextModeBlocked = blockedReason !== null
+  const actionLabel = i18n.t(tooltipKey.action)
+  const shortcutParts = isPageTranslationShortcutEmpty(translateConfig.modeShortcut)
+    ? []
+    : formatHotkeyParts(translateConfig.modeShortcut)
 
-  const handleModeChange = (mode: TranslationModeType | null) => {
-    if (!mode)
-      return
-    const currentProvider = getProviderConfigById(providersConfig, translateConfig.providerId)
-
-    if (mode === "translationOnly" && currentProvider && currentProvider.provider === "google-translate") {
-      const enabledProviders = filterEnabledProvidersConfig(providersConfig)
-
-      const microsoftProvider = enabledProviders.find(p => p.provider === "microsoft-translate")
-      if (microsoftProvider) {
-        void setTranslateConfig(
-          deepmerge(translateConfig, {
-            mode,
-            providerId: microsoftProvider.id,
-          }),
-        )
-        return
-      }
-
-      const llmProviders = getLLMProvidersConfig(enabledProviders)
-      if (llmProviders.length > 0) {
-        void setTranslateConfig(
-          deepmerge(translateConfig, {
-            mode,
-            providerId: llmProviders[0].id,
-          }),
-        )
-        return
-      }
-    }
-
-    void setTranslateConfig(
-      deepmerge(translateConfig, { mode }),
-    )
+  const handleModeToggle = () => {
+    if (nextModeBlocked) return
+    void setTranslateConfig({ mode: nextMode })
   }
 
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-[13px] font-medium flex items-center gap-1.5">
-        {i18n.t("options.translation.translationMode.title")}
-        <HelpTooltip>
-          {i18n.t("options.translation.translationMode.description")}
-        </HelpTooltip>
-      </span>
-      <Select
-        value={currentMode}
-        onValueChange={handleModeChange}
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={actionLabel}
+            aria-disabled={nextModeBlocked || undefined}
+            className={cn(nextModeBlocked && "cursor-not-allowed opacity-50")}
+            onClick={handleModeToggle}
+          />
+        }
       >
-        <SelectTrigger className="h-7! w-31">
-          <SelectValue>
-            {i18n.t(`options.translation.translationMode.mode.${currentMode}`)}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {TRANSLATION_MODES.map(mode => (
-              <SelectItem key={mode} value={mode}>
-                {i18n.t(`options.translation.translationMode.mode.${mode}`)}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    </div>
+        <Icon
+          {...currentModeIcon}
+          className={cn(currentModeIcon.className, currentMode === "translationOnly" && "size-4.5")}
+        />
+      </TooltipTrigger>
+      <TooltipContent>
+        {/* The blocked-reason line is much longer than the mode labels; let it
+            wrap inside the 320px popup instead of forcing one clipped line. */}
+        <div className={cn("whitespace-nowrap", nextModeBlocked && "max-w-64 whitespace-normal")}>
+          <p>{i18n.t(tooltipKey.current)}</p>
+          {nextModeBlocked ? <p>{blockedReason}</p> : <p>{actionLabel}</p>}
+          {!nextModeBlocked && shortcutParts.length > 0 && (
+            <KbdGroup className="mt-1.5">
+              {shortcutParts.map((part) => (
+                <Kbd key={part}>{part}</Kbd>
+              ))}
+            </KbdGroup>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
   )
 }

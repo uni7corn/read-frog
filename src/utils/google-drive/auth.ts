@@ -1,9 +1,10 @@
-import { browser, storage } from "#imports"
 import { z } from "zod"
+import { browser, storage } from "#imports"
+import { env } from "@/env"
 import { GOOGLE_DRIVE_TOKEN_STORAGE_KEY } from "../constants/config"
 import { logger } from "../logger"
 
-const GOOGLE_CLIENT_ID = import.meta.env.WXT_GOOGLE_CLIENT_ID || "YOUR_CLIENT_ID"
+const GOOGLE_CLIENT_ID = env.WXT_GOOGLE_CLIENT_ID ?? "YOUR_CLIENT_ID"
 const GOOGLE_REDIRECT_URI = browser.identity.getRedirectURL()
 const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/drive.appdata",
@@ -32,7 +33,9 @@ export type GoogleUserInfo = z.infer<typeof googleUserInfoSchema>
  */
 async function getTokenFromStorage(): Promise<GoogleAuthToken | null> {
   try {
-    const tokenData = await storage.getItem<GoogleAuthToken>(`local:${GOOGLE_DRIVE_TOKEN_STORAGE_KEY}`)
+    const tokenData = await storage.getItem<GoogleAuthToken>(
+      `local:${GOOGLE_DRIVE_TOKEN_STORAGE_KEY}`,
+    )
     if (!tokenData) {
       return null
     }
@@ -44,8 +47,7 @@ async function getTokenFromStorage(): Promise<GoogleAuthToken | null> {
     }
 
     return parsed.data
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to get token from storage", error)
     return null
   }
@@ -81,7 +83,7 @@ export async function authenticateGoogleDriveAndSaveTokenToStorage(): Promise<st
       throw new Error("No access token in OAuth response")
     }
 
-    const expiresAt = Date.now() + (expiresIn ? Number.parseInt(expiresIn) * 1000 : 3600 * 1000)
+    const expiresAt = Date.now() + (expiresIn ? Number.parseInt(expiresIn, 10) * 1000 : 3600 * 1000)
 
     const tokenData: GoogleAuthToken = {
       access_token: accessToken,
@@ -94,8 +96,7 @@ export async function authenticateGoogleDriveAndSaveTokenToStorage(): Promise<st
     await storage.setItem(`local:${GOOGLE_DRIVE_TOKEN_STORAGE_KEY}`, validatedToken)
 
     return accessToken
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Google OAuth authentication failed", error)
     throw error
   }
@@ -115,8 +116,7 @@ export async function getValidAccessToken(): Promise<string> {
 
     // Trust local expiry check - validate only on API 401 errors
     return tokenData.access_token
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to get valid access token", error)
     throw error
   }
@@ -125,8 +125,7 @@ export async function getValidAccessToken(): Promise<string> {
 export async function clearAccessToken(): Promise<void> {
   try {
     await storage.removeItem(`local:${GOOGLE_DRIVE_TOKEN_STORAGE_KEY}`)
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to clear access token", error)
     throw error
   }
@@ -144,8 +143,7 @@ export async function getIsAuthenticated(): Promise<boolean> {
     }
 
     return Date.now() < tokenData.expires_at - TOKEN_EXPIRY_BUFFER_MS
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to check authentication status", error)
     return false
   }

@@ -1,3 +1,4 @@
+import type { Table } from "dexie"
 import { browser } from "#imports"
 import { db } from "@/utils/db/dexie/db"
 import { logger } from "@/utils/logger"
@@ -14,63 +15,73 @@ export const REQUEST_RECORD_MAX_AGE_DAYS = 120
 export const SUMMARY_CACHE_CLEANUP_ALARM = "summary-cache-cleanup"
 export const SUMMARY_CACHE_MAX_AGE_MINUTES = 7 * 24 * 60
 
+export const AI_SEGMENTATION_CACHE_CLEANUP_ALARM = "ai-segmentation-cache-cleanup"
+export const AI_SEGMENTATION_CACHE_MAX_AGE_MINUTES = 7 * 24 * 60
+
 export async function setUpDatabaseCleanup() {
-  // Set up periodic alarms (only if they don't exist)
-  const existingCacheAlarm = await browser.alarms.get(TRANSLATION_CACHE_CLEANUP_ALARM)
-  if (!existingCacheAlarm) {
-    void browser.alarms.create(TRANSLATION_CACHE_CLEANUP_ALARM, {
-      delayInMinutes: 1,
-      periodInMinutes: CHECK_INTERVAL_MINUTES,
-    })
-  }
+  const cleanupJobs = new Map<string, () => Promise<void>>([
+    [
+      TRANSLATION_CACHE_CLEANUP_ALARM,
+      createCacheCleanup({
+        table: db.translationCache,
+        maxAgeMinutes: TRANSLATION_CACHE_MAX_AGE_MINUTES,
+        label: "Translation cache",
+      }),
+    ],
+    [REQUEST_RECORD_CLEANUP_ALARM, cleanupOldRequestRecords],
+    [
+      SUMMARY_CACHE_CLEANUP_ALARM,
+      createCacheCleanup({
+        table: db.articleSummaryCache,
+        maxAgeMinutes: SUMMARY_CACHE_MAX_AGE_MINUTES,
+        label: "Summary cache",
+      }),
+    ],
+    [
+      AI_SEGMENTATION_CACHE_CLEANUP_ALARM,
+      createCacheCleanup({
+        table: db.aiSegmentationCache,
+        maxAgeMinutes: AI_SEGMENTATION_CACHE_MAX_AGE_MINUTES,
+        label: "AI segmentation cache",
+      }),
+    ],
+  ])
 
-  const existingRequestAlarm = await browser.alarms.get(REQUEST_RECORD_CLEANUP_ALARM)
-  if (!existingRequestAlarm) {
-    void browser.alarms.create(REQUEST_RECORD_CLEANUP_ALARM, {
-      delayInMinutes: 1,
-      periodInMinutes: CHECK_INTERVAL_MINUTES,
-    })
-  }
-
-  const existingSummaryAlarm = await browser.alarms.get(SUMMARY_CACHE_CLEANUP_ALARM)
-  if (!existingSummaryAlarm) {
-    void browser.alarms.create(SUMMARY_CACHE_CLEANUP_ALARM, {
-      delayInMinutes: 1,
-      periodInMinutes: CHECK_INTERVAL_MINUTES,
-    })
-  }
-
-  // Register the alarm listener
+  // Register synchronously so alarms can wake the background during initialization.
   browser.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name === TRANSLATION_CACHE_CLEANUP_ALARM) {
-      await cleanupOldTranslationCache()
-    }
-    else if (alarm.name === REQUEST_RECORD_CLEANUP_ALARM) {
-      await cleanupOldRequestRecords()
-    }
-    else if (alarm.name === SUMMARY_CACHE_CLEANUP_ALARM) {
-      await cleanupOldSummaryCache()
-    }
+    await cleanupJobs.get(alarm.name)?.()
   })
+
+  for (const name of cleanupJobs.keys()) {
+    if (!(await browser.alarms.get(name))) {
+      void browser.alarms.create(name, {
+        delayInMinutes: 1,
+        periodInMinutes: CHECK_INTERVAL_MINUTES,
+      })
+    }
+  }
 }
 
-async function cleanupOldTranslationCache() {
-  try {
-    const cutoffDate = new Date()
-    cutoffDate.setTime(cutoffDate.getTime() - TRANSLATION_CACHE_MAX_AGE_MINUTES * 60 * 1000)
+function createCacheCleanup({
+  table,
+  maxAgeMinutes,
+  label,
+}: {
+  table: Pick<Table<{ createdAt: Date }>, "where">
+  maxAgeMinutes: number
+  label: string
+}) {
+  return async () => {
+    try {
+      const cutoffDate = new Date(Date.now() - maxAgeMinutes * 60 * 1000)
+      const deletedCount = await table.where("createdAt").below(cutoffDate).delete()
 
-    // Delete all cache entries older than the cutoff date
-    const deletedCount = await db.translationCache
-      .where("createdAt")
-      .below(cutoffDate)
-      .delete()
-
-    if (deletedCount > 0) {
-      logger.info(`Cache cleanup: Deleted ${deletedCount} old translation cache entries`)
+      if (deletedCount > 0) {
+        logger.info(`${label} cleanup: Deleted ${deletedCount} old entries`)
+      }
+    } catch (error) {
+      logger.error(`Failed to cleanup old ${label}:`, error)
     }
-  }
-  catch (error) {
-    logger.error("Failed to cleanup old cache:", error)
   }
 }
 
@@ -80,8 +91,7 @@ export async function cleanupAllTranslationCache() {
     await db.translationCache.clear()
 
     logger.info(`Cache cleanup: Deleted all translation cache entries`)
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to cleanup all cache:", error)
     throw error
   }
@@ -101,10 +111,12 @@ async function cleanupOldRequestRecords() {
         .limit(excessCount)
         .toArray()
 
-      const keysToDelete = oldestRecords.map(record => record.key)
+      const keysToDelete = oldestRecords.map((record) => record.key)
       await db.batchRequestRecord.bulkDelete(keysToDelete)
 
-      logger.info(`Request records cleanup: Deleted ${excessCount} oldest records (count exceeded ${REQUEST_RECORD_MAX_COUNT})`)
+      logger.info(
+        `Request records cleanup: Deleted ${excessCount} oldest records (count exceeded ${REQUEST_RECORD_MAX_COUNT})`,
+      )
     }
 
     // Delete records older than max age
@@ -117,10 +129,11 @@ async function cleanupOldRequestRecords() {
       .delete()
 
     if (deletedByAgeCount > 0) {
-      logger.info(`Request records cleanup: Deleted ${deletedByAgeCount} records older than ${REQUEST_RECORD_MAX_AGE_DAYS} days`)
+      logger.info(
+        `Request records cleanup: Deleted ${deletedByAgeCount} records older than ${REQUEST_RECORD_MAX_AGE_DAYS} days`,
+      )
     }
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to cleanup old request records:", error)
   }
 }
@@ -131,30 +144,9 @@ export async function cleanupAllRequestRecords() {
     await db.batchRequestRecord.clear()
 
     logger.info(`Request records cleanup: Deleted all batch request records`)
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to cleanup all request records:", error)
     throw error
-  }
-}
-
-async function cleanupOldSummaryCache() {
-  try {
-    const cutoffDate = new Date()
-    cutoffDate.setTime(cutoffDate.getTime() - SUMMARY_CACHE_MAX_AGE_MINUTES * 60 * 1000)
-
-    // Delete all summary cache entries older than the cutoff date
-    const deletedCount = await db.articleSummaryCache
-      .where("createdAt")
-      .below(cutoffDate)
-      .delete()
-
-    if (deletedCount > 0) {
-      logger.info(`Summary cache cleanup: Deleted ${deletedCount} old article summary cache entries`)
-    }
-  }
-  catch (error) {
-    logger.error("Failed to cleanup old summary cache:", error)
   }
 }
 
@@ -164,8 +156,7 @@ export async function cleanupAllSummaryCache() {
     await db.articleSummaryCache.clear()
 
     logger.info(`Summary cache cleanup: Deleted all article summary cache entries`)
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to cleanup all summary cache:", error)
     throw error
   }
@@ -175,8 +166,7 @@ export async function cleanupAllAiSegmentationCache() {
   try {
     await db.aiSegmentationCache.clear()
     logger.info("AI segmentation cache cleanup: Deleted all entries")
-  }
-  catch (error) {
+  } catch (error) {
     logger.error("Failed to cleanup all AI segmentation cache:", error)
     throw error
   }

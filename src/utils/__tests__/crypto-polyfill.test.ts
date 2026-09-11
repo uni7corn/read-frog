@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { generateUUIDv4 } from "@/utils/crypto-polyfill"
+import { generateUUIDv4, getRandomUUID } from "@/utils/crypto-polyfill"
+
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 describe("generateUUIDv4", () => {
   let getRandomValuesSpy: ReturnType<typeof vi.spyOn>
@@ -14,8 +16,7 @@ describe("generateUUIDv4", () => {
 
   it("should generate valid UUID v4 format", () => {
     const uuid = generateUUIDv4()
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    expect(uuid).toMatch(uuidRegex)
+    expect(uuid).toMatch(UUID_V4_PATTERN)
   })
 
   it("should generate unique UUIDs", () => {
@@ -46,8 +47,11 @@ describe("generateUUIDv4", () => {
 
   it("should generate correct UUID for known input", () => {
     // Mock specific bytes to verify the algorithm
-    getRandomValuesSpy.mockImplementation((array: Uint8Array) => {
-      const mockBytes = [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]
+    getRandomValuesSpy.mockImplementation((array: Uint8Array<ArrayBuffer>) => {
+      const mockBytes = [
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
+        0xff,
+      ]
       array.set(mockBytes)
       return array
     })
@@ -59,5 +63,61 @@ describe("generateUUIDv4", () => {
     // bytes[8] = 0x88 & 0x3F | 0x80 = 0x88
     // Note: bytes[7] remains 0x77
     expect(uuid).toBe("00112233-4455-4677-8899-aabbccddeeff")
+  })
+})
+
+describe("getRandomUUID", () => {
+  const originalCrypto = globalThis.crypto
+
+  afterEach(() => {
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: originalCrypto,
+    })
+  })
+
+  it("should use crypto.randomUUID when available", () => {
+    const randomUUID = vi.fn<(...args: any[]) => any>(() => "native-uuid")
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto),
+        randomUUID,
+      },
+    })
+
+    expect(getRandomUUID()).toBe("native-uuid")
+    expect(randomUUID).toHaveBeenCalledTimes(1)
+  })
+
+  it("should fall back to crypto.getRandomValues when crypto.randomUUID is unavailable", () => {
+    const getRandomValues = vi.fn<(...args: any[]) => any>((array: Uint8Array<ArrayBuffer>) =>
+      originalCrypto.getRandomValues(array),
+    )
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        getRandomValues,
+      },
+    })
+
+    const uuid = getRandomUUID()
+
+    expect(uuid).toMatch(UUID_V4_PATTERN)
+    expect(getRandomValues).toHaveBeenCalledTimes(1)
+  })
+
+  it("should not patch crypto.randomUUID when the module is imported", async () => {
+    Object.defineProperty(globalThis, "crypto", {
+      configurable: true,
+      value: {
+        getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto),
+      },
+    })
+
+    vi.resetModules()
+    await import("@/utils/crypto-polyfill")
+
+    expect("randomUUID" in globalThis.crypto).toBe(false)
   })
 })

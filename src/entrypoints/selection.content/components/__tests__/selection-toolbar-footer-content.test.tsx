@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import type { ProviderConfig } from "@/types/config/provider"
-import { i18n } from "#imports"
 import { act, fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { TooltipProvider } from "@/components/ui/base-ui/tooltip"
+import { i18n } from "@/utils/i18n"
 import { SelectionToolbarFooterContent } from "../selection-toolbar-footer-content"
 
 vi.mock("@/components/llm-providers/provider-selector", () => ({
@@ -18,7 +18,7 @@ vi.mock("@/components/llm-providers/provider-selector", () => ({
     providers: ProviderConfig[]
     value: string
   }) => {
-    const nextProvider = providers.find(provider => provider.id !== value)
+    const nextProvider = providers.find((provider) => provider.id !== value)
 
     return (
       <button
@@ -46,16 +46,17 @@ describe("selectionToolbarFooterContent", () => {
       provider: "google-translate",
     },
     {
-      id: "microsoft-translate-default",
-      name: "Microsoft Translate",
+      id: "deepl-default",
+      name: "DeepL",
       enabled: true,
-      provider: "microsoft-translate",
+      provider: "deepl",
+      apiKey: "test-key",
     },
   ]
 
   it("renders the provider selector and forwards footer actions", async () => {
-    const onProviderChange = vi.fn()
-    const onRegenerate = vi.fn()
+    const onProviderChange = vi.fn<(...args: any[]) => any>()
+    const onRegenerate = vi.fn<(...args: any[]) => any>()
 
     render(
       <TooltipProvider>
@@ -66,7 +67,9 @@ describe("selectionToolbarFooterContent", () => {
           value="google-translate-default"
           onProviderChange={onProviderChange}
           onRegenerate={onRegenerate}
-        />
+        >
+          <button type="button">Save to Notebase</button>
+        </SelectionToolbarFooterContent>
       </TooltipProvider>,
     )
 
@@ -76,14 +79,18 @@ describe("selectionToolbarFooterContent", () => {
       await Promise.resolve()
     })
 
-    expect(onProviderChange).toHaveBeenCalledWith("microsoft-translate-default")
+    expect(onProviderChange).toHaveBeenCalledWith("deepl-default")
     expect(screen.getByText(i18n.t("action.contextDetailsTitleLabel"))).toBeInTheDocument()
     expect(screen.getByText(i18n.t("action.contextDetailsParagraphsLabel"))).toBeInTheDocument()
     expect(screen.getByText("Page Title")).toBeInTheDocument()
     expect(screen.getByText("Context text")).toBeInTheDocument()
-    expect(
-      screen.getByText("Context text").closest("[data-slot='selection-toolbar-footer-preview-value']"),
-    ).toHaveClass("max-h-36", "overflow-y-auto")
+    expect(screen.getByRole("button", { name: "Save to Notebase" })).toBeInTheDocument()
+    const contextPreview = screen
+      .getByText("Context text")
+      .closest("[data-slot='selection-toolbar-footer-preview-value']")
+
+    expect(contextPreview).toHaveClass("max-h-36", "overflow-y-auto", "break-words")
+    expect(contextPreview?.className).toContain("[overflow-wrap:anywhere]")
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: "action.regenerate" }))
@@ -101,8 +108,8 @@ describe("selectionToolbarFooterContent", () => {
           providers={providers}
           titleText=""
           value="google-translate-default"
-          onProviderChange={vi.fn()}
-          onRegenerate={vi.fn()}
+          onProviderChange={vi.fn<(...args: any[]) => any>()}
+          onRegenerate={vi.fn<(...args: any[]) => any>()}
         />
       </TooltipProvider>,
     )

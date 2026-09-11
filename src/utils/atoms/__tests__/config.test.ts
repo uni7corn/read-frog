@@ -6,10 +6,10 @@ describe("mergeWithArrayOverwrite", () => {
   it("should overwrite arrays and merge objects in complex config scenarios", () => {
     const config = {
       language: DEFAULT_CONFIG.language,
-      translate: {
-        ...DEFAULT_CONFIG.translate,
+      pageTranslation: {
+        ...DEFAULT_CONFIG.pageTranslation,
         page: {
-          ...DEFAULT_CONFIG.translate.page,
+          ...DEFAULT_CONFIG.pageTranslation.page,
           autoTranslatePatterns: ["old.com"],
           autoTranslateLanguages: ["eng"],
         },
@@ -22,7 +22,7 @@ describe("mergeWithArrayOverwrite", () => {
 
     const patch = {
       language: { targetCode: "jpn" },
-      translate: {
+      pageTranslation: {
         page: {
           autoTranslatePatterns: ["new.com", "test.org"],
           autoTranslateLanguages: [],
@@ -37,16 +37,18 @@ describe("mergeWithArrayOverwrite", () => {
     const result = mergeWithArrayOverwrite(config, patch)
 
     // Arrays should be completely replaced
-    expect(result.translate.page.autoTranslatePatterns).toEqual(["new.com", "test.org"])
-    expect(result.translate.page.autoTranslateLanguages).toEqual([])
+    expect(result.pageTranslation.page.autoTranslatePatterns).toEqual(["new.com", "test.org"])
+    expect(result.pageTranslation.page.autoTranslateLanguages).toEqual([])
     expect(result.floatingButton.disabledFloatingButtonPatterns).toEqual(["youtube.com"])
 
-    expect(result.translate.mode).toBe("replace")
+    expect(result.pageTranslation.mode).toBe("replace")
     expect(result.floatingButton.enabled).toBe(true)
 
     // Ensure immutability
     expect(result).not.toBe(config)
-    expect(result.translate.page.autoTranslatePatterns).not.toBe(config.translate.page.autoTranslatePatterns)
+    expect(result.pageTranslation.page.autoTranslatePatterns).not.toBe(
+      config.pageTranslation.page.autoTranslatePatterns,
+    )
   })
 
   it("should handle edge cases and type conversions", () => {
@@ -54,12 +56,17 @@ describe("mergeWithArrayOverwrite", () => {
     expect(mergeWithArrayOverwrite({ arr: [1, 2] }, { arr: "string" })).toEqual({ arr: "string" })
 
     // Non-array to array conversion
-    expect(mergeWithArrayOverwrite({ val: "text" }, { val: ["a", "b"] })).toEqual({ val: ["a", "b"] })
+    expect(mergeWithArrayOverwrite({ val: "text" }, { val: ["a", "b"] })).toEqual({
+      val: ["a", "b"],
+    })
 
     // Empty array overwrite
     expect(mergeWithArrayOverwrite({ items: ["x"] }, { items: [] })).toEqual({ items: [] })
 
     // Null/undefined handling
-    expect(mergeWithArrayOverwrite({ a: null }, { a: 1, b: undefined })).toEqual({ a: 1, b: undefined })
+    expect(mergeWithArrayOverwrite({ a: null }, { a: 1, b: undefined })).toEqual({
+      a: 1,
+      b: undefined,
+    })
   })
 })

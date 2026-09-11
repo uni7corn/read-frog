@@ -1,5 +1,5 @@
 import type { InsertCell } from "@/components/ui/insertable-textarea"
-import { useStore } from "@tanstack/react-form"
+import { useSelector } from "@tanstack/react-store"
 import { Field, FieldError, FieldLabel } from "@/components/ui/base-ui/field"
 import { QuickInsertableTextarea } from "@/components/ui/insertable-textarea"
 import { useFieldContext } from "./form-context"
@@ -18,13 +18,14 @@ export function QuickInsertableTextareaField({
   placeholder,
 }: QuickInsertableTextareaFieldProps) {
   const field = useFieldContext<string>()
-  const errors = useStore(field.store, state => state.meta.errors)
+  const errors = useSelector(field.store, (state) => state.meta.errors)
   const hasError = errors.length > 0
 
   return (
-    <Field invalid={hasError}>
-      <FieldLabel>{label}</FieldLabel>
+    <Field data-invalid={hasError}>
+      <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <QuickInsertableTextarea
+        id={field.name}
         value={field.state.value}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           field.handleChange(event.target.value)
@@ -34,8 +35,8 @@ export function QuickInsertableTextareaField({
         className={className}
         insertCells={insertCells}
       />
-      <FieldError match={hasError}>
-        {errors.map(error => typeof error === "string" ? error : error?.message).join(", ")}
+      <FieldError>
+        {errors.map((error) => (typeof error === "string" ? error : error?.message)).join(", ")}
       </FieldError>
     </Field>
   )

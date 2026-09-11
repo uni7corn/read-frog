@@ -2,11 +2,24 @@
 
 [![Read Frog banner][image-banner]][website]
 
+<p align="center">
+  <a href="https://trendshift.io/repositories/22377" target="_blank"><img src="https://trendshift.io/api/badge/repositories/22377" alt="mengxi-ream%2Fread-frog | Trendshift" width="250" height="55" /></a>
+  <a href="https://www.star-history.com/mengxi-ream/read-frog">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=mengxi-ream/read-frog&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=mengxi-ream/read-frog" />
+      <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=mengxi-ream/read-frog" width="260" height="55" />
+    </picture>
+  </a>
+</p>
+
 An open-source AI-powered language learning extension for browsers.<br/>
 Supports immersive translation, article analysis, multiple AI models, and more.<br/>
 Master languages effortlessly and deeply with AI, right in your browser.
 
-**English** · [简体中文](./README.zh-CN.md) · [Official Website](https://readfrog.app) · [Tutorial](https://www.readfrog.app/tutorial) · [Changelog](https://www.readfrog.app/changelog) · [Blog](https://www.readfrog.app/blog)
+[![English][english-shield]](./README.md) [![简体中文][chinese-shield]](./readmes/README.zh-CN.md) [![繁體中文][traditional-chinese-shield]](./readmes/README.zh-TW.md) [![日本語][japanese-shield]](./readmes/README.ja.md) [![한국어][korean-shield]](./readmes/README.ko.md) [![Español][spanish-shield]](./readmes/README.es.md) [![Русский][russian-shield]](./readmes/README.ru.md) [![Türkçe][turkish-shield]](./readmes/README.tr.md) [![Tiếng Việt][vietnamese-shield]](./readmes/README.vi.md)
+
+[Official Website](https://readfrog.app) · [Tutorial](https://www.readfrog.app/docs) · [Changelog][github-release-link] · [Blog](https://www.readfrog.app/blog)
 
 <!-- SHIELD GROUP -->
 
@@ -26,8 +39,6 @@ Master languages effortlessly and deeply with AI, right in your browser.
 
 </div>
 
-![2025 Recap](/assets/2025-recap.png)
-
 <details>
 <summary><kbd>Table of contents</kbd></summary>
 
@@ -39,14 +50,12 @@ Master languages effortlessly and deeply with AI, right in your browser.
   - [Community](#community)
 - [✨ Features](#-features)
   - [🔄 Bilingual / Translation Only](#-bilingual--translation-only)
-  - [🧠 Context-Aware Translation](#-context-aware-translation)
   - [✨ Selection Translation](#-selection-translation)
-  - [📝 Custom Prompts](#-custom-prompts)
-  - [📦 Batch Requests](#-batch-requests)
-  - [🤖 20+ AI Providers](#-20-ai-providers)
+  - [🧠 Context-Aware Translation](#-context-aware-translation)
   - [🎬 Subtitle Translation](#-subtitle-translation)
   - [🔊 Text-to-Speech (TTS)](#-text-to-speech-tts)
-  - [📖 Read Article](#-read-article)
+  - [📦 Batch Requests](#-batch-requests)
+  - [🤖 20+ AI Providers](#-20-ai-providers)
 - [🤝 Contribute](#-contribute)
   - [Contribute Code](#contribute-code)
 - [📜 Commercial License Grant](#-commercial-license-grant)
@@ -57,8 +66,6 @@ Master languages effortlessly and deeply with AI, right in your browser.
 </details>
 
 ## 📺 Demo
-
-![Read Frog](/assets/read-demo.gif)
 
 <div align="center">
   <img src="assets/node-translation-demo.gif" width="38%" alt="Read Frog Popup Interface" />
@@ -96,11 +103,11 @@ Whether you are a user or a developer, Read Frog will be an important part of yo
   <kbd>Star History</kbd>
 </summary>
 
-<a href="https://www.star-history.com/#mengxi-ream/read-frog&Timeline">
+<a href="https://www.star-history.com/?type=timeline&repos=mengxi-ream%2Fread-frog">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mengxi-ream/read-frog&type=Timeline&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mengxi-ream/read-frog&type=Timeline" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mengxi-ream/read-frog&type=Timeline" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=mengxi-ream/read-frog&type=timeline&theme=dark&legend=top-left&sealed_token=vUW24BwE2sgnq-CzlWEAT6gnzZqNrXl9ai4A05Pc3CQcPGdBqbts3tq5VRWEerfrqVdonsJasb04WcKd5AKSSCjlsdj_TwyI3j9xytMG4FQNw7yXDe9IUA" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=mengxi-ream/read-frog&type=timeline&legend=top-left&sealed_token=vUW24BwE2sgnq-CzlWEAT6gnzZqNrXl9ai4A05Pc3CQcPGdBqbts3tq5VRWEerfrqVdonsJasb04WcKd5AKSSCjlsdj_TwyI3j9xytMG4FQNw7yXDe9IUA" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=mengxi-ream/read-frog&type=timeline&legend=top-left&sealed_token=vUW24BwE2sgnq-CzlWEAT6gnzZqNrXl9ai4A05Pc3CQcPGdBqbts3tq5VRWEerfrqVdonsJasb04WcKd5AKSSCjlsdj_TwyI3j9xytMG4FQNw7yXDe9IUA" />
  </picture>
 </a>
 
@@ -116,13 +123,11 @@ Whether you are a user or a developer, Read Frog will be an important part of yo
 
 Transform your everyday web reading into an immersive language learning journey with Read Frog's powerful features.
 
-<!-- ![][image-feat-bilingual] -->
+### 🪄 [Custom AI Actions][docs-tutorial]
 
-### 🔄 [Bilingual / Translation Only][docs-tutorial]
+Turn selected text into reusable AI tools that match the way you read and learn. Define your own prompts and structured output fields, choose a provider, model, and icon, then run the action directly from the selection toolbar for dictionary lookups, rewriting, summaries, explanations, or any workflow you design.
 
-Switch seamlessly between two translation display modes. **Bilingual mode** shows the original text alongside its translation, perfect for learning and comparison. **Translation-only mode** replaces the original text entirely for a cleaner reading experience.
-
-The extension automatically re-translates all visible content when you switch modes while translation is active, ensuring a smooth transition without needing to refresh the page.
+Start with the built-in **Dictionary** and **Improve Writing** templates, or build an action from scratch. Structured results can also be mapped and saved to Notebase for later study.
 
 <div align="right">
 
@@ -130,13 +135,25 @@ The extension automatically re-translates all visible content when you switch mo
 
 </div>
 
-<!-- ![][image-feat-context] -->
+### 🧠 [Flashcards & Spaced Repetition][docs-tutorial]
 
-### 🧠 [Context-Aware Translation][docs-tutorial]
+Save vocabulary, definitions, example sentences, translations, and reading notes to Notebase, then turn them into flashcards with customizable card templates. Content you discover while reading becomes study material without interrupting your flow.
 
-Enable AI to understand the full context of what you're reading. When activated, Read Frog uses Mozilla's Readability library to extract the article's title and content, providing this context to the AI for more accurate, contextually-appropriate translations.
+Review due cards online and rate each one **Again**, **Hard**, **Good**, or **Easy**. Read Frog's spaced-repetition scheduler uses your feedback to decide when each card should appear again—right before you are likely to forget it.
 
-This means technical terms get translated correctly within their domain, literary expressions maintain their nuance, and ambiguous phrases are interpreted based on the surrounding content rather than in isolation.
+<div align="right">
+
+[![Back to top][back-to-top]](#readme-top)
+
+</div>
+
+<!-- ![][image-feat-bilingual] -->
+
+### 🔄 [Bilingual / Translation Only][docs-tutorial]
+
+Switch seamlessly between two translation display modes. **Bilingual mode** shows the original text alongside its translation, perfect for learning and comparison. **Translation-only mode** replaces the original text entirely for a cleaner reading experience.
+
+The extension automatically re-translates all visible content when you switch modes while translation is active, ensuring a smooth transition without needing to refresh the page.
 
 <div align="right">
 
@@ -158,13 +175,39 @@ The toolbar intelligently positions itself to stay within the viewport, supports
 
 </div>
 
-<!-- ![][image-feat-prompts] -->
+<!-- ![][image-feat-context] -->
 
-### 📝 [Custom Prompts][docs-tutorial]
+### 🧠 [Context-Aware Translation][docs-tutorial]
 
-Define your own translation prompts to translate like an expert. Create domain-specific prompts for technical documents, literary works, or casual content. Use tokens like `[TARGET_LANG]`, `[INPUT]`, `[TITLE]`, and `[SUMMARY]` to build dynamic, context-aware prompts.
+Enable AI to understand the full context of what you're reading. When activated, Read Frog extracts the page title and a concise Markdown version of the page content, providing this context to the AI for more accurate, contextually-appropriate translations.
 
-Save multiple prompt patterns and switch between them based on what you're reading. Your prompts, your rules.
+This means technical terms get translated correctly within their domain, literary expressions maintain their nuance, and ambiguous phrases are interpreted based on the surrounding content rather than in isolation.
+
+<div align="right">
+
+[![Back to top][back-to-top]](#readme-top)
+
+</div>
+
+<!-- ![][image-feat-subtitle] -->
+
+### 🎬 [Subtitle Translation][docs-tutorial]
+
+Translate YouTube subtitles directly in the video player. Watch foreign language content with translations displayed alongside the original subtitles, making video content accessible for language learning.
+
+<div align="right">
+
+[![Back to top][back-to-top]](#readme-top)
+
+</div>
+
+<!-- ![][image-feat-tts] -->
+
+### 🔊 [Text-to-Speech (TTS)][docs-tutorial]
+
+Listen to any selected text with high-quality AI voices. Powered by **Edge TTS** — completely free, with 150+ voices across 80+ languages including Chinese, English, Japanese, Korean, and many more. Adjust rate, pitch, and volume to your preference.
+
+Automatic language detection (basic or LLM-powered) with per-language voice mapping ensures the right voice for every language. Smart sentence-aware chunking handles long text by splitting at natural boundaries and prefetching the next chunk for seamless playback. Perfect for pronunciation practice and auditory learning.
 
 <div align="right">
 
@@ -200,46 +243,6 @@ Plus free translation options: Google Translate, Microsoft Translate, and DeepLX
 
 </div>
 
-<!-- ![][image-feat-subtitle] -->
-
-### 🎬 [Subtitle Translation][docs-tutorial]
-
-Translate YouTube subtitles directly in the video player. Watch foreign language content with translations displayed alongside the original subtitles, making video content accessible for language learning.
-
-<div align="right">
-
-[![Back to top][back-to-top]](#readme-top)
-
-</div>
-
-<!-- ![][image-feat-tts] -->
-
-### 🔊 [Text-to-Speech (TTS)][docs-tutorial]
-
-Listen to any selected text with high-quality AI voices. Powered by **Edge TTS** — completely free, with 150+ voices across 80+ languages including Chinese, English, Japanese, Korean, and many more. Adjust rate, pitch, and volume to your preference.
-
-Automatic language detection (basic or LLM-powered) with per-language voice mapping ensures the right voice for every language. Smart sentence-aware chunking handles long text by splitting at natural boundaries and prefetching the next chunk for seamless playback. Perfect for pronunciation practice and auditory learning.
-
-<div align="right">
-
-[![Back to top][back-to-top]](#readme-top)
-
-</div>
-
-<!-- ![][image-feat-read] -->
-
-### 📖 [Read Article][docs-tutorial]
-
-One-click deep article analysis. Read Frog extracts the main content using Mozilla's Readability, detects the source language, and generates a summary and introduction in your target language.
-
-Then it provides sentence-by-sentence translations with vocabulary explanations tailored to your language level (beginner, intermediate, or advanced). Each sentence includes key word definitions, grammatical analysis, and contextual explanations. It's like having a personal language tutor analyze every article you read.
-
-<div align="right">
-
-[![Back to top][back-to-top]](#readme-top)
-
-</div>
-
 ## 🤝 Contribute
 
 Contributions of all types are more than welcome.
@@ -254,7 +257,7 @@ Project Structure: [DeepWiki](https://deepwiki.com/mengxi-ream/read-frog)
 
 Ask AI to understand the project: [Dosu](https://app.dosu.dev/29569286-71ba-47dd-b038-c7ab1b9d0df7/documents)
 
-Check out the [Contribution Guide](https://readfrog.app/en/tutorial/code-contribution/contribution-guide) for more details.
+Check out the [Contribution Guide](https://readfrog.app/en/docs/code-contribution/contribution-guide) for more details.
 
 ReadFrog is dual-licensed under GPLv3 and a commercial license.
 
@@ -308,8 +311,6 @@ Every donation helps us build a better language learning experience. Thank you f
 
 [![Sponsors][sponsor-image]][sponsor-link]
 
-(will support Afdian in the future)
-
 <div align="right">
 
 [![Back to top][back-to-top]](#readme-top)
@@ -325,10 +326,12 @@ Every donation helps us build a better language learning experience. Thank you f
 [contributors-link]: https://github.com/mengxi-ream/read-frog/graphs/contributors
 [contributors-shield]: https://img.shields.io/github/contributors/mengxi-ream/read-frog?style=flat-square&labelColor=black
 [crxsoso-link]: https://www.crxsoso.com/webstore/detail/modkelfkcfjpgbfmnbnllalkiogfofhb
+[chinese-shield]: https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-gray?style=flat-square
 [discord-link]: https://discord.gg/ej45e3PezJ
 [discord-shield]: https://img.shields.io/discord/1371229720942874646?style=flat-square&label=Discord&logo=discord&logoColor=white&color=5865F2&labelColor=black
 [discord-shield-badge]: https://img.shields.io/badge/chat-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white&labelColor=black
 [edge-store-link]: https://microsoftedge.microsoft.com/addons/detail/read-frog-open-source-a/cbcbomlgikfbdnoaohcjfledcoklcjbo
+[english-shield]: https://img.shields.io/badge/English-gray?style=flat-square
 [firefox-store-link]: https://addons.mozilla.org/firefox/addon/read-frog-open-ai-translator/
 [firefox-version-shield]: https://img.shields.io/amo/v/read-frog-open-ai-translator?style=flat-square&label=Firefox%20Version&labelColor=black&color=orange
 [firefox-users-shield]: https://img.shields.io/amo/users/read-frog-open-ai-translator?style=flat-square&label=Firefox%20Users&color=orange&labelColor=black
@@ -337,20 +340,27 @@ Every donation helps us build a better language learning experience. Thank you f
 [extension-release-shield]: https://img.shields.io/github/package-json/v/mengxi-ream/read-frog?filename=package.json&style=flat-square&label=Latest%20Version&color=brightgreen&labelColor=black
 [github-release-link]: https://github.com/mengxi-ream/read-frog/releases
 [github-star-link]: https://github.com/mengxi-ream/read-frog/stargazers
-[image-banner]: /assets/store/large-promo-tile.png
+[image-banner]: /assets/banner.png
 [image-star]: ./assets/star.png
 [issues-link]: https://github.com/mengxi-ream/read-frog/issues
 [issues-shield]: https://img.shields.io/github/issues/mengxi-ream/read-frog?style=flat-square&labelColor=black
+[japanese-shield]: https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9E-gray?style=flat-square
+[korean-shield]: https://img.shields.io/badge/%ED%95%9C%EA%B5%AD%EC%96%B4-gray?style=flat-square
 [last-commit-shield]: https://img.shields.io/github/last-commit/mengxi-ream/read-frog?style=flat-square&label=commit&labelColor=black
+[russian-shield]: https://img.shields.io/badge/%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9-gray?style=flat-square
 [sponsor-image]: https://cdn.jsdelivr.net/gh/mengxi-ream/static/sponsorkit/sponsors.svg
 [sponsor-link]: https://github.com/sponsors/mengxi-ream
 [sponsor-shield]: https://img.shields.io/github/sponsors/mengxi-ream?style=flat-square&label=Sponsor&color=EA4AAA&labelColor=black
+[spanish-shield]: https://img.shields.io/badge/Espa%C3%B1ol-gray?style=flat-square
 [star-history-link]: https://www.star-history.com/#mengxi-ream/read-frog&Timeline
 [star-history-shield]: https://img.shields.io/github/stars/mengxi-ream/read-frog?style=flat-square&label=stars&color=yellow&labelColor=black
+[traditional-chinese-shield]: https://img.shields.io/badge/%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87-gray?style=flat-square
+[turkish-shield]: https://img.shields.io/badge/T%C3%BCrk%C3%A7e-gray?style=flat-square
+[vietnamese-shield]: https://img.shields.io/badge/Ti%E1%BA%BFng%20Vi%E1%BB%87t-gray?style=flat-square
 [website]: https://readfrog.app
 [wechat-link]: ./assets/wechat-account.jpg
 [wechat-shield-badge]: https://img.shields.io/badge/chat-WeChat-07C160?style=for-the-badge&logo=wechat&logoColor=white&labelColor=black
 
 <!-- Feature docs link -->
 
-[docs-tutorial]: https://readfrog.app/tutorial
+[docs-tutorial]: https://readfrog.app/docs

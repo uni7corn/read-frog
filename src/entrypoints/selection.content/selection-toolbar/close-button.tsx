@@ -1,4 +1,3 @@
-import { i18n } from "#imports"
 import { IconX } from "@tabler/icons-react"
 import { useAtom } from "jotai"
 import { useState } from "react"
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/base-ui/dropdown-menu"
 import { SELECTION_CONTENT_OVERLAY_LAYERS } from "@/entrypoints/selection.content/overlay-layers"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
+import { i18n } from "@/utils/i18n"
 import { shadowWrapper } from ".."
 
 export const DropEvent = "rf-dropdown-change"
@@ -32,18 +32,23 @@ export function CloseButton() {
       }}
     >
       <DropdownMenuTrigger
-        render={(
+        render={
           <button
             type="button"
             title="Close selection toolbar"
-            className={`border-border absolute -top-1 -right-1 cursor-pointer rounded-full border bg-neutral-100 dark:bg-neutral-900 ${isDropdownOpen ? "block" : "hidden group-hover:block"}`}
+            className={`absolute -top-1 -right-1 cursor-pointer rounded-full border border-border bg-neutral-100 dark:bg-neutral-900 ${isDropdownOpen ? "block" : "hidden group-hover:block"}`}
             onMouseDown={handleMouseDown}
           />
-        )}
+        }
       >
         <IconX className="h-3 w-3 text-neutral-400 dark:text-neutral-600" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent container={shadowWrapper} align="start" side="right" className={`${SELECTION_CONTENT_OVERLAY_LAYERS.selectionOverlay} w-fit! whitespace-nowrap`}>
+      <DropdownMenuContent
+        container={shadowWrapper}
+        align="start"
+        side="right"
+        className={`${SELECTION_CONTENT_OVERLAY_LAYERS.selectionOverlay} w-fit! whitespace-nowrap`}
+      >
         <DropdownMenuItem
           onMouseDown={handleMouseDown}
           onClick={() => {
@@ -55,7 +60,7 @@ export function CloseButton() {
             })
           }}
         >
-          {i18n.t("options.floatingButtonAndToolbar.selectionToolbar.closeMenu.disableForSite")}
+          {i18n.t("options.selectionToolbar.closeMenu.disableForSite")}
         </DropdownMenuItem>
         <DropdownMenuItem
           onMouseDown={handleMouseDown}
@@ -63,7 +68,7 @@ export function CloseButton() {
             void setSelectionToolbar({ ...selectionToolbar, enabled: false })
           }}
         >
-          {i18n.t("options.floatingButtonAndToolbar.selectionToolbar.closeMenu.disableGlobally")}
+          {i18n.t("options.selectionToolbar.closeMenu.disableGlobally")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -71,9 +71,8 @@ function getFirstWord(text: string): string {
 }
 
 function isQualityPoor(fragments: SubtitlesFragment[]): boolean {
-  if (fragments.length === 0)
-    return false
-  const longCount = fragments.filter(f => f.text.length > QUALITY_LENGTH_THRESHOLD).length
+  if (fragments.length === 0) return false
+  const longCount = fragments.filter((f) => f.text.length > QUALITY_LENGTH_THRESHOLD).length
   return longCount / fragments.length > QUALITY_PERCENTAGE_THRESHOLD
 }
 
@@ -96,11 +95,13 @@ function processSubtitles(
   const maxLength = getMaxLength(isCJK)
 
   const flushBuffer = () => {
-    if (buffer.length === 0)
-      return
+    if (buffer.length === 0) return
     result.push({
-      text: buffer.map(s => s.text).join(separator).trim(),
-      start: buffer[0].start,
+      text: buffer
+        .map((s) => s.text)
+        .join(separator)
+        .trim(),
+      start: buffer[0]!.start,
       end: buffer.at(-1)!.end,
     })
     buffer.length = 0
@@ -109,31 +110,34 @@ function processSubtitles(
 
   for (let i = 0; i < fragments.length; i++) {
     const frag = fragments[i]
-    if (!frag.text)
-      continue
+    if (!frag!.text) continue
 
-    const text = cleanText(frag.text)
-    if (!text)
-      continue
+    const text = cleanText(frag!.text)
+    if (!text) continue
     const fragLength = getTextLength(text, isCJK)
     const lastSegment = buffer.at(-1)
 
     if (lastSegment) {
       const isEndOfSentence = SENTENCE_END_PATTERN.test(lastSegment.text)
-      const isTimeout = frag.start - lastSegment.end > PAUSE_TIMEOUT_MS
+      const isTimeout = frag!.start - lastSegment.end > PAUSE_TIMEOUT_MS
       const wouldExceedLimit = bufferLength + fragLength > maxLength
 
-      const startsWithSign = STARTS_WITH_SIGN_PATTERN.test(frag.text)
-      const startsWithPauseWord = usePause
-        && PAUSE_WORDS.has(getFirstWord(frag.text))
-        && buffer.length > 1
+      const startsWithSign = STARTS_WITH_SIGN_PATTERN.test(frag!.text)
+      const startsWithPauseWord =
+        usePause && PAUSE_WORDS.has(getFirstWord(frag!.text)) && buffer.length > 1
 
-      if (isEndOfSentence || isTimeout || wouldExceedLimit || startsWithSign || startsWithPauseWord) {
+      if (
+        isEndOfSentence ||
+        isTimeout ||
+        wouldExceedLimit ||
+        startsWithSign ||
+        startsWithPauseWord
+      ) {
         flushBuffer()
       }
     }
 
-    buffer.push({ text, start: frag.start, end: frag.end })
+    buffer.push({ text, start: frag!.start, end: frag!.end })
     bufferLength += fragLength
   }
 
@@ -141,7 +145,7 @@ function processSubtitles(
   return result
 }
 
-function getTargetBounds(isCJK: boolean): { min: number, max: number } {
+function getTargetBounds(isCJK: boolean): { min: number; max: number } {
   return isCJK
     ? { min: TARGET_MIN_CJK, max: TARGET_MAX_CJK }
     : { min: TARGET_MIN_NON_CJK, max: TARGET_MAX_NON_CJK }
@@ -180,11 +184,11 @@ function rebalanceToTargetRange(
   const result: SubtitlesFragment[] = []
 
   for (let i = 0; i < fragments.length; i++) {
-    let current = { ...fragments[i] }
+    let current = { ...fragments[i]! }
     let currentLength = getTextLength(current.text, isCJK)
 
     while (currentLength < min && i + 1 < fragments.length) {
-      const next = fragments[i + 1]
+      const next = fragments[i + 1]!
       const nextLength = getTextLength(next.text, isCJK)
       const combinedLength = currentLength + nextLength
 
@@ -201,13 +205,13 @@ function rebalanceToTargetRange(
   }
 
   for (let i = result.length - 1; i > 0; i--) {
-    const current = result[i]
+    const current = result[i]!
     const currentLength = getTextLength(current.text, isCJK)
     if (currentLength >= min) {
       continue
     }
 
-    const previous = result[i - 1]
+    const previous = result[i - 1]!
     const previousLength = getTextLength(previous.text, isCJK)
     const combinedLength = previousLength + currentLength
 
@@ -226,8 +230,7 @@ export function optimizeSubtitles(
   fragments: SubtitlesFragment[],
   language: string,
 ): SubtitlesFragment[] {
-  if (fragments.length === 0)
-    return []
+  if (fragments.length === 0) return []
 
   // First pass without aggressive pause detection
   let result = processSubtitles(fragments, language, false)

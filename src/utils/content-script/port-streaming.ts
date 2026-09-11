@@ -4,22 +4,21 @@ import type {
   StreamPortStartMessage,
 } from "@/types/background-stream"
 import { browser } from "#imports"
-import { generateUUIDv4 } from "@/utils/crypto-polyfill"
+import { getRandomUUID } from "@/utils/crypto-polyfill"
 
-function createRequestId() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID()
-  }
-
-  return generateUUIDv4()
-}
+/**
+ * Rejection message when the background port drops mid-stream (service worker
+ * restart, extension reload). Callers can match it to treat the failure as an
+ * infrastructure hiccup rather than a provider error.
+ */
+export const STREAM_PORT_DISCONNECTED_MESSAGE = "Stream disconnected unexpectedly"
 
 /**
  * Handles cleanup, abort signals, and disconnection automatically
  */
-export function createPortStreamPromise<TResponse = string, TSerializablePayload = unknown>(
+export function createPortStreamPromise<TResponse = string>(
   portName: string,
-  serializablePayload: TSerializablePayload,
+  serializablePayload: unknown,
   options: {
     signal?: AbortSignal
     onChunk?: (data: TResponse) => void
@@ -27,13 +26,9 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
   } = {},
 ): Promise<TResponse> {
   return new Promise<TResponse>((resolve, reject) => {
-    const {
-      signal,
-      onChunk,
-      keepAliveIntervalMs = 20_000,
-    } = options
+    const { signal, onChunk, keepAliveIntervalMs = 20_000 } = options
 
-    const requestId = createRequestId()
+    const streamRequestId = getRandomUUID()
     const port = browser.runtime.connect({ name: portName })
 
     let settled = false
@@ -66,8 +61,7 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
 
       try {
         port.disconnect()
-      }
-      catch {
+      } catch {
         // The port may already be closed due to a race with onDisconnect.
         // This is expected during cleanup and safe to ignore.
       }
@@ -77,7 +71,7 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
     }
 
     messageListener = (event: StreamPortResponse<TResponse>) => {
-      if (!event || event.requestId !== requestId) {
+      if (!event || event.streamRequestId !== streamRequestId) {
         return
       }
 
@@ -97,7 +91,7 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
     }
 
     disconnectListener = () => {
-      finalize(() => reject(new Error("Stream disconnected unexpectedly")))
+      finalize(() => reject(new Error(STREAM_PORT_DISCONNECTED_MESSAGE)))
     }
 
     abortListener = () => {
@@ -116,9 +110,9 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
       signal.addEventListener("abort", abortListener)
     }
 
-    const startMessage: StreamPortStartMessage<TSerializablePayload> = {
+    const startMessage: StreamPortStartMessage<unknown> = {
       type: "start",
-      requestId,
+      streamRequestId,
       payload: serializablePayload,
     }
 
@@ -133,11 +127,10 @@ export function createPortStreamPromise<TResponse = string, TSerializablePayload
         try {
           const pingMessage: StreamPortRequestMessage<unknown> = {
             type: "ping",
-            requestId,
+            streamRequestId,
           }
           port.postMessage(pingMessage)
-        }
-        catch {
+        } catch {
           // Ignore keepalive send failures; disconnect listener will handle it.
         }
       }, keepAliveIntervalMs)

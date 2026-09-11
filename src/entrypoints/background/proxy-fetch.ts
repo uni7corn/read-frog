@@ -1,11 +1,16 @@
 import type { ProxyResponse } from "@/types/proxy-fetch"
-import { browser } from "#imports"
-import { AUTH_COOKIE_PATTERNS, AUTH_DOMAINS } from "@read-frog/definitions"
-import { DEFAULT_PROXY_CACHE_TTL_MS } from "@/utils/constants/proxy-fetch"
-
+import { AUTH_COOKIE_PATTERNS } from "@read-frog/definitions"
+import { browser, storage } from "#imports"
+import { env } from "@/env"
+import { AUTH_CACHE_GROUP_KEY, DEFAULT_PROXY_CACHE_TTL_MS } from "@/utils/constants/proxy-fetch"
 import { logger } from "@/utils/logger"
 import { onMessage } from "@/utils/message"
 import { SessionCacheGroupRegistry } from "../../utils/session-cache/session-cache-group-registry"
+import { clearHostedAiStatusCache } from "./hosted-ai-status"
+
+// Last-seen auth cookie values, kept in session storage so the comparison
+// survives service-worker restarts (cleared with the browser session)
+const AUTH_COOKIE_LAST_SEEN_KEY = "session:proxyFetchAuthCookieLastSeen"
 
 function encodeArrayBufferToBase64(buffer: ArrayBuffer) {
   const bytes = new Uint8Array(buffer)
@@ -32,55 +37,71 @@ export function proxyFetch() {
     await SessionCacheGroupRegistry.clearAllCacheGroup()
   }
 
+  // Auth-scoped cache invalidation: session cookie changes only affect the auth group
+  async function invalidateAuthCache() {
+    const sessionCache = await getSessionCache(AUTH_CACHE_GROUP_KEY)
+    // The hosted-AI verdict is per identity (guest vs signed-in vs Ultra) but
+    // carries no identity to check itself against, so it rides this hook rather
+    // than keying on a user id — reading one in the background costs a
+    // get-session round trip, the very traffic this listener exists to avoid.
+    await Promise.all([sessionCache.clear(), clearHostedAiStatusCache()])
+  }
+
   // Listen for cookie changes to invalidate auth-related cache
-  if (browser.cookies && browser.cookies.onChanged) {
+  if (browser.cookies?.onChanged) {
     browser.cookies.onChanged.addListener(async (changeInfo) => {
-      const { cookie, removed } = changeInfo
+      const { cookie, removed, cause } = changeInfo
       // Check if it's an auth-related cookie for monitored domains
-      if (cookie.domain && AUTH_DOMAINS.some(domain => cookie.domain.includes(domain))) {
-        // Check against defined auth cookie patterns
-        if (AUTH_COOKIE_PATTERNS.some(name => cookie.name.includes(name))) {
-          // Get current cookie value for before/after comparison
-          let beforeValue: string | undefined
-          let afterValue: string | undefined
-
-          if (removed) {
-            // Cookie was removed - before value was the cookie value, after is undefined
-            beforeValue = cookie.value
-            afterValue = undefined
-          }
-          else {
-            // Cookie was added/updated - get the previous value by querying all cookies
-            try {
-              const existingCookies = await browser.cookies.getAll({
-                domain: cookie.domain,
-                name: cookie.name,
-              })
-              // If cookie exists, this was an update; if not, this was creation
-              beforeValue = existingCookies.length > 0 && existingCookies[0].value !== cookie.value
-                ? existingCookies[0].value
-                : undefined
-              afterValue = cookie.value
-            }
-            catch (error) {
-              logger.warn("[ProxyFetch] Could not retrieve previous cookie value:", error)
-              beforeValue = "unknown"
-              afterValue = cookie.value
-            }
-          }
-
-          logger.info("[ProxyFetch] Auth cookie changed, invalidating cache:", {
-            cookieName: cookie.name,
-            domain: cookie.domain,
-            removed,
-            beforeValue,
-            afterValue,
-          })
-          invalidateAllCache().catch(error =>
-            logger.error("[ProxyFetch] Failed to invalidate cache:", error),
-          )
-        }
+      if (
+        !cookie.domain ||
+        !env.WXT_AUTH_COOKIE_DOMAINS.some((domain: string) => cookie.domain.includes(domain))
+      ) {
+        return
       }
+      // Check against defined auth cookie patterns
+      if (!AUTH_COOKIE_PATTERNS.some((name) => cookie.name.includes(name))) {
+        return
+      }
+
+      // A cookie re-set fires two events: an "overwrite" removal followed by an
+      // add. Only the add carries the new value, so skip the overwrite half —
+      // otherwise every server-side cookie refresh double-invalidates the cache.
+      if (removed && cause === "overwrite") {
+        return
+      }
+
+      const lastSeenKey = `${cookie.domain}|${cookie.name}`
+      const newValue = removed ? undefined : cookie.value
+
+      try {
+        const lastSeen =
+          (await storage.getItem<Record<string, string>>(AUTH_COOKIE_LAST_SEEN_KEY)) ?? {}
+        // Same token re-issued (e.g. expiry extended): session identity didn't
+        // change, so the cached session is still valid — don't invalidate, or
+        // every get-session response would evict the cache it just filled.
+        if (!removed && lastSeen[lastSeenKey] === newValue) {
+          return
+        }
+        if (newValue === undefined) {
+          delete lastSeen[lastSeenKey]
+        } else {
+          lastSeen[lastSeenKey] = newValue
+        }
+        await storage.setItem(AUTH_COOKIE_LAST_SEEN_KEY, lastSeen)
+      } catch (error) {
+        // Can't tell whether the token changed — invalidate to stay correct
+        logger.warn("[ProxyFetch] Could not read last-seen auth cookie state:", error)
+      }
+
+      logger.info("[ProxyFetch] Auth cookie changed, invalidating auth cache:", {
+        cookieName: cookie.name,
+        domain: cookie.domain,
+        removed,
+        cause,
+      })
+      invalidateAuthCache().catch((error) =>
+        logger.error("[ProxyFetch] Failed to invalidate auth cache:", error),
+      )
     })
   }
 
@@ -94,6 +115,7 @@ export function proxyFetch() {
       headers,
       body,
       credentials,
+      redirect,
       cacheConfig,
       responseType = "text",
     } = message.data
@@ -104,17 +126,22 @@ export function proxyFetch() {
       ttl: cacheTtl = DEFAULT_PROXY_CACHE_TTL_MS,
     } = cacheConfig ?? {}
 
-    async function getCached(reqMethod: string, targetUrl: string): Promise<ProxyResponse | undefined> {
-      if (!cacheEnabled)
-        return undefined
+    async function getCached(
+      reqMethod: string,
+      targetUrl: string,
+    ): Promise<ProxyResponse | undefined> {
+      if (!cacheEnabled) return undefined
 
       const sessionCache = await getSessionCache(cacheGroupKey)
       return await sessionCache.get(reqMethod, targetUrl, cacheTtl)
     }
 
-    async function setCached(reqMethod: string, targetUrl: string, resp: ProxyResponse): Promise<void> {
-      if (!cacheEnabled)
-        return
+    async function setCached(
+      reqMethod: string,
+      targetUrl: string,
+      resp: ProxyResponse,
+    ): Promise<void> {
+      if (!cacheEnabled) return
 
       const sessionCache = await getSessionCache(cacheGroupKey)
       await sessionCache.set(reqMethod, targetUrl, resp)
@@ -125,8 +152,7 @@ export function proxyFetch() {
       if (groupKey) {
         const sessionCache = await getSessionCache(groupKey)
         await sessionCache.clear()
-      }
-      else {
+      } else {
         await invalidateAllCache()
       }
     }
@@ -136,8 +162,7 @@ export function proxyFetch() {
     // Check cache for GET requests
     if (finalMethod === "GET" && cacheEnabled) {
       const cached = await getCached(finalMethod, url)
-      if (cached)
-        return cached
+      if (cached) return cached
     }
 
     // Aggressive mode: pre-clear cache before mutations to avoid race with subsequent GETs
@@ -150,12 +175,14 @@ export function proxyFetch() {
       headers: headers ? new Headers(headers) : undefined,
       body,
       credentials: credentials ?? "include",
+      redirect,
     })
 
     const responseHeaders: [string, string][] = [...response.headers.entries()]
-    const responseBody = responseType === "base64"
-      ? encodeArrayBufferToBase64(await response.arrayBuffer())
-      : await response.text()
+    const responseBody =
+      responseType === "base64"
+        ? encodeArrayBufferToBase64(await response.arrayBuffer())
+        : await response.text()
 
     const result = {
       status: response.status,
@@ -178,8 +205,7 @@ export function proxyFetch() {
         else if (result.status >= 200 && result.status < 300) {
           await setCached(finalMethod, url, result)
         }
-      }
-      else {
+      } else {
         // For auth mutations: only invalidate cache if mutation succeeded
         if (result.status >= 200 && result.status < 300) {
           await invalidateCache(cacheGroupKey)

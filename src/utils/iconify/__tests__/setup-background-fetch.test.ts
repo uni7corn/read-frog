@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const { sendMessageMock, setFetchMock } = vi.hoisted(() => ({
-  sendMessageMock: vi.fn(),
-  setFetchMock: vi.fn(),
+  sendMessageMock: vi.fn<(...args: any[]) => any>(),
+  setFetchMock: vi.fn<(...args: any[]) => any>(),
 }))
 
 vi.mock("@/utils/message", () => ({
@@ -42,7 +42,7 @@ describe("ensureIconifyBackgroundFetch", () => {
     const { ensureIconifyBackgroundFetch } = await import("../setup-background-fetch")
     ensureIconifyBackgroundFetch()
 
-    const customFetch = setFetchMock.mock.calls[0][0] as typeof fetch
+    const customFetch = setFetchMock.mock.calls[0]![0] as typeof fetch
     const response = await customFetch("https://api.iconify.design/tabler.json?icons=sparkles")
 
     expect(sendMessageMock).toHaveBeenCalledWith("backgroundFetch", {
@@ -72,8 +72,10 @@ describe("ensureIconifyBackgroundFetch", () => {
     const { ensureIconifyBackgroundFetch } = await import("../setup-background-fetch")
     ensureIconifyBackgroundFetch()
 
-    const customFetch = setFetchMock.mock.calls[0][0] as typeof fetch
+    const customFetch = setFetchMock.mock.calls[0]![0] as typeof fetch
 
-    await expect(customFetch("https://api.iconify.design/tabler.json?icons=sparkles")).rejects.toThrow("network error")
+    await expect(
+      customFetch("https://api.iconify.design/tabler.json?icons=sparkles"),
+    ).rejects.toThrow("network error")
   })
 })

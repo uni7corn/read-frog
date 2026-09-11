@@ -1,6 +1,6 @@
-import { browser, i18n } from "#imports"
 import { IconSettings } from "@tabler/icons-react"
 import { useAtom, useAtomValue } from "jotai"
+import { browser } from "#imports"
 import ProviderIcon from "@/components/provider-icon"
 import { useTheme } from "@/components/providers/theme-provider"
 import { Button } from "@/components/ui/base-ui/button"
@@ -14,12 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/base-ui/select"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { filterEnabledProvidersConfig, getLLMProvidersConfig, getNonAPIProvidersConfig, getPureAPIProvidersConfig, getTranslateProvidersConfig } from "@/utils/config/helpers"
+import {
+  filterEnabledProvidersConfig,
+  getLLMProvidersConfig,
+  getNonAPIProvidersConfig,
+  getPureAPIProvidersConfig,
+  getTranslateProvidersConfig,
+} from "@/utils/config/helpers"
 import { PROVIDER_ITEMS } from "@/utils/constants/providers"
+import { i18n } from "@/utils/i18n"
 import { selectedProviderIdsAtom } from "../atoms"
 
 export function TranslationServiceDropdown() {
-  const { theme = "light" } = useTheme()
+  const { theme } = useTheme()
   const [selectedIds, setSelectedIds] = useAtom(selectedProviderIdsAtom)
   const providersConfig = useAtomValue(configFieldsAtomMap.providersConfig)
   const translateProviders = getTranslateProvidersConfig(providersConfig)
@@ -30,44 +37,39 @@ export function TranslationServiceDropdown() {
       await browser.tabs.create({
         url: browser.runtime.getURL("/options.html#/api-providers"),
       })
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error opening configure API:", error)
     }
   }
 
-  const aiProviders = getLLMProvidersConfig(filteredProvidersConfig)
+  const llmProviders = getLLMProvidersConfig(filteredProvidersConfig)
   const nonAPIProviders = getNonAPIProvidersConfig(filteredProvidersConfig)
   const pureAPIProviders = getPureAPIProvidersConfig(filteredProvidersConfig)
 
   return (
     <div className="flex items-center gap-2">
-      <Select
-        multiple
-        value={selectedIds}
-        onValueChange={setSelectedIds}
-      >
+      <Select multiple value={selectedIds} onValueChange={setSelectedIds}>
         <SelectTrigger className="min-w-52">
           <SelectValue placeholder={i18n.t("translateService.selectServices")}>
-            {selectedIds.length > 0
-              ? (
-                  <div className="flex items-center gap-2">
-                    <span>{i18n.t("translateService.translationProviders")}</span>
-                    <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
-                      {selectedIds.length}
-                    </span>
-                  </div>
-                )
-              : (
-                  <span className="text-muted-foreground">{i18n.t("translateService.selectServices")}</span>
-                )}
+            {selectedIds.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <span>{i18n.t("translateService.translationProviders")}</span>
+                <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs text-primary-foreground">
+                  {selectedIds.length}
+                </span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground">
+                {i18n.t("translateService.selectServices")}
+              </span>
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {aiProviders.length > 0 && (
+          {llmProviders.length > 0 && (
             <SelectGroup>
-              <SelectLabel>{i18n.t("translateService.aiTranslator")}</SelectLabel>
-              {aiProviders.map(({ id, name, provider }) => (
+              <SelectLabel>{i18n.t("translateService.llmModels")}</SelectLabel>
+              {llmProviders.map(({ id, name, provider }) => (
                 <SelectItem key={id} value={id}>
                   <ProviderIcon logo={PROVIDER_ITEMS[provider].logo(theme)} name={name} size="sm" />
                 </SelectItem>
@@ -92,7 +94,12 @@ export function TranslationServiceDropdown() {
         </SelectContent>
       </Select>
 
-      <Button variant="outline" size="icon" onClick={handleConfigureAPI} title={i18n.t("translateService.configureAPI")}>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={handleConfigureAPI}
+        title={i18n.t("translateService.configureAPI")}
+      >
         <IconSettings />
       </Button>
     </div>

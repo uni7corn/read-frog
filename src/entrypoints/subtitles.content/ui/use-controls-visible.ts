@@ -14,8 +14,7 @@ export function useControlsInfo(
   const [info, setInfo] = useState<ControlsInfo>({ controlsVisible: false, controlsHeight: 0 })
 
   const updateInfo = useEffectEvent((container: HTMLElement) => {
-    if (!controlsConfig)
-      return
+    if (!controlsConfig) return
 
     setInfo({
       controlsVisible: controlsConfig.checkVisibility(container),
@@ -24,18 +23,13 @@ export function useControlsInfo(
   })
 
   const setupObserver = useEffectEvent(() => {
-    if (!controlsConfig)
-      return
+    if (!controlsConfig) return undefined
 
     const element = elementRef.current
-    if (!element)
-      return
-
-    const shadowRoot = getContainingShadowRoot(element)
+    const shadowRoot = element ? getContainingShadowRoot(element) : null
     const shadowHost = shadowRoot?.host as HTMLElement | undefined
-    const videoContainer = shadowHost?.parentElement
-    if (!videoContainer)
-      return
+    const videoContainer = shadowHost?.parentElement ?? controlsConfig.findVideoContainer?.()
+    if (!videoContainer) return undefined
 
     updateInfo(videoContainer)
 

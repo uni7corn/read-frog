@@ -18,7 +18,9 @@ describe("config utilities", () => {
     }
 
     it("should remove apiKey from OpenAI provider config", () => {
-      const openaiConfigFromConstants = DEFAULT_PROVIDER_CONFIG_LIST.find(config => config.provider === "openai")!
+      const openaiConfigFromConstants = DEFAULT_PROVIDER_CONFIG_LIST.find(
+        (config) => config.provider === "openai",
+      )!
       const openaiConfigWithApiKey = {
         ...openaiConfigFromConstants,
         apiKey: "sk-1234567890abcdef",
@@ -114,10 +116,10 @@ describe("config utilities", () => {
       expect(result.providers[1]).not.toHaveProperty("apiKey")
       expect(result.settings).not.toHaveProperty("apiKey")
 
-      expect(result.providers[0].name).toBe("Provider 1")
-      expect(result.providers[0].enabled).toBe(true)
-      expect(result.providers[1].name).toBe("Provider 2")
-      expect(result.providers[1].enabled).toBe(false)
+      expect(result.providers[0]!.name).toBe("Provider 1")
+      expect(result.providers[0]!.enabled).toBe(true)
+      expect(result.providers[1]!.name).toBe("Provider 2")
+      expect(result.providers[1]!.enabled).toBe(false)
       expect(result.settings.theme).toBe("dark")
       expect(hasAPIKey(result)).toBe(false)
     })

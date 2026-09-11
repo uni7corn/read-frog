@@ -108,7 +108,7 @@ describe("binaryHeapPQ", () => {
       ]
 
       // Add in random order
-      items.reverse().forEach(item => pq.push(item.value, item.priority))
+      items.reverse().forEach((item) => pq.push(item.value, item.priority))
 
       // Should come out in priority order (lowest priority number first)
       const sortedItems = items.toSorted((a, b) => a.priority - b.priority)
@@ -252,7 +252,7 @@ describe("binaryHeapPQ", () => {
       }))
 
       // Add all items
-      items.forEach(item => pq.push(item.value, item.priority))
+      items.forEach((item) => pq.push(item.value, item.priority))
 
       expect(pq.size()).toBe(1000)
 
@@ -260,19 +260,19 @@ describe("binaryHeapPQ", () => {
       const results: number[] = []
       while (!pq.isEmpty()) {
         const item = pq.pop()!
-        const originalItem = items.find(i => i.value === item)!
+        const originalItem = items.find((i) => i.value === item)!
         results.push(originalItem.priority)
       }
 
       // Verify sorted order (ascending priorities)
       for (let i = 1; i < results.length; i++) {
-        expect(results[i]).toBeGreaterThanOrEqual(results[i - 1])
+        expect(results[i]).toBeGreaterThanOrEqual(results[i - 1]!)
       }
     })
 
     it("should work with different data types", () => {
       const numberPQ = new BinaryHeapPQ<number>()
-      const objectPQ = new BinaryHeapPQ<{ id: number, name: string }>()
+      const objectPQ = new BinaryHeapPQ<{ id: number; name: string }>()
 
       // Test with numbers
       numberPQ.push(42, 2)
@@ -295,11 +295,11 @@ describe("binaryHeapPQ", () => {
     it("should maintain heap property after multiple operations", () => {
       // This test ensures the internal heap structure is maintained correctly
       const priorities = [5, 2, 8, 1, 9, 3, 7, 4, 6]
-      const values = priorities.map(p => `item${p}`)
+      const values = priorities.map((p) => `item${p}`)
 
       // Add items in random order
       for (let i = 0; i < values.length; i++) {
-        pq.push(values[i], priorities[i])
+        pq.push(values[i]!, priorities[i]!)
       }
 
       // Remove items - should come out in ascending priority order

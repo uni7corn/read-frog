@@ -3,15 +3,30 @@ import type { ConfigMeta } from "@/types/config/meta"
 import { storage } from "#imports"
 import { configSchema } from "@/types/config/config"
 import { isAPIProviderConfig } from "@/types/config/provider"
-import { CONFIG_SCHEMA_VERSION, CONFIG_STORAGE_KEY, DEFAULT_CONFIG } from "../constants/config"
+import { initI18n } from "@/utils/i18n"
+import {
+  buildFreshDefaultConfig,
+  CONFIG_SCHEMA_VERSION,
+  CONFIG_STORAGE_KEY,
+  DEFAULT_CONFIG,
+} from "../constants/config"
 import { logger } from "../logger"
 import { runMigration } from "./migration"
+
+export interface InitializeConfigResult {
+  /**
+   * The config was created from defaults in this run — either no stored value existed, or the
+   * stored value failed validation and was rebuilt. Callers use it to run one-time setup that
+   * only makes sense on untouched defaults (see `selectFreshTranslateProviders`).
+   */
+  isFreshInstall: boolean
+}
 
 /**
  * Initialize the config, this function should only be called once in the background script
  * @returns The extension config
  */
-export async function initializeConfig() {
+export async function initializeConfig(): Promise<InitializeConfigResult> {
   const [storedConfig, configMeta] = await Promise.all([
     storage.getItem<Config>(`local:${CONFIG_STORAGE_KEY}`),
     storage.getMeta<ConfigMeta>(`local:${CONFIG_STORAGE_KEY}`),
@@ -20,13 +35,16 @@ export async function initializeConfig() {
   let config: Config
   let currentVersion: number
   let didConfigChange = false
+  let isFreshInstall = false
 
   if (!storedConfig) {
-    config = DEFAULT_CONFIG
+    // Initialize locale before building defaults used by this browser context.
+    await initI18n(DEFAULT_CONFIG.uiLanguage)
+    config = buildFreshDefaultConfig()
     currentVersion = CONFIG_SCHEMA_VERSION
     didConfigChange = true
-  }
-  else {
+    isFreshInstall = true
+  } else {
     config = storedConfig
     currentVersion = configMeta?.schemaVersion ?? 1
   }
@@ -37,8 +55,7 @@ export async function initializeConfig() {
       config = await runMigration(nextVersion, config)
       didConfigChange = true
       currentVersion = nextVersion
-    }
-    catch (error) {
+    } catch (error) {
       console.error(`Migration to version ${nextVersion} failed:`, error)
       currentVersion = nextVersion
     }
@@ -46,9 +63,13 @@ export async function initializeConfig() {
 
   if (!configSchema.safeParse(config).success) {
     logger.warn("Config is invalid, using default config")
-    config = DEFAULT_CONFIG
+    await initI18n(DEFAULT_CONFIG.uiLanguage)
+    config = buildFreshDefaultConfig()
     currentVersion = CONFIG_SCHEMA_VERSION
     didConfigChange = true
+    // The rebuilt config is untouched defaults, so recovered users get the
+    // same one-time provider selection a genuine fresh install does.
+    isFreshInstall = true
   }
 
   if (import.meta.env.DEV) {
@@ -61,9 +82,8 @@ export async function initializeConfig() {
     didConfigChange = didConfigChange || betaResult.changed
   }
 
-  const didMetaNeedUpdate
-    = configMeta?.schemaVersion !== currentVersion
-      || configMeta?.lastModifiedAt === undefined
+  const didMetaNeedUpdate =
+    configMeta?.schemaVersion !== currentVersion || configMeta?.lastModifiedAt === undefined
 
   if (didConfigChange) {
     await storage.setItem<Config>(`local:${CONFIG_STORAGE_KEY}`, config)
@@ -75,9 +95,11 @@ export async function initializeConfig() {
       lastModifiedAt: configMeta?.lastModifiedAt ?? Date.now(),
     })
   }
+
+  return { isFreshInstall }
 }
 
-function applyAPIKeysFromEnv(config: Config): { config: Config, changed: boolean } {
+function applyAPIKeysFromEnv(config: Config): { config: Config; changed: boolean } {
   let changed = false
 
   const providersConfig = config.providersConfig.map((providerConfig) => {
@@ -111,7 +133,7 @@ function applyAPIKeysFromEnv(config: Config): { config: Config, changed: boolean
   }
 }
 
-function applyDevBetaExperience(config: Config): { config: Config, changed: boolean } {
+function applyDevBetaExperience(config: Config): { config: Config; changed: boolean } {
   if (config.betaExperience.enabled) {
     return { config, changed: false }
   }

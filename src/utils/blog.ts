@@ -1,22 +1,34 @@
-import { storage } from "#imports"
-import { semanticVersionSchema } from "@read-frog/definitions"
-import { z } from "zod"
+import type { LatestBlogPost } from "@read-frog/definitions"
+import type { UiLanguage } from "@/types/config/config"
+import {
+  bilibiliVideoUrlSchema,
+  getBilibiliVideoIdFromUrl,
+  latestBlogResponseSchema,
+} from "@read-frog/definitions"
+import { browser, storage } from "#imports"
 import { logger } from "./logger"
 import { sendMessage } from "./message"
 
 const LAST_VIEWED_BLOG_DATE_KEY = "lastViewedBlogDate"
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
+const BILIBILI_EMBED_HOSTNAME = "player.bilibili.com"
+const DEFAULT_BLOG_LOCALE = "en"
 
-/**
- * Zod schema for validating blog API response
- */
-const blogApiResponseSchema = z.object({
-  date: z.string(),
-  title: z.string(),
-  description: z.string(),
-  url: z.string(),
-  extensionVersion: semanticVersionSchema.nullable().optional(),
-}).nullable()
+export type BlogLocale = "en" | "zh" | "zh-TW" | "ko" | "vi" | "ru" | "tr" | "ja" | "es"
+
+const BLOG_LOCALE_BY_PRIMARY_LANGUAGE: Partial<Record<string, BlogLocale>> = {
+  en: "en",
+  es: "es",
+  ja: "ja",
+  ko: "ko",
+  ru: "ru",
+  tr: "tr",
+  vi: "vi",
+}
+
+// Wire schema and bilibili helpers live in @read-frog/definitions, shared with
+// the www route that serves /api/blog/latest.
+export type { LatestBlogPost } from "@read-frog/definitions"
 
 /**
  * Saves the last viewed blog date to Chrome storage
@@ -38,16 +50,68 @@ export async function getLastViewedBlogDate(): Promise<Date | null> {
  * @param latestViewedDate - The last date the user viewed the blog
  * @param latestDate - The date of the latest blog post
  */
-export function hasNewBlogPost(
-  latestViewedDate: Date | null,
-  latestDate: Date | null,
-): boolean {
-  if (!latestDate)
-    return false
+export function hasNewBlogPost(latestViewedDate: Date | null, latestDate: Date | null): boolean {
+  if (!latestDate) return false
 
-  if (!latestViewedDate)
-    return true
+  if (!latestViewedDate) return true
   return latestDate > latestViewedDate
+}
+
+export function extractBilibiliVideoId(url: string): string | null {
+  const result = bilibiliVideoUrlSchema.safeParse(url)
+  if (!result.success) {
+    return null
+  }
+
+  return getBilibiliVideoIdFromUrl(result.data)
+}
+
+export function buildBilibiliEmbedUrl(url: string): string | null {
+  const videoId = extractBilibiliVideoId(url)
+  if (!videoId) {
+    return null
+  }
+
+  const embedUrl = new URL(`https://${BILIBILI_EMBED_HOSTNAME}/player.html`)
+  embedUrl.searchParams.set("bvid", videoId)
+  embedUrl.searchParams.set("autoplay", "1")
+  embedUrl.searchParams.set("muted", "1")
+  embedUrl.searchParams.set("danmaku", "0")
+  return embedUrl.toString()
+}
+
+export function resolveBlogLocale(uiLocale?: string | null): BlogLocale {
+  const normalizedLocale = uiLocale?.trim().replaceAll("_", "-").toLowerCase()
+  if (!normalizedLocale) {
+    return DEFAULT_BLOG_LOCALE
+  }
+
+  if (normalizedLocale.startsWith("zh")) {
+    return normalizedLocale.includes("hant") ||
+      normalizedLocale === "zh-tw" ||
+      normalizedLocale === "zh-hk" ||
+      normalizedLocale === "zh-mo"
+      ? "zh-TW"
+      : "zh"
+  }
+
+  return (
+    BLOG_LOCALE_BY_PRIMARY_LANGUAGE[normalizedLocale.split("-")[0] ?? ""] ?? DEFAULT_BLOG_LOCALE
+  )
+}
+
+export function getBlogLocaleFromUILanguage(uiLanguage: UiLanguage): BlogLocale {
+  if (uiLanguage !== "auto") {
+    return resolveBlogLocale(uiLanguage)
+  }
+
+  const browserLocale =
+    browser.i18n.getUILanguage?.() ||
+    browser.i18n.getMessage?.("@@ui_locale") ||
+    globalThis.navigator?.language ||
+    DEFAULT_BLOG_LOCALE
+
+  return resolveBlogLocale(browserLocale)
 }
 
 /**
@@ -58,12 +122,22 @@ export function hasNewBlogPost(
  * @param locale - The locale to fetch the latest post for (default: 'en')
  * @param extensionVersion - The current extension version to filter compatible posts
  * @param useCache - Whether to use cache (default: true)
- * @returns Promise resolving to the latest blog post data (date, url, and extensionVersion), or null if no posts found
+ * @returns Promise resolving to the latest blog post metadata, or null if no posts found
  *
  * @example
  * ```ts
  * const latestPost = await getLatestBlogDate('http://localhost:8888/api/blog/latest', 'en', '1.10.0')
- * console.log(latestPost) // { date: Date, url: '/blog/post-slug', extensionVersion: '1.11.0' }
+ * console.log(latestPost)
+ * // {
+ * //   date: Date,
+ * //   title: 'Spring update',
+ * //   description: 'New subtitle features shipped.',
+ * //   url: '/blog/post-slug',
+ * //   urlOverride: 'https://www.readfrog.app',
+ * //   imageUrl: 'https://www.readfrog.app/blog/landing-page-refresh/cover-en.png',
+ * //   videoUrl: 'https://www.bilibili.com/video/BV...',
+ * //   extensionVersion: '1.11.0',
+ * // }
  *
  * // Without cache
  * const freshPost = await getLatestBlogDate('http://localhost:8888/api/blog/latest', 'en', '1.10.0', false)
@@ -74,7 +148,7 @@ export async function getLatestBlogDate(
   locale: string = "en",
   extensionVersion?: string,
   useCache: boolean = true,
-): Promise<{ date: Date, url: string, extensionVersion?: string | null } | null> {
+): Promise<LatestBlogPost | null> {
   try {
     const url = new URL(apiUrl)
     url.searchParams.set("locale", locale)
@@ -98,27 +172,8 @@ export async function getLatestBlogDate(
       throw new Error(`Failed to fetch blog: ${response.status}`)
     }
 
-    // Parse and validate response with Zod
-    const parsedBody = JSON.parse(response.body)
-    const validationResult = blogApiResponseSchema.safeParse(parsedBody)
-
-    if (!validationResult.success) {
-      throw new Error(`Invalid blog API response: ${validationResult.error.message}`)
-    }
-
-    const latestPost = validationResult.data
-
-    if (!latestPost) {
-      return null
-    }
-
-    return {
-      date: new Date(latestPost.date),
-      url: latestPost.url,
-      extensionVersion: latestPost.extensionVersion ?? null,
-    }
-  }
-  catch (error) {
+    return latestBlogResponseSchema.parse(JSON.parse(response.body))
+  } catch (error) {
     logger.error("Error fetching latest blog post:", error)
     return null
   }

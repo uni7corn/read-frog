@@ -1,27 +1,36 @@
-import { ApiProvidersPage } from "../pages/api-providers"
-import { ConfigPage } from "../pages/config"
-import { ContextMenuPage } from "../pages/context-menu"
-import { CustomActionsPage } from "../pages/custom-actions"
-import { FloatingButtonPage } from "../pages/floating-button"
-import { GeneralPage } from "../pages/general"
-import { InputTranslationPage } from "../pages/input-translation"
-import { SelectionToolbarPage } from "../pages/selection-toolbar"
-import { StatisticsPage } from "../pages/statistics"
-import { TextToSpeechPage } from "../pages/text-to-speech"
-import { TranslationPage } from "../pages/translation"
-import { VideoSubtitlesPage } from "../pages/video-subtitles"
+export const ROUTE_DEFS = [
+  { path: "/" },
+  { path: "/preference" },
+  { path: "/shortcuts" },
+  { path: "/api-providers" },
+  { path: "/custom-actions" },
+  { path: "/page-translation" },
+  { path: "/video-subtitles" },
+  { path: "/floating-button" },
+  { path: "/selection-toolbar" },
+  { path: "/context-menu" },
+  { path: "/input-translation" },
+  { path: "/tts" },
+  // Advanced is a sidebar GROUP with no page of its own; this path only exists
+  // so links made before that change still land somewhere.
+  { path: "/advanced" },
+  { path: "/help-and-community" },
 
-export const ROUTE_CONFIG = [
-  { path: "/", component: GeneralPage },
-  { path: "/api-providers", component: ApiProvidersPage },
-  { path: "/custom-actions", component: CustomActionsPage },
-  { path: "/translation", component: TranslationPage },
-  { path: "/video-subtitles", component: VideoSubtitlesPage },
-  { path: "/floating-button", component: FloatingButtonPage },
-  { path: "/selection-toolbar", component: SelectionToolbarPage },
-  { path: "/context-menu", component: ContextMenuPage },
-  { path: "/input-translation", component: InputTranslationPage },
-  ...(import.meta.env.BROWSER === "firefox" ? [] : [{ path: "/tts", component: TextToSpeechPage }]),
-  { path: "/statistics", component: StatisticsPage },
-  { path: "/config", component: ConfigPage },
+  // Detail pages drilled into from a `ConfigNavItem`. They own no sidebar entry — the
+  // sidebar lists its links itself — but route exactly like any other page.
+  { path: "/advanced/glossary" },
+  { path: "/advanced/glossary/:glossaryId" },
+  { path: "/preference/config-backup" },
+  { path: "/preference/extension-activation" },
+  { path: "/page-translation/custom-css" },
+  { path: "/page-translation/prompts" },
+  { path: "/page-translation/translation-control" },
+  { path: "/page-translation/translation-control/auto-translate-websites" },
+  { path: "/page-translation/translation-control/never-auto-translate-websites" },
+  { path: "/page-translation/translation-control/site-rules" },
+  { path: "/page-translation/translation-queue" },
+  { path: "/video-subtitles/style" },
+  { path: "/video-subtitles/style/custom-css" },
+  { path: "/video-subtitles/prompts" },
+  { path: "/video-subtitles/subtitles-queue" },
 ] as const

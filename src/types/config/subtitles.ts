@@ -1,6 +1,24 @@
 import { z } from "zod"
-import { MAX_BACKGROUND_OPACITY, MAX_FONT_SCALE, MAX_FONT_WEIGHT, MIN_BACKGROUND_OPACITY, MIN_FONT_SCALE, MIN_FONT_WEIGHT } from "@/utils/constants/subtitles"
-import { batchQueueConfigSchema, customPromptsConfigSchema, requestQueueConfigSchema } from "./translate"
+import { BUILT_IN_SUBTITLE_TRANSLATE_PROMPT_IDS } from "@/utils/constants/prompt"
+import {
+  MAX_BACKGROUND_OPACITY,
+  MAX_FONT_SCALE,
+  MAX_FONT_WEIGHT,
+  MIN_BACKGROUND_OPACITY,
+  MIN_FONT_SCALE,
+  MIN_FONT_WEIGHT,
+} from "@/utils/constants/subtitles"
+import {
+  batchQueueConfigSchema,
+  createCustomPromptsConfigSchema,
+  MAX_CUSTOM_CSS_LENGTH,
+  pageTranslationShortcutSchema,
+  requestQueueConfigSchema,
+} from "./translate"
+
+export const subtitleCustomPromptsConfigSchema = createCustomPromptsConfigSchema(
+  BUILT_IN_SUBTITLE_TRANSLATE_PROMPT_IDS,
+)
 
 export const subtitlesDisplayModeSchema = z.enum(["bilingual", "originalOnly", "translationOnly"])
 export const subtitlesTranslationPositionSchema = z.enum(["above", "below"])
@@ -23,6 +41,8 @@ export const subtitlesStyleSchema = z.object({
   main: subtitleTextStyleSchema,
   translation: subtitleTextStyleSchema,
   container: subtitleContainerStyleSchema,
+  /** Extra CSS for the subtitle lines, on top of the picked fonts and colours. `null` is off. */
+  customCSS: z.string().max(MAX_CUSTOM_CSS_LENGTH, "Custom CSS cannot exceed 8KB").nullable(),
 })
 
 export const subtitlePositionSchema = z.object({
@@ -33,12 +53,13 @@ export const subtitlePositionSchema = z.object({
 export const videoSubtitlesSchema = z.object({
   enabled: z.boolean(),
   autoStart: z.boolean(),
+  toggleShortcut: pageTranslationShortcutSchema,
   providerId: z.string().nonempty(),
   style: subtitlesStyleSchema,
   aiSegmentation: z.boolean(),
   requestQueueConfig: requestQueueConfigSchema,
   batchQueueConfig: batchQueueConfigSchema,
-  customPromptsConfig: customPromptsConfigSchema,
+  customPromptsConfig: subtitleCustomPromptsConfigSchema,
   position: subtitlePositionSchema,
 })
 

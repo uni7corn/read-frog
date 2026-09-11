@@ -1,12 +1,28 @@
 import type { Browser } from "#imports"
 import type { Config } from "@/types/config/config"
-import { browser, i18n, storage } from "#imports"
+import { browser, storage } from "#imports"
+import { ANALYTICS_FEATURE, ANALYTICS_SURFACE } from "@/types/analytics"
+import { createFeatureUsageContext } from "@/utils/analytics"
 import { CONFIG_STORAGE_KEY } from "@/utils/constants/config"
-import { getTranslationStateKey, TRANSLATION_STATE_KEY_PREFIX } from "@/utils/constants/storage-keys"
+import {
+  getTranslationStateKey,
+  parseTabIdFromStorageKey,
+  TRANSLATION_STATE_KEY_PREFIX,
+} from "@/utils/constants/storage-keys"
+import { getSelectionToolbarActions } from "@/utils/custom-actions"
+import { i18n } from "@/utils/i18n"
 import { sendMessage } from "@/utils/message"
 import { ensureInitializedConfig } from "./config"
+import { getPageTranslationEnabled, setPageTranslationEnabled } from "./page-translation-state"
 
-const MENU_ID_TRANSLATE = "read-frog-translate"
+export const MENU_ID_TRANSLATE = "read-frog-translate"
+export const MENU_ID_SELECTION_TRANSLATE = "read-frog-selection-translate"
+export const MENU_ID_SELECTION_READ_ALOUD = "read-frog-selection-read-aloud"
+export const MENU_ID_SELECTION_CUSTOM_ACTION_PREFIX = "read-frog-selection-custom-action:"
+
+function getSelectionCustomActionMenuId(actionId: string) {
+  return `${MENU_ID_SELECTION_CUSTOM_ACTION_PREFIX}${actionId}`
+}
 
 /**
  * Register all context menu event listeners synchronously
@@ -41,9 +57,7 @@ export function registerContextMenuListeners() {
     for (const [key, change] of Object.entries(changes)) {
       // Check if this is a translation state change
       if (key.startsWith(TRANSLATION_STATE_KEY_PREFIX.replace("session:", ""))) {
-        // Extract tabId from key (format: "translationState.{tabId}")
-        const parts = key.split(".")
-        const tabId = Number.parseInt(parts[1])
+        const tabId = parseTabIdFromStorageKey(key)
 
         if (!Number.isNaN(tabId)) {
           // Only update menu if this is the active tab
@@ -83,6 +97,9 @@ async function updateContextMenuItems(config: Config) {
   await browser.contextMenus.removeAll()
 
   const { enabled: translateEnabled } = config.contextMenu
+  const enabledCustomActions = getSelectionToolbarActions(config.selectionToolbar).filter(
+    (action) => action.enabled !== false,
+  )
 
   if (translateEnabled) {
     browser.contextMenus.create({
@@ -90,6 +107,28 @@ async function updateContextMenuItems(config: Config) {
       title: i18n.t("contextMenu.translate"),
       contexts: ["page"],
     })
+
+    browser.contextMenus.create({
+      id: MENU_ID_SELECTION_TRANSLATE,
+      title: i18n.t("contextMenu.translateSelection"),
+      contexts: ["selection"],
+    })
+
+    browser.contextMenus.create({
+      id: MENU_ID_SELECTION_READ_ALOUD,
+      title: i18n.t("contextMenu.readAloudSelection"),
+      contexts: ["selection"],
+    })
+
+    if (enabledCustomActions.length > 0) {
+      enabledCustomActions.forEach((action) => {
+        browser.contextMenus.create({
+          id: getSelectionCustomActionMenuId(action.id),
+          title: action.name,
+          contexts: ["selection"],
+        })
+      })
+    }
   }
 
   // Update translate menu title for current tab
@@ -114,21 +153,15 @@ async function updateTranslateMenuTitle(tabId: number, enabled?: boolean) {
     let isTranslated: boolean
     if (enabled !== undefined) {
       isTranslated = enabled
-    }
-    else {
-      const state = await storage.getItem<{ enabled: boolean }>(
-        getTranslationStateKey(tabId),
-      )
+    } else {
+      const state = await storage.getItem<{ enabled: boolean }>(getTranslationStateKey(tabId))
       isTranslated = state?.enabled ?? false
     }
 
     await browser.contextMenus.update(MENU_ID_TRANSLATE, {
-      title: isTranslated
-        ? i18n.t("contextMenu.showOriginal")
-        : i18n.t("contextMenu.translate"),
+      title: isTranslated ? i18n.t("contextMenu.showOriginal") : i18n.t("contextMenu.translate"),
     })
-  }
-  catch {
+  } catch {
     // Menu item might not exist if translateEnabled is false
   }
 }
@@ -145,26 +178,116 @@ async function handleContextMenuClick(
   }
 
   if (info.menuItemId === MENU_ID_TRANSLATE) {
-    await handleTranslateClick(tab.id)
+    await handleTranslateClick(tab.id, tab.url)
+    return
+  }
+
+  if (info.menuItemId === MENU_ID_SELECTION_TRANSLATE) {
+    await handleSelectionTranslateClick(info, tab.id)
+    return
+  }
+
+  if (info.menuItemId === MENU_ID_SELECTION_READ_ALOUD) {
+    await handleSelectionReadAloudClick(info, tab.id)
+    return
+  }
+
+  if (
+    typeof info.menuItemId === "string" &&
+    info.menuItemId.startsWith(MENU_ID_SELECTION_CUSTOM_ACTION_PREFIX)
+  ) {
+    const actionId = info.menuItemId.slice(MENU_ID_SELECTION_CUSTOM_ACTION_PREFIX.length)
+    if (!actionId) {
+      return
+    }
+
+    await handleSelectionCustomActionClick(info, tab.id, actionId)
   }
 }
 
 /**
  * Handle translate menu click - toggle page translation
  */
-async function handleTranslateClick(tabId: number) {
-  const state = await storage.getItem<{ enabled: boolean }>(
-    getTranslationStateKey(tabId),
-  )
-  const isCurrentlyTranslated = state?.enabled ?? false
+async function handleTranslateClick(tabId: number, tabUrl?: string) {
+  const isCurrentlyTranslated = await getPageTranslationEnabled(tabId)
   const newState = !isCurrentlyTranslated
 
-  // Update storage directly (instead of sending message to self)
-  await storage.setItem(getTranslationStateKey(tabId), { enabled: newState })
+  if (!newState) {
+    await setPageTranslationEnabled(tabId, false, tabUrl, true)
+    void sendMessage("notifyTranslationStateChanged", { enabled: false }, tabId)
+  }
 
   // Notify content script in that specific tab
-  void sendMessage("askManagerToTogglePageTranslation", { enabled: newState }, tabId)
+  void sendMessage(
+    "askManagerToTogglePageTranslation",
+    {
+      enabled: newState,
+      analyticsContext: newState
+        ? createFeatureUsageContext(
+            ANALYTICS_FEATURE.PAGE_TRANSLATION,
+            ANALYTICS_SURFACE.CONTEXT_MENU,
+          )
+        : undefined,
+    },
+    tabId,
+  )
 
   // Update menu title immediately
-  await updateTranslateMenuTitle(tabId)
+  await updateTranslateMenuTitle(tabId, newState)
+}
+
+async function handleSelectionTranslateClick(
+  info: Browser.contextMenus.OnClickData,
+  tabId: number,
+) {
+  const selectionText = info.selectionText?.trim()
+  if (!selectionText) {
+    return
+  }
+
+  const target = typeof info.frameId === "number" ? { tabId, frameId: info.frameId } : tabId
+
+  void sendMessage(
+    "openSelectionTranslationFromContextMenu",
+    {
+      selectionText,
+    },
+    target,
+  )
+}
+
+async function handleSelectionReadAloudClick(
+  info: Browser.contextMenus.OnClickData,
+  tabId: number,
+) {
+  const selectionText = info.selectionText?.trim()
+  if (!selectionText) {
+    return
+  }
+
+  const target = typeof info.frameId === "number" ? { tabId, frameId: info.frameId } : tabId
+
+  void sendMessage("readAloudSelectionFromContextMenu", { selectionText }, target)
+}
+
+async function handleSelectionCustomActionClick(
+  info: Browser.contextMenus.OnClickData,
+  tabId: number,
+  actionId: string,
+) {
+  const selectionText = info.selectionText?.trim()
+  if (!selectionText) {
+    return
+  }
+
+  const target = typeof info.frameId === "number" ? { tabId, frameId: info.frameId } : tabId
+
+  void sendMessage(
+    "openSelectionCustomActionFromContextMenu",
+    {
+      actionId,
+      selectionText,
+    },
+    target,
+  )
 }

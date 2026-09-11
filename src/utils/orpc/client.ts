@@ -1,36 +1,24 @@
 import type { ORPCRouterClient } from "@read-frog/api-contract"
 import { createORPCClient } from "@orpc/client"
 import { RPCLink } from "@orpc/client/fetch"
-import { BatchLinkPlugin } from "@orpc/client/plugins"
-import { WEBSITE_URL } from "../constants/url"
+import { createTanstackQueryUtils } from "@orpc/tanstack-query"
+import { ORPC_PREFIX } from "@read-frog/definitions"
+import { env } from "@/env"
 import { normalizeHeaders } from "../http"
 import { sendMessage } from "../message"
 
 const link = new RPCLink({
-  // TODO: add and use ORPC_PREFIX from @read-frog/definitions
-  url: `${WEBSITE_URL}/api/rpc`,
+  url: `${env.WXT_API_URL}${ORPC_PREFIX}`,
   headers: {
     "x-orpc-source": "extension",
   },
-  plugins: [
-    new BatchLinkPlugin({
-      groups: [
-        {
-          condition: () => true,
-          context: {},
-        },
-      ],
-    }),
-  ],
   // Proxy fetch through background to avoid CORS in content scripts
-  fetch: async (request) => {
-    // request is already a Request object with method, headers, body
-    const req = typeof request === "string" ? new Request(request) : request
-
-    const url = req.url
-    const method = req.method
-    const headerEntries = normalizeHeaders(req.headers)
-    const body = req.body ? await req.text() : undefined
+  fetch: async (request, init) => {
+    const url = request.url
+    const method = request.method
+    const headerEntries = normalizeHeaders(request.headers)
+    const text = await request.text()
+    const body = text.length > 0 ? text : undefined
 
     const resp = await sendMessage("backgroundFetch", {
       url,
@@ -38,6 +26,7 @@ const link = new RPCLink({
       headers: headerEntries,
       body,
       credentials: "include",
+      redirect: init.redirect,
     })
 
     return new Response(resp.body, {
@@ -48,4 +37,5 @@ const link = new RPCLink({
   },
 })
 
-export const orpc: ORPCRouterClient = createORPCClient(link)
+export const orpcClient: ORPCRouterClient = createORPCClient(link)
+export const orpc = createTanstackQueryUtils(orpcClient)

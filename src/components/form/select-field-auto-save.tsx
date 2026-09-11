@@ -1,43 +1,52 @@
 import type * as React from "react"
-import { useStore } from "@tanstack/react-form"
+import { useSelector } from "@tanstack/react-store"
 import { useCallback } from "react"
-import { Field, FieldError, FieldLabel } from "@/components/ui/base-ui/field"
+import { Field, FieldError, FieldTitle } from "@/components/ui/base-ui/field"
 import { Select } from "@/components/ui/base-ui/select"
 import { useFieldContext } from "./form-context"
+import { useAutosaveContext } from "./use-autosave"
 
 type SelectFieldAutoSaveProps = React.ComponentProps<typeof Select> & {
-  formForSubmit: { handleSubmit: () => void }
   label: React.ReactNode
+  labelExtra?: React.ReactNode
 }
 
-export function SelectFieldAutoSave(
-  { formForSubmit, label, ...props }: SelectFieldAutoSaveProps,
-) {
+export function SelectFieldAutoSave({
+  label,
+  labelExtra,
+  onValueChange,
+  ...props
+}: SelectFieldAutoSaveProps) {
+  const autosave = useAutosaveContext()
   const field = useFieldContext<string | undefined>()
-  const errors = useStore(field.store, state => state.meta.errors)
+  const errors = useSelector(field.store, (state) => state.meta.errors)
   const hasError = errors.length > 0
 
-  const handleValueChange = useCallback((value: unknown) => {
-    if (typeof value !== "string")
-      return
-    field.handleChange(value)
-    void formForSubmit.handleSubmit()
-  }, [field, formForSubmit])
+  const handleValueChange = useCallback(
+    (...[value, details]: Parameters<NonNullable<SelectFieldAutoSaveProps["onValueChange"]>>) => {
+      if (typeof value !== "string") return
+      autosave.edit(
+        () => {
+          field.handleChange(value)
+          onValueChange?.(value, details)
+        },
+        { immediate: true },
+      )
+    },
+    [field, autosave, onValueChange],
+  )
 
   return (
-    <Field invalid={hasError}>
-      <FieldLabel nativeLabel={false} render={<div />}>
-        {label}
-      </FieldLabel>
-      <Select
-        value={field.state.value}
-        onValueChange={handleValueChange}
-        {...props}
-      >
+    <Field data-invalid={hasError}>
+      <div className="flex w-full items-end justify-between">
+        <FieldTitle>{label}</FieldTitle>
+        {labelExtra}
+      </div>
+      <Select {...props} value={field.state.value} onValueChange={handleValueChange}>
         {props.children}
       </Select>
-      <FieldError match={hasError}>
-        {errors.map(error => typeof error === "string" ? error : error?.message).join(", ")}
+      <FieldError>
+        {errors.map((error) => (typeof error === "string" ? error : error?.message)).join(", ")}
       </FieldError>
     </Field>
   )

@@ -1,12 +1,8 @@
 import type { LangCodeISO6393 } from "@read-frog/definitions"
-import { i18n } from "#imports"
+import type { LanguageItem } from "./language-combobox-options"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 import { Icon } from "@iconify/react"
-import {
-  LANG_CODE_TO_LOCALE_NAME,
-  langCodeISO6393Schema,
-} from "@read-frog/definitions"
-import { camelCase } from "case-anything"
+import { langCodeISO6393Schema } from "@read-frog/definitions"
 import { useMemo } from "react"
 import { Button } from "@/components/ui/base-ui/button"
 import {
@@ -17,23 +13,15 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/base-ui/combobox"
+import { i18n } from "@/utils/i18n"
+import { getLanguageLabel } from "@/utils/language-labels"
+import { filterLanguage } from "./language-combobox-options"
 
-interface LanguageItem {
-  value: LangCodeISO6393
-  label: string
-}
-
-function getLanguageItems(): LanguageItem[] {
-  return langCodeISO6393Schema.options.map(code => ({
+function getLanguageItems(): LanguageItem<LangCodeISO6393>[] {
+  return langCodeISO6393Schema.options.map((code) => ({
     value: code,
-    label: `${i18n.t(`languages.${camelCase(code)}` as Parameters<typeof i18n.t>[0])} (${LANG_CODE_TO_LOCALE_NAME[code]})`,
+    label: getLanguageLabel(code),
   }))
-}
-
-function filterLanguage(item: LanguageItem, query: string): boolean {
-  const searchLower = query.toLowerCase()
-  return item.label.toLowerCase().includes(searchLower)
-    || item.value.toLowerCase().includes(searchLower)
 }
 
 interface MultiLanguageComboboxProps {
@@ -50,7 +38,7 @@ export function MultiLanguageCombobox({
   const languageItems = useMemo(() => getLanguageItems(), [])
 
   const selectedItems = useMemo(
-    () => languageItems.filter(item => selectedLanguages.includes(item.value)),
+    () => languageItems.filter((item) => selectedLanguages.includes(item.value)),
     [languageItems, selectedLanguages],
   )
 
@@ -58,20 +46,20 @@ export function MultiLanguageCombobox({
     <Combobox
       multiple
       value={selectedItems}
-      onValueChange={(items: LanguageItem[]) => {
-        onLanguagesChange(items.map(item => item.value))
+      onValueChange={(items: LanguageItem<LangCodeISO6393>[]) => {
+        onLanguagesChange(items.map((item) => item.value))
       }}
       items={languageItems}
       filter={filterLanguage}
     >
-      <ComboboxPrimitive.Trigger render={<Button variant="outline" className="w-40 justify-between" />}>
+      <ComboboxPrimitive.Trigger render={<Button variant="outline" size="sm" />}>
         <span className="truncate">{buttonLabel}</span>
-        <Icon icon="tabler:chevron-down" className="text-muted-foreground" />
+        <Icon icon="tabler:chevron-down" className="size-4 text-muted-foreground" />
       </ComboboxPrimitive.Trigger>
       <ComboboxContent align="end" className="w-fit">
         <ComboboxInput showTrigger={false} placeholder={i18n.t("translationHub.searchLanguages")} />
         <ComboboxList>
-          {(item: LanguageItem) => (
+          {(item: LanguageItem<LangCodeISO6393>) => (
             <ComboboxItem key={item.value} value={item}>
               {item.label}
             </ComboboxItem>

@@ -8,7 +8,7 @@ const {
   mockDeepQueryTopLevelSelector,
   mockGetDetectedCodeFromStorage,
   mockGetLocalConfig,
-  mockGetOrFetchArticleData,
+  mockGetOrCreateWebPageContext,
   mockRemoveAllTranslatedWrapperNodes,
   mockSendMessage,
   mockTranslateTextForPageTitle,
@@ -16,16 +16,16 @@ const {
   mockValidateTranslationConfigAndToast,
   mockWalkAndLabelElement,
 } = vi.hoisted(() => ({
-  mockGetDetectedCodeFromStorage: vi.fn(),
-  mockGetLocalConfig: vi.fn(),
-  mockDeepQueryTopLevelSelector: vi.fn(),
-  mockWalkAndLabelElement: vi.fn(),
-  mockRemoveAllTranslatedWrapperNodes: vi.fn(),
-  mockTranslateWalkedElement: vi.fn(),
-  mockTranslateTextForPageTitle: vi.fn(),
-  mockGetOrFetchArticleData: vi.fn(),
-  mockValidateTranslationConfigAndToast: vi.fn(),
-  mockSendMessage: vi.fn(),
+  mockGetDetectedCodeFromStorage: vi.fn<(...args: any[]) => any>(),
+  mockGetLocalConfig: vi.fn<(...args: any[]) => any>(),
+  mockDeepQueryTopLevelSelector: vi.fn<(...args: any[]) => any>(),
+  mockWalkAndLabelElement: vi.fn<(...args: any[]) => any>(),
+  mockRemoveAllTranslatedWrapperNodes: vi.fn<(...args: any[]) => any>(),
+  mockTranslateWalkedElement: vi.fn<(...args: any[]) => any>(),
+  mockTranslateTextForPageTitle: vi.fn<(...args: any[]) => any>(),
+  mockGetOrCreateWebPageContext: vi.fn<(...args: any[]) => any>(),
+  mockValidateTranslationConfigAndToast: vi.fn<(...args: any[]) => any>(),
+  mockSendMessage: vi.fn<(...args: any[]) => any>(),
 }))
 
 vi.mock("@/utils/config/languages", () => ({
@@ -37,8 +37,12 @@ vi.mock("@/utils/config/storage", () => ({
 }))
 
 vi.mock("@/utils/host/dom/filter", () => ({
-  hasNoWalkAncestor: vi.fn().mockReturnValue(false),
-  isDontWalkIntoButTranslateAsChildElement: vi.fn().mockReturnValue(false),
+  hasNoWalkAncestor: vi.fn<(...args: any[]) => any>().mockReturnValue(false),
+  isDontWalkIntoAndDontTranslateAsChildElement: vi
+    .fn<(...args: any[]) => any>()
+    .mockReturnValue(false),
+  isDontWalkIntoButTranslateAsChildElement: vi.fn<(...args: any[]) => any>().mockReturnValue(false),
+  isWalkBlockedElement: vi.fn<(...args: any[]) => any>().mockReturnValue(false),
   isHTMLElement: (node: unknown) => node instanceof HTMLElement,
 }))
 
@@ -46,8 +50,12 @@ vi.mock("@/utils/host/dom/find", () => ({
   deepQueryTopLevelSelector: mockDeepQueryTopLevelSelector,
 }))
 
-vi.mock("@/utils/host/dom/traversal", () => ({
+vi.mock("@/utils/host/dom/traversal", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/host/dom/traversal")>()),
   walkAndLabelElement: mockWalkAndLabelElement,
+  walkAndLabelElementChunked: vi
+    .fn<(...args: any[]) => any>()
+    .mockResolvedValue({ forceBlock: false, isInlineNode: false }),
 }))
 
 vi.mock("@/utils/host/translate/node-manipulation", () => ({
@@ -59,8 +67,8 @@ vi.mock("@/utils/host/translate/translate-variants", () => ({
   translateTextForPageTitle: mockTranslateTextForPageTitle,
 }))
 
-vi.mock("@/utils/host/translate/article-context", () => ({
-  getOrFetchArticleData: mockGetOrFetchArticleData,
+vi.mock("@/utils/host/translate/webpage-context", () => ({
+  getOrCreateWebPageContext: mockGetOrCreateWebPageContext,
 }))
 
 vi.mock("@/utils/host/translate/translate-text", () => ({
@@ -69,9 +77,9 @@ vi.mock("@/utils/host/translate/translate-text", () => ({
 
 vi.mock("@/utils/logger", () => ({
   logger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
+    error: vi.fn<(...args: any[]) => any>(),
+    info: vi.fn<(...args: any[]) => any>(),
+    warn: vi.fn<(...args: any[]) => any>(),
   },
 }))
 
@@ -80,11 +88,9 @@ vi.mock("@/utils/message", () => ({
 }))
 
 class MockIntersectionObserver {
-  observe = vi.fn()
-  unobserve = vi.fn()
-  disconnect = vi.fn()
-
-  constructor(_callback: IntersectionObserverCallback, _options?: IntersectionObserverInit) {}
+  observe = vi.fn<(...args: any[]) => any>()
+  unobserve = vi.fn<(...args: any[]) => any>()
+  disconnect = vi.fn<(...args: any[]) => any>()
 }
 
 function createDeferred<T>() {
@@ -98,7 +104,7 @@ function createDeferred<T>() {
 
 async function flushDomUpdates(): Promise<void> {
   await Promise.resolve()
-  await new Promise(resolve => setTimeout(resolve, 0))
+  await new Promise((resolve) => setTimeout(resolve, 0))
   await Promise.resolve()
 }
 
@@ -115,9 +121,45 @@ describe("pageTranslationManager title handling", () => {
     mockGetDetectedCodeFromStorage.mockResolvedValue("eng")
     mockGetLocalConfig.mockResolvedValue(DEFAULT_CONFIG)
     mockDeepQueryTopLevelSelector.mockReturnValue([])
-    mockGetOrFetchArticleData.mockResolvedValue({ title: "Original Title" })
+    mockGetOrCreateWebPageContext.mockResolvedValue({
+      url: window.location.href,
+      webTitle: "Original Title",
+      webContent: "Article body",
+    })
     mockValidateTranslationConfigAndToast.mockReturnValue(true)
     mockSendMessage.mockResolvedValue(undefined)
+  })
+
+  it("does not prime webpage context on start for non-llm translation", async () => {
+    mockTranslateTextForPageTitle.mockResolvedValue("Translated Title")
+
+    const manager = new PageTranslationManager()
+    await manager.start()
+    await flushDomUpdates()
+
+    expect(mockGetOrCreateWebPageContext).not.toHaveBeenCalled()
+
+    manager.stop()
+  })
+
+  it("primes webpage context on start for AI-aware llm translation", async () => {
+    mockGetLocalConfig.mockResolvedValue({
+      ...DEFAULT_CONFIG,
+      pageTranslation: {
+        ...DEFAULT_CONFIG.pageTranslation,
+        providerId: "openai-default",
+        enableAIContentAware: true,
+      },
+    })
+    mockTranslateTextForPageTitle.mockResolvedValue("Translated Title")
+
+    const manager = new PageTranslationManager()
+    await manager.start()
+    await flushDomUpdates()
+
+    expect(mockGetOrCreateWebPageContext).toHaveBeenCalledTimes(1)
+
+    manager.stop()
   })
 
   it("translates the tab title on start and restores the latest source title on stop", async () => {
@@ -143,8 +185,20 @@ describe("pageTranslationManager title handling", () => {
     manager.stop()
 
     expect(document.title).toBe("Updated Source Title")
-    expect(mockSendMessage).toHaveBeenCalledWith("setAndNotifyPageTranslationStateChangedByManager", { enabled: true })
-    expect(mockSendMessage).toHaveBeenCalledWith("setAndNotifyPageTranslationStateChangedByManager", { enabled: false })
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      "setAndNotifyPageTranslationStateChangedByManager",
+      {
+        enabled: true,
+        url: window.location.href,
+      },
+    )
+    expect(mockSendMessage).toHaveBeenCalledWith(
+      "setAndNotifyPageTranslationStateChangedByManager",
+      {
+        enabled: false,
+        url: window.location.href,
+      },
+    )
   })
 
   it("does not retrigger title translation for its own managed title updates", async () => {

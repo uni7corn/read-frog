@@ -1,6 +1,6 @@
-import { i18n } from "#imports"
 import { useAtom, useAtomValue } from "jotai"
 import { HelpTooltip } from "@/components/help-tooltip"
+import { getPageTranslatePromptSelectItems } from "@/components/prompt-configurator/built-in-prompts"
 import {
   Select,
   SelectContent,
@@ -11,31 +11,30 @@ import {
 } from "@/components/ui/base-ui/select"
 import { isLLMProvider } from "@/types/config/provider"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { featureProviderConfigAtom } from "@/utils/atoms/provider"
+import { featureProviderRefAtom } from "@/utils/atoms/provider"
 import { DEFAULT_TRANSLATE_PROMPT_ID } from "@/utils/constants/prompt"
+import { i18n } from "@/utils/i18n"
 
 export default function TranslatePromptSelector() {
-  const translateProviderConfig = useAtomValue(featureProviderConfigAtom("translate"))
-  const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.translate)
+  const translateProviderRef = useAtomValue(featureProviderRefAtom("pageTranslation"))
+  const [translateConfig, setTranslateConfig] = useAtom(configFieldsAtomMap.pageTranslation)
 
-  if (!translateProviderConfig?.provider || !isLLMProvider(translateProviderConfig?.provider))
+  if (
+    !translateProviderRef ||
+    (translateProviderRef.kind === "local" && !isLLMProvider(translateProviderRef.config.provider))
+  )
     return null
 
   const customPromptsConfig = translateConfig.customPromptsConfig
-  const { patterns = [], promptId } = customPromptsConfig
+  const { patterns, promptId } = customPromptsConfig
 
-  const items = [
-    { value: DEFAULT_TRANSLATE_PROMPT_ID, label: i18n.t("options.translation.personalizedPrompts.default") },
-    ...patterns.map(prompt => ({ value: prompt.id, label: prompt.name })),
-  ]
+  const items = getPageTranslatePromptSelectItems(patterns)
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[13px] font-medium flex items-center gap-1.5">
+      <span className="flex items-center gap-1.5 text-[13px] font-medium">
         {i18n.t("translatePrompt.title")}
-        <HelpTooltip>
-          {i18n.t("translatePrompt.description")}
-        </HelpTooltip>
+        <HelpTooltip>{i18n.t("translatePrompt.description")}</HelpTooltip>
       </span>
       <Select
         items={items}
@@ -44,7 +43,7 @@ export default function TranslatePromptSelector() {
           void setTranslateConfig({
             customPromptsConfig: {
               ...customPromptsConfig,
-              promptId: value === DEFAULT_TRANSLATE_PROMPT_ID ? null : value,
+              promptId: value ?? DEFAULT_TRANSLATE_PROMPT_ID,
             },
           })
         }}
@@ -54,7 +53,7 @@ export default function TranslatePromptSelector() {
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {items.map(item => (
+            {items.map((item) => (
               <SelectItem key={item.value} value={item.value}>
                 {item.label}
               </SelectItem>

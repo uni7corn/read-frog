@@ -1,14 +1,24 @@
-import { i18n } from "#imports"
 import { Icon } from "@iconify/react/dist/iconify.js"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAtomValue } from "jotai"
 import { Button } from "@/components/ui/base-ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/base-ui/tooltip"
-import { getLastViewedBlogDate, getLatestBlogDate, hasNewBlogPost, saveLastViewedBlogDate } from "@/utils/blog"
-import { WEBSITE_URL } from "@/utils/constants/url"
+import { env } from "@/env"
+import { configFieldsAtomMap } from "@/utils/atoms/config"
+import {
+  getBlogLocaleFromUILanguage,
+  getLastViewedBlogDate,
+  getLatestBlogDate,
+  hasNewBlogPost,
+  saveLastViewedBlogDate,
+} from "@/utils/blog"
+import { i18n } from "@/utils/i18n"
 import { version } from "../../../../package.json"
 
 export default function BlogNotification() {
   const queryClient = useQueryClient()
+  const uiLanguage = useAtomValue(configFieldsAtomMap.uiLanguage)
+  const blogLocale = getBlogLocaleFromUILanguage(uiLanguage)
 
   const { data: lastViewedDate } = useQuery({
     queryKey: ["last-viewed-blog-date"],
@@ -16,8 +26,8 @@ export default function BlogNotification() {
   })
 
   const { data: latestBlogPost } = useQuery({
-    queryKey: ["latest-blog-post"],
-    queryFn: () => getLatestBlogDate(`${WEBSITE_URL}/api/blog/latest`, "en", version),
+    queryKey: ["latest-blog-post", blogLocale],
+    queryFn: () => getLatestBlogDate(`${env.WXT_WEBSITE_URL}/api/blog/latest`, blogLocale, version),
   })
 
   const handleClick = async () => {
@@ -28,39 +38,27 @@ export default function BlogNotification() {
     // Open the latest blog post URL directly, or fallback to /blog if not available
     // Convert relative URL to absolute URL
     const blogUrl = latestBlogPost?.url
-      ? `${WEBSITE_URL}${latestBlogPost.url}`
-      : `${WEBSITE_URL}/blog`
+      ? `${env.WXT_WEBSITE_URL}${latestBlogPost.url}`
+      : `${env.WXT_WEBSITE_URL}/blog`
     window.open(blogUrl, "_blank")
   }
 
-  const showIndicator = hasNewBlogPost(
-    lastViewedDate ?? null,
-    latestBlogPost?.date ?? null,
-  )
+  const showIndicator = hasNewBlogPost(lastViewedDate ?? null, latestBlogPost?.date ?? null)
 
   return (
     <Tooltip>
       <TooltipTrigger
-        render={(
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={handleClick}
-          />
-        )}
+        render={<Button variant="ghost" size="icon" className="relative" onClick={handleClick} />}
       >
         <Icon icon="tabler:bell-filled" />
         {showIndicator && (
-          <span className="absolute top-1.5 right-1.5 flex items-center justify-center size-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex size-1.5 rounded-full bg-primary"></span>
+          <span className="absolute top-1.5 right-1.5 flex size-2 items-center justify-center">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-75"></span>
+            <span className="relative inline-flex size-1.5 rounded-full bg-brand"></span>
           </span>
         )}
       </TooltipTrigger>
-      <TooltipContent>
-        {i18n.t("popup.blog.notification")}
-      </TooltipContent>
+      <TooltipContent>{i18n.t("popup.blog.notification")}</TooltipContent>
     </Tooltip>
   )
 }

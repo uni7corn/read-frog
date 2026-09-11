@@ -1,17 +1,17 @@
 import type { LangCodeISO6391 } from "@read-frog/definitions"
-import type { PureAPIProviderConfig } from "@/types/config/provider"
+import type { ProviderConfig } from "@/types/config/provider"
+import type { TranslationTextFormat } from "@/types/config/translate"
 import { DEFAULT_PROVIDER_CONFIG } from "@/utils/constants/providers"
-import { sendMessage } from "@/utils/message"
 
-const TRAILING_SLASHES_RE = /\/+$/
+type DeepLXProviderConfig = Extract<ProviderConfig, { provider: "deeplx" }>
 const API_KEY_PLACEHOLDER_RE = /\{\{apiKey\}\}/g
 
 export async function deeplxTranslate(
   sourceText: string,
   fromLang: LangCodeISO6391 | "auto",
   toLang: LangCodeISO6391,
-  providerConfig: PureAPIProviderConfig,
-  options?: { forceBackgroundFetch?: boolean },
+  providerConfig: DeepLXProviderConfig,
+  options?: { textFormat?: TranslationTextFormat; signal?: AbortSignal },
 ): Promise<string> {
   const baseURL = providerConfig.baseURL || DEFAULT_PROVIDER_CONFIG.deeplx.baseURL
   const apiKey = providerConfig.apiKey
@@ -21,11 +21,9 @@ export async function deeplxTranslate(
   }
 
   const formatLang = (lang: LangCodeISO6391 | "auto") => {
-    if (lang === "auto")
-      return "auto"
+    if (lang === "auto") return "auto"
     let formattedLang = lang.toUpperCase()
-    if (formattedLang === "ZH-TW")
-      formattedLang = "ZH-HANT"
+    if (formattedLang === "ZH-TW") formattedLang = "ZH-HANT"
     return formattedLang
   }
 
@@ -35,38 +33,20 @@ export async function deeplxTranslate(
     text: sourceText,
     source_lang: formatLang(fromLang),
     target_lang: formatLang(toLang),
+    ...(options?.textFormat === "html" ? { tag_handling: "html" } : {}),
   })
 
-  const fetchResponse = options?.forceBackgroundFetch
-    ? await fetchViaBackground(url, requestBody)
-    : await fetchDirect(url, requestBody)
+  const fetchResponse = await fetchDirect(url, requestBody, options?.signal)
 
   return parseDeepLXResponse(fetchResponse)
 }
 
-async function fetchViaBackground(url: string, body: string) {
-  const resp = await sendMessage("backgroundFetch", {
-    url,
-    method: "POST",
-    headers: [["Content-Type", "application/json"]],
-    body,
-    credentials: "omit",
-  })
-
-  return {
-    ok: resp.status >= 200 && resp.status < 300,
-    status: resp.status,
-    statusText: resp.statusText,
-    text: () => Promise.resolve(resp.body),
-    json: () => Promise.resolve(JSON.parse(resp.body)),
-  }
-}
-
-async function fetchDirect(url: string, body: string) {
+async function fetchDirect(url: string, body: string, signal?: AbortSignal) {
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body,
+    signal,
   }).catch((error) => {
     throw new Error(`Network error during DeepLX translation: ${error.message}`)
   })
@@ -74,11 +54,18 @@ async function fetchDirect(url: string, body: string) {
   return resp
 }
 
-async function parseDeepLXResponse(resp: { ok: boolean, status: number, statusText: string, text: () => Promise<string>, json: () => Promise<any> }) {
+async function parseDeepLXResponse(resp: {
+  ok: boolean
+  status: number
+  statusText: string
+  text: () => Promise<string>
+  json: () => Promise<any>
+}) {
   if (!resp.ok) {
     const errorText = await resp.text().catch(() => "Unable to read error response")
     throw new Error(
-      `DeepLX translation request failed: ${resp.status} ${resp.statusText}${errorText ? ` - ${errorText}` : ""
+      `DeepLX translation request failed: ${resp.status} ${resp.statusText}${
+        errorText ? ` - ${errorText}` : ""
       }`,
     )
   }
@@ -89,43 +76,20 @@ async function parseDeepLXResponse(resp: { ok: boolean, status: number, statusTe
       throw new TypeError("Unexpected response format from DeepLX translation API")
     }
     return result.data
-  }
-  catch (error) {
-    throw new Error(
-      `Failed to parse DeepLX translation response: ${(error as Error).message}`,
-    )
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to parse DeepLX translation response: ${message}`, { cause: error })
   }
 }
 
 export function buildDeepLXUrl(baseURL: string, apiKey?: string): string {
-  // Remove trailing slash from baseURL
-  const cleanBaseURL = baseURL.replace(TRAILING_SLASHES_RE, "")
-
-  // If baseURL contains {{apiKey}} placeholder, replace it with the API key
-  if (cleanBaseURL.includes("{{apiKey}}")) {
-    if (!apiKey) {
+  if (baseURL.includes("{{apiKey}}")) {
+    const normalizedApiKey = apiKey?.trim()
+    if (!normalizedApiKey) {
       throw new Error("API key is required when using {{apiKey}} placeholder in DeepLX baseURL")
     }
-    return cleanBaseURL.replace(API_KEY_PLACEHOLDER_RE, apiKey)
+    return baseURL.replace(API_KEY_PLACEHOLDER_RE, normalizedApiKey)
   }
 
-  // Special logic for api.deeplx.org: insert token between .org and /translate
-  if (cleanBaseURL === "https://api.deeplx.org") {
-    if (apiKey) {
-      return `https://api.deeplx.org/${apiKey}/translate`
-    }
-    return `${cleanBaseURL}/translate`
-  }
-
-  // For baseURL without /translate, add it at the end
-  if (!cleanBaseURL.endsWith("/translate")) {
-    if (apiKey) {
-      return `${cleanBaseURL}/${apiKey}/translate`
-    }
-    return `${cleanBaseURL}/translate`
-  }
-
-  // If baseURL already ends with /translate, use it as-is
-  // This handles cases like "https://api.example.com/v1/translate"
-  return cleanBaseURL
+  return baseURL
 }

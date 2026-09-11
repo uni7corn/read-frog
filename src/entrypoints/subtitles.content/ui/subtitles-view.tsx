@@ -1,35 +1,39 @@
-import type { ControlsConfig } from "@/entrypoints/subtitles.content/platforms"
 import { IconGripHorizontal } from "@tabler/icons-react"
-import { useAtomValue, useSetAtom } from "jotai"
-import { Activity, useRef } from "react"
+import { useAtomValue } from "jotai"
+import { Activity } from "react"
 import { configFieldsAtomMap } from "@/utils/atoms/config"
-import { SUBTITLES_VIEW_CLASS } from "@/utils/constants/subtitles"
+import { SUBTITLES_BOX_CLASS, SUBTITLES_VIEW_CLASS } from "@/utils/constants/subtitles"
 import { cn } from "@/utils/styles/utils"
+import { displaySubtitleAtom } from "../atoms"
 import { MainSubtitle, TranslationSubtitle } from "./subtitle-lines"
-import { useControlsInfo } from "./use-controls-visible"
 import { useVerticalDrag } from "./use-vertical-drag"
 
 interface SubtitlesViewProps {
-  controlsConfig?: ControlsConfig
   showContent: boolean
 }
 
 function SubtitlesContent() {
+  const subtitle = useAtomValue(displaySubtitleAtom)
   const { style } = useAtomValue(configFieldsAtomMap.videoSubtitles)
   const { displayMode, translationPosition, container } = style
 
   const translationAbove = translationPosition === "above"
   const showMain = displayMode !== "translationOnly"
-  const showTranslation = displayMode !== "originalOnly"
+  const isDuplicateTranslation = !!subtitle?.translation && subtitle.translation === subtitle.text
+  // Bilingual: keep translation row for pending indicator when original is shown without translation.
+  const showTranslation =
+    displayMode !== "originalOnly" && !(displayMode === "bilingual" && isDuplicateTranslation)
 
   const containerStyle = {
     backgroundColor: `rgba(0, 0, 0, ${container.backgroundOpacity / 100})`,
   }
 
   return (
-    <div className={`${SUBTITLES_VIEW_CLASS} flex w-full flex-col items-center justify-end pb-3 pointer-events-none`}>
+    <div
+      className={`${SUBTITLES_VIEW_CLASS} pointer-events-none flex w-full flex-col items-center justify-end pb-3`}
+    >
       <div
-        className="flex flex-col gap-2 w-fit max-w-[90%] mx-auto px-2 py-1.5 rounded text-center text-white pointer-events-auto select-text cursor-text"
+        className={`${SUBTITLES_BOX_CLASS} pointer-events-auto mx-auto flex w-fit max-w-[90%] cursor-text flex-col gap-2 rounded px-2 py-1.5 text-center text-white select-text`}
         style={containerStyle}
       >
         <Activity mode={showMain ? "visible" : "hidden"}>
@@ -44,20 +48,13 @@ function SubtitlesContent() {
   )
 }
 
-export function SubtitlesView({ controlsConfig, showContent }: SubtitlesViewProps) {
-  const windowRef = useRef<HTMLDivElement>(null)
-  const { controlsVisible, controlsHeight } = useControlsInfo(windowRef, controlsConfig)
-  const setVideoSubtitles = useSetAtom(configFieldsAtomMap.videoSubtitles)
-
-  const { refs, windowStyle, positionStyle, isDragging } = useVerticalDrag({
-    controlsVisible,
-    controlsHeight,
-    onDragEnd: pos => void setVideoSubtitles({ position: pos }),
-  })
+export function SubtitlesView({ showContent }: SubtitlesViewProps) {
+  const { refs, windowStyle, positionStyle, isDragging } = useVerticalDrag()
 
   return (
     <div
-      ref={windowRef}
+      // oxlint-disable-next-line react/refs -- the ref object is handed to the ref prop; nothing reads .current here
+      ref={refs.window}
       style={{
         width: windowStyle.width,
         height: windowStyle.height,
@@ -70,18 +67,20 @@ export function SubtitlesView({ controlsConfig, showContent }: SubtitlesViewProp
       }}
     >
       <div
+        // oxlint-disable-next-line react/refs -- the ref object is handed to the ref prop; nothing reads .current here
         ref={refs.container}
         className={cn(
-          "group flex flex-col items-center absolute w-full left-0 right-0",
+          "group absolute right-0 left-0 flex w-full flex-col items-center",
           !isDragging && "transition-[top,bottom] duration-200",
           !showContent && "invisible",
         )}
         style={positionStyle}
       >
-        <div className="w-full flex justify-center pointer-events-auto">
+        <div className="pointer-events-auto">
           <div
+            // oxlint-disable-next-line react/refs -- the ref object is handed to the ref prop; nothing reads .current here
             ref={refs.handle}
-            className="mb-0.5 px-2 py-1 rounded cursor-grab active:cursor-grabbing bg-black/75 opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity duration-200"
+            className="mb-0.5 cursor-grab rounded bg-black/75 px-2 py-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100 active:cursor-grabbing active:opacity-100"
           >
             <IconGripHorizontal className="size-4 text-white" />
           </div>

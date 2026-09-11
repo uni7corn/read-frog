@@ -29,6 +29,7 @@ web-ext.config.ts
 
 .env
 .env.*
+!.env.example
 !.env.local.example
 
 coverage/
@@ -45,3 +46,4 @@ docs/
 scripts/output/
 
 reference/
+.gstack/

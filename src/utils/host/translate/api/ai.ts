@@ -1,48 +1,79 @@
 import type { LLMProviderConfig } from "@/types/config/provider"
-import type { ArticleContent } from "@/types/content"
+import type { MatchedTerm } from "@/utils/glossary/types"
 import type { TranslatePromptOptions, TranslatePromptResult } from "@/utils/prompts/translate"
 import { generateText } from "ai"
 import { extractAISDKErrorMessage } from "@/utils/error/extract-message"
-import { getModelById, resolveModelId } from "@/utils/providers/model"
+import { getModelById } from "@/utils/providers/model"
+import { resolveModelId } from "@/utils/providers/model-id"
 import { getProviderOptionsWithOverride } from "@/utils/providers/options"
+import { getTopLevelReasoning } from "@/utils/providers/reasoning"
+import { attachRequestErrorMeta, getRequestErrorMeta } from "@/utils/request/retry-policy"
 
 const THINK_TAG_RE = /<\/think>([\s\S]*)/
 
-export type PromptResolver = (
+export type PromptResolver<TContext = unknown> = (
   targetLang: string,
   input: string,
-  options?: TranslatePromptOptions,
+  options?: TranslatePromptOptions<TContext>,
 ) => Promise<TranslatePromptResult>
 
-export async function aiTranslate(
+export async function aiTranslate<TContext>(
   text: string,
   targetLangName: string,
   providerConfig: LLMProviderConfig,
-  promptResolver: PromptResolver,
-  options?: { isBatch?: boolean, content?: ArticleContent },
+  promptResolver: PromptResolver<TContext>,
+  options?: {
+    isBatch?: boolean
+    context?: TContext
+    signal?: AbortSignal
+    // Forwarded verbatim to the prompt resolver: the terms were resolved by the
+    // context that knew the page URL, and re-resolving here would scope them
+    // wrong (see `TranslatePromptOptions.glossaryTerms`).
+    glossaryTerms?: readonly MatchedTerm[]
+  },
 ) {
-  const { id: providerId, model: providerModel, provider, providerOptions: userProviderOptions, temperature } = providerConfig
+  const {
+    id: providerId,
+    model: providerModel,
+    provider,
+    providerOptions: userProviderOptions,
+    temperature,
+  } = providerConfig
+  const reasoning = getTopLevelReasoning(providerConfig)
   const modelName = resolveModelId(providerModel)
   const model = await getModelById(providerId)
 
-  const providerOptions = getProviderOptionsWithOverride(modelName ?? "", provider, userProviderOptions)
+  const providerOptions = getProviderOptionsWithOverride(
+    modelName ?? "",
+    provider,
+    userProviderOptions,
+    reasoning,
+  )
   const { systemPrompt, prompt } = await promptResolver(targetLangName, text, options)
 
   try {
     const { text: translatedText } = await generateText({
       model,
-      system: systemPrompt,
+      instructions: systemPrompt,
       prompt,
+      reasoning,
       temperature,
       providerOptions,
+      abortSignal: options?.signal,
       maxRetries: 0, // Disable SDK built-in retries, let RequestQueue/BatchQueue handle it
     })
 
     const [, finalTranslation = translatedText] = translatedText.match(THINK_TAG_RE) || []
 
     return finalTranslation
-  }
-  catch (error) {
-    throw new Error(extractAISDKErrorMessage(error))
+  } catch (error) {
+    const message = extractAISDKErrorMessage(error)
+    const meta = getRequestErrorMeta(error)
+    if (error instanceof Error) {
+      error.message = message
+      throw attachRequestErrorMeta(error, meta)
+    }
+
+    throw attachRequestErrorMeta(new Error(message), meta)
   }
 }
